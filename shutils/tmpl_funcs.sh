@@ -33,7 +33,7 @@ reset_tmpl_vars()
 			short_desc maintainer long_desc checksum wrksrc	\
 			make_cmd bootstrap register_shell \
 			make_build_target configure_script noextract nofetch \
-			build_depends nostrip nonfree \
+			build_depends nostrip nonfree build_requires \
 			make_install_target version revision patch_args \
 			sgml_catalogs xml_catalogs xml_entries sgml_entries \
 			disable_parallel_build run_depends font_dirs preserve \
@@ -237,6 +237,14 @@ prepare_tmpl()
 	fi
 	if [ -n "${only_for_archs}" -a -z "$found" ]; then
 		msg_error "$pkgname: this package cannot be built on $XBPS_MACHINE.\n"
+	fi
+
+	if [ -n "$build_requires" ]; then
+		local xbpssrcver=$(xbps-src -V)
+		$XBPS_CMPVER_CMD $build_requires $xbpssrcver
+		if [ $? -eq 1 ]; then
+			msg_error "$pkgname: xbps-src-${build_requires} is required to build this pkg!\n"
+		fi
 	fi
 
 	unset XBPS_EXTRACT_DONE XBPS_APPLYPATCHES_DONE

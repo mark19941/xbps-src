@@ -1,3 +1,7 @@
+v12:
+ - New (optional) var for templates 'build_requires' which expects a minimal
+   version of xbps-src required to build a package and its subpkgs.
+
 v11:
  - Uses the new virtualpkg trigger from xbps-triggers-0.32.
  - New xbps.conf for xbps-0.11 for the chroot.
