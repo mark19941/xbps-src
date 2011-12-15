@@ -71,8 +71,18 @@ set_defvars()
 	done
 
 	export XBPS_VERSION=$(xbps-bin.static -V|awk '{print $2}')
-	xbps_conf="-C $XBPS_MASTERDIR/usr/local/etc/xbps"
-
+	export XBPS_APIVER=$(xbps-bin.static -V|awk '{print $4}')
+	case ${XBPS_VERSION} in
+	0.1[0-9]*)
+		local _newapiconf=20111215 # date when xbps.conf appeared.
+		rv=$(xbps-uhelper.static cmpver ${_newapiconf} ${XBPS_APIVER})
+		if [ "${rv}" -ge 0 ]; then
+			xbps_conf="-r $XBPS_MASTERDIR -C $XBPS_MASTERDIR/usr/local/etc/xbps/xbps.conf"
+		else
+			xbps_conf="-r $XBPS_MASTERDIR -C $XBPS_MASTERDIR/usr/local/etc/xbps"
+		fi
+		;;
+	esac
 	export XBPS_PKGDB_CMD="xbps-uhelper.static -r $XBPS_MASTERDIR"
 	export XBPS_BIN_CMD="xbps-bin.static $xbps_conf -r $XBPS_MASTERDIR"
 	export XBPS_REPO_CMD="xbps-repo.static $xbps_conf -r $XBPS_MASTERDIR"

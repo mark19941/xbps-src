@@ -71,6 +71,7 @@ ACTION="\$1"
 PKGNAME="\$2"
 VERSION="\$3"
 UPDATE="\$4"
+CONF_FILE="\$5"
 
 #
 # The following code will run the triggers.
@@ -137,6 +138,13 @@ _EOF
 		_add_trigger systemd-service
 		echo "export systemd_services=\"${systemd_services}\"" >> $tmpf
 	fi
+	#
+	# Handle virtual packages modifying xbps.conf.
+	#
+	if [ -d ${DESTDIR}/etc/xbps/virtualpkg.d ]; then
+		_add_trigger virtualpkg
+	fi
+
 	#
 	# Handle GNU Info files.
 	#
@@ -287,7 +295,7 @@ _EOF
 				if ! $(echo $j|grep -q pre-${action}); then
 					continue
 				fi
-				printf "\t\${TRIGGERSDIR}/$f run $j \${PKGNAME} \${VERSION} \${UPDATE}\n" >> $tmpf
+				printf "\t\${TRIGGERSDIR}/$f run $j \${PKGNAME} \${VERSION} \${UPDATE} \${CONF_FILE}\n" >> $tmpf
 				printf "\t[ \$? -ne 0 ] && exit \$?\n" >> $tmpf
 			done
 		done
@@ -299,7 +307,7 @@ _EOF
 				if ! $(echo $j|grep -q post-${action}); then
 					continue
 				fi
-				printf "\t\${TRIGGERSDIR}/$f run $j \${PKGNAME} \${VERSION} \${UPDATE}\n" >> $tmpf
+				printf "\t\${TRIGGERSDIR}/$f run $j \${PKGNAME} \${VERSION} \${UPDATE} \${CONF_FILE}\n" >> $tmpf
 				printf "\t[ \$? -ne 0 ] && exit \$?\n" >> $tmpf
 			done
 		done

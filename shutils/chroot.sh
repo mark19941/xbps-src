@@ -217,12 +217,10 @@ prepare_binpkg_repos()
 {
 	local f
 
-	for f in conf repositories; do
-		if [ ! -f ${XBPS_MASTERDIR}/usr/local/etc/xbps/${f}.plist ]; then
-			install -Dm644 ${XBPS_SHAREDIR}/chroot/${f}.plist \
-				${XBPS_MASTERDIR}/usr/local/etc/xbps/${f}.plist
-		fi
-	done
+	if [ ! -f ${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf ]; then
+		install -Dm644 ${XBPS_SHAREDIR}/chroot/xbps.conf \
+			${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf
+	fi
 	msg_normal "Synchronizing index for remote repositories...\n"
 	${XBPS_REPO_CMD} sync 2>/dev/null
 }
