@@ -75,7 +75,8 @@ set_defvars()
 	case ${XBPS_VERSION} in
 	0.1[0-9]*)
 		local _newapiconf=20111215 # date when xbps.conf appeared.
-		rv=$(xbps-uhelper.static cmpver ${_newapiconf} ${XBPS_APIVER})
+		xbps-uhelper.static cmpver ${_newapiconf} ${XBPS_APIVER}
+		rv=$?
 		if [ "${rv}" -ge 0 ]; then
 			xbps_conf="-r $XBPS_MASTERDIR -C $XBPS_MASTERDIR/usr/local/etc/xbps/xbps.conf"
 		else
