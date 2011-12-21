@@ -25,7 +25,7 @@
 
 _mount()
 {
-	MASTERDIR="${XBPS_MASTERDIR}" DISTRIBUTIONDIR="${XBPS_DISTRIBUTIONDIR}" \
+	MASTERDIR="${XBPS_MASTERDIR}" DISTDIR="${XBPS_DISTDIR}" \
 		HOSTDIR="${XBPS_HOSTDIR}" XBPS_ETCDIR="${XBPS_ETCDIR}" \
 		XBPS_SHAREDIR="${XBPS_SHAREDIR}" ${SUDO_CMD} \
 		${XBPS_LIBEXECDIR}/chroot-helper.sh mount
@@ -34,7 +34,7 @@ _mount()
 
 _umount()
 {
-	MASTERDIR="${XBPS_MASTERDIR}" DISTRIBUTIONDIR="${XBPS_DISTRIBUTIONDIR}" \
+	MASTERDIR="${XBPS_MASTERDIR}" DISTDIR="${XBPS_DISTDIR}" \
 		HOSTDIR="${XBPS_HOSTDIR}" XBPS_ETCDIR="${XBPS_ETCDIR}" \
 		XBPS_SHAREDIR="${XBPS_SHAREDIR}" ${SUDO_CMD} \
 		${XBPS_LIBEXECDIR}/chroot-helper.sh umount
@@ -70,7 +70,7 @@ chroot_init()
 
 	cat > $XBPSSRC_CF <<_EOF
 # Generated configuration file by xbps-src, DO NOT EDIT!
-XBPS_DISTRIBUTIONDIR=/xbps
+XBPS_DISTDIR=/xbps
 XBPS_MASTERDIR=/
 XBPS_CFLAGS="$XBPS_CFLAGS"
 XBPS_CXXFLAGS="$XBPS_CFLAGS"
@@ -128,6 +128,10 @@ _EOF
 prepare_chroot()
 {
 	local f
+
+	if [ ! -f $XBPS_MASTERDIR/bin/bash ]; then
+		msg_error "Bootstrap not installed in $XBPS_MASTERDIR, can't continue."
+	fi
 
 	# Create some required files.
 	cp -f /etc/mtab $XBPS_MASTERDIR/etc
@@ -222,7 +226,7 @@ prepare_binpkg_repos()
 			${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf
 	fi
 	msg_normal "Synchronizing index for remote repositories...\n"
-	${XBPS_REPO_CMD} sync 2>/dev/null
+	${XBPS_REPO_CMD} sync
 }
 
 create_busybox_links()

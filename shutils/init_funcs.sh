@@ -25,7 +25,7 @@
 
 set_defvars()
 {
-	local DDIRS i
+	local DDIRS i xbps_conf
 
 	XBPS_HELPERSDIR=$XBPS_SHAREDIR/helpers
 	XBPS_SHUTILSDIR=$XBPS_SHAREDIR/shutils
@@ -38,8 +38,8 @@ set_defvars()
 		XBPS_DESTDIR=/destdir
 		XBPS_BUILDDIR=/builddir
 	else
-		XBPS_SRCPKGDIR=$XBPS_DISTRIBUTIONDIR/srcpkgs
-		XBPS_COMMONDIR=$XBPS_DISTRIBUTIONDIR/common
+		XBPS_SRCPKGDIR=$XBPS_DISTDIR/srcpkgs
+		XBPS_COMMONDIR=$XBPS_DISTDIR/common
 		XBPS_DESTDIR=$XBPS_MASTERDIR/destdir
 		XBPS_BUILDDIR=$XBPS_MASTERDIR/builddir
 	fi
@@ -52,7 +52,7 @@ set_defvars()
 	fi
 	XBPS_TRIGGERSDIR=$XBPS_SRCPKGDIR/xbps-triggers/files
 
-	DDIRS="DISTRIBUTIONDIR TRIGGERSDIR HELPERSDIR SRCPKGDIR SHUTILSDIR COMMONDIR"
+	DDIRS="DISTDIR TRIGGERSDIR HELPERSDIR SRCPKGDIR SHUTILSDIR COMMONDIR"
 	for i in ${DDIRS}; do
 		eval val="\$XBPS_$i"
 		if [ ! -d "$val" ]; then
@@ -70,20 +70,10 @@ set_defvars()
 		fi
 	done
 
+	xbps_conf="-C /usr/local/etc/xbps/xbps.conf"
+
 	export XBPS_VERSION=$(xbps-bin.static -V|awk '{print $2}')
 	export XBPS_APIVER=$(xbps-bin.static -V|awk '{print $4}')
-	case ${XBPS_VERSION} in
-	0.1[0-9]*)
-		local _newapiconf=20111215 # date when xbps.conf appeared.
-		xbps-uhelper.static cmpver ${_newapiconf} ${XBPS_APIVER}
-		rv=$?
-		if [ "${rv}" -ge 0 ]; then
-			xbps_conf="-r $XBPS_MASTERDIR -C $XBPS_MASTERDIR/usr/local/etc/xbps/xbps.conf"
-		else
-			xbps_conf="-r $XBPS_MASTERDIR -C $XBPS_MASTERDIR/usr/local/etc/xbps"
-		fi
-		;;
-	esac
 	export XBPS_PKGDB_CMD="xbps-uhelper.static -r $XBPS_MASTERDIR"
 	export XBPS_BIN_CMD="xbps-bin.static $xbps_conf -r $XBPS_MASTERDIR"
 	export XBPS_REPO_CMD="xbps-repo.static $xbps_conf -r $XBPS_MASTERDIR"

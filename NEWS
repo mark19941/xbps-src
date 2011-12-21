@@ -1,36 +1,48 @@
+v13:
+ * Renamed XBPS_DISTRIBUTIONDIR in xbps-src.conf to XBPS_DISTDIR (shorter).
+ * Set XBPS_DISTDIR to $HOME/xbps-packages by default.
+ * Set XBPS_MASTERDIR to $XBPS_DISTDIR/masterdir by default.
+ * If XBPS_MASTERDIR dir doesn't exist, create it.
+ * New option XBPS_SRCPKGS_REPOURL to specify the URL to fetch
+   the xbps-packages git repository.
+ * New target: fetch-srcpkgs. To clone the xbps-packages git repository
+   as defined by XBPS_SRCPKGS_REPOURL.
+ * -B option can be used with the "bootstrap" target to install a bootstrap
+   from binary packages rather than building it from source.
+
 v12:
- - New (optional) var for templates 'build_requires' which expects a minimal
+ * New (optional) var for templates 'build_requires' which expects a minimal
    version of xbps-src required to build a package and its subpkgs.
 
 v11:
- - Uses the new virtualpkg trigger from xbps-triggers-0.32.
- - New xbps.conf for xbps-0.11 for the chroot.
- - Fixed make-repoidx target in no-chroot case.
+ * Uses the new virtualpkg trigger from xbps-triggers-0.32.
+ * New xbps.conf for xbps-0.11 for the chroot.
+ * Fixed make-repoidx target in no-chroot case.
 
 v10:
- - Fixed paths for chroot and non chroot case in set_defvars().
+ * Fixed paths for chroot and non chroot case in set_defvars().
 
 v9:
- - xbps-src now copies /etc/services to the chroot (masterdir) to make
+ * xbps-src now copies /etc/services to the chroot (masterdir) to make
    https URLs work with xbps-uhelper.
- - The home directory of the user running xbps-src for chroot operations
+ * The home directory of the user running xbps-src for chroot operations
    has been changed to /tmp.
- - The changes listed above are *only* applied on newly created chroots.
+ * The changes listed above are *only* applied on newly created chroots.
 
 v8:
- - xbps-src failed to detect required shlibs from the same package, when
+ * xbps-src failed to detect required shlibs from the same package, when
    them were symlinks and not real files.
 
 v7:
- - xbps-src now provides required XBPS configuration file for use in
+ * xbps-src now provides required XBPS configuration file for use in
    chroot operations, adding local repositories by default.
 
 v6:
- - Fixed the 'show-deps' target to show dependencies that contain the +
+ * Fixed the 'show-deps' target to show dependencies that contain the +
    character on its pkgname.
 
 v5:
- - Implemented 'show-deps' target to print build or run time dependencies
+ * Implemented 'show-deps' target to print build or run time dependencies
    for a source package.
- - It's possible to use xbps-src code from non-default PATH by setting the
+ * It's possible to use xbps-src code from non-default PATH by setting the
    environment variable DESTDIR.

@@ -45,18 +45,20 @@ SUDO_CMD=sudo
 CHROOT_CMD=chroot
 XBPS_MACHINE=$(uname -m)
 
-# Required utilities in host system.
-REQHOST_UTILS="awk bash bison sed gcc msgfmt patch makeinfo \
-	perl fakeroot tar xz gzip bzip2 xbps-bin.static \
-	xbps-repo.static xbps-uhelper.static"
+# Required utilities in host system for the bootstrap target.
+REQHOST_UTILS_BOOTSTRAP="awk bash bison sed gcc msgfmt patch makeinfo \
+	perl fakeroot tar xz gzip bzip2"
+# Required utilities in host system for chroot ops.
+REQHOST_UTILS="xbps-bin.static xbps-repo.static xbps-uhelper.static"
 
 check_reqhost_utils()
 {
-	local broken
+	local broken utils=${REQHOST_UTILS}
 
 	[ -n "$IN_CHROOT" ] && return 0
+	[ -n "$1" ] && utils=${REQHOST_UTILS_BOOTSTRAP}
 
-	for f in ${REQHOST_UTILS}; do
+	for f in ${utils}; do
 		if ! command -v ${f} 2>&1 >/dev/null; then
 			echo "${f} is missing in your system, can't continue!"
 			broken=1
@@ -74,6 +76,8 @@ $PROGNAME: [-BCDhKS] [-c file] [-m dir] [-p dir] [-s dir] [target] [pkgname]
 Targets:
  bootstrap
   Build and install from source the bootstrap packages into <masterdir>.
+  If -B flag is specified, the bootstrap packages will be installed from
+  binary packages as found in host repositories.
 
  bootstrap-update
   Updates bootstrap packages with latest versions available from registered
@@ -109,6 +113,10 @@ Targets:
 
  fetch [pkgname]
   Download package source distribution file(s).
+
+ fetch-srcpkgs
+  Fetches the "xbps-packages" repository from XBPS_SRCPKGS_REPOURL settting
+  in xbps-src.conf into XBPS_DISTDIR.
 
  install [pkgname]
   Installs a package into destination directory and \`stows' its files into
@@ -235,16 +243,18 @@ check_config_vars()
 		exit 1
 	fi
 
-	for f in XBPS_DISTRIBUTIONDIR XBPS_MASTERDIR; do
+	for f in XBPS_DISTDIR XBPS_MASTERDIR; do
 		eval val="\$${f}"
 		if [ -z "$val" ]; then
 			echo "${f} not set in configuration file!"
 			exit 1
 		fi
 	done
-	if [ ! -w "$XBPS_MASTERDIR" ]; then
+	if [ -d "$XBPS_MASTERDIR" -a ! -w "$XBPS_MASTERDIR" ]; then
 		echo "ERROR: not enough perms for masterdir $XBPS_MASTERDIR."
 		exit 1
+	elif [ ! -d "$XBPS_MASTERDIR" ]; then
+		mkdir -p "$XBPS_MASTERDIR"
 	fi
 }
 
@@ -375,10 +385,20 @@ fi
 #
 case "$target" in
 bootstrap)
-	[ ! -d $XBPS_SRCPKGDIR/base-chroot ] && \
-		msg_error "Cannot find $XBPS_SRCPKGDIR/base-chroot directory!\n"
-	cd $XBPS_SRCPKGDIR/base-chroot && _ORIGINPKG="$(basename_cwd)"
-	setup_tmpl ${_ORIGINPKG} && install_pkg $pkgname
+	if [ -n "$BUILD_BINPKG" ]; then
+		# binary bootstrap
+		msg_normal "Installing bootstrap from binary package repositories...\n"
+		xbps-repo.static -r $XBPS_MASTERDIR sync && \
+			xbps-bin.static -r $XBPS_MASTERDIR -y install base-chroot
+	else
+		# bootstrap from sources
+		# check for required host utils
+		check_reqhost_utils bootstrap
+		[ ! -d $XBPS_SRCPKGDIR/base-chroot ] && \
+			msg_error "Cannot find $XBPS_SRCPKGDIR/base-chroot directory!\n"
+		cd $XBPS_SRCPKGDIR/base-chroot && _ORIGINPKG="$(basename_cwd)"
+		setup_tmpl ${_ORIGINPKG} && install_pkg $pkgname
+	fi
 	;;
 bootstrap-update)
 	if [ -z "$IN_CHROOT" ]; then
@@ -442,6 +462,14 @@ extract|fetch)
 	fi
 	fetch_distfiles $update_checksum
 	[ "$target" = "extract" ] && extract_distfiles
+	;;
+fetch-srcpkgs)
+	if ! command -v git 2>&1 >/dev/null; then
+		msg_error "git command not found, can't fetch repository."
+	fi
+	if [ ! -d $XBPS_DISTDIR/.git ]; then
+		git clone $XBPS_SRCPKGS_REPOURL $XBPS_DISTDIR
+	fi
 	;;
 build|configure|install)
 	if [ -z "${_pkgname}" ]; then

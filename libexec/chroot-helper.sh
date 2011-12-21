@@ -41,7 +41,7 @@ mount_chroot_fs()
 			fi
 			case ${f} in
 				xbps)
-					blah=${DISTRIBUTIONDIR}
+					blah=${DISTDIR}
 					dowrite="-w"
 					;;
 				host)
@@ -103,8 +103,8 @@ if [ $# -ne 1 ]; then
 	exit 1
 fi
 
-if [ -z "$MASTERDIR" -o -z "$DISTRIBUTIONDIR" ]; then
-	echo "$0: MASTERDIR or DISTRIBUTIONDIR unset, can't continue."
+if [ -z "$MASTERDIR" -o -z "$DISTDIR" ]; then
+	echo "$0: MASTERDIR or DISTDIR unset, can't continue."
 	exit 1
 fi
 
