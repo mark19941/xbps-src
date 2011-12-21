@@ -395,7 +395,10 @@ bootstrap)
 		# binary bootstrap
 		msg_normal "Installing bootstrap from binary package repositories...\n"
 		xbps-repo.static -r $XBPS_MASTERDIR sync && \
-			xbps-bin.static -r $XBPS_MASTERDIR -y install base-chroot
+			xbps-bin.static -r $XBPS_MASTERDIR \
+				-c $XBPS_MASTERDIR/host/repocache \
+				-y install base-chroot && \
+				msg_normal "Installed bootstrap successfully!\n"
 	else
 		# bootstrap from sources
 		# check for required host utils
