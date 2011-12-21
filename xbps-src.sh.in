@@ -53,18 +53,26 @@ REQHOST_UTILS="xbps-bin.static xbps-repo.static xbps-uhelper.static"
 
 check_reqhost_utils()
 {
-	local broken utils=${REQHOST_UTILS}
+	local broken
 
 	[ -n "$IN_CHROOT" ] && return 0
 	[ -n "$1" ] && utils=${REQHOST_UTILS_BOOTSTRAP}
 
-	for f in ${utils}; do
+	for f in ${REQHOST_UTILS}; do
 		if ! command -v ${f} 2>&1 >/dev/null; then
 			echo "${f} is missing in your system, can't continue!"
 			broken=1
 		fi
 	done
+	[ -n "$broken" ] && exit 1
+	[ -z "$1" ] && return 0
 
+	for f in ${REQHOST_UTILS_BOOTSTRAP}; do
+		if ! command -v ${f} 2>&1 >/dev/null; then
+			echo "${f} is missing in your system, can't continue!"
+			broken=1
+		fi
+	done
 	[ -n "$broken" ] && exit 1
 }
 
@@ -253,8 +261,6 @@ check_config_vars()
 	if [ -d "$XBPS_MASTERDIR" -a ! -w "$XBPS_MASTERDIR" ]; then
 		echo "ERROR: not enough perms for masterdir $XBPS_MASTERDIR."
 		exit 1
-	elif [ ! -d "$XBPS_MASTERDIR" ]; then
-		mkdir -p "$XBPS_MASTERDIR"
 	fi
 }
 

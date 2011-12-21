@@ -62,8 +62,8 @@ chroot_init()
 
 	msg_normal "Entering into the chroot on $XBPS_MASTERDIR.\n"
 
-	if [ ! -d $XBPS_MASTERDIR/usr/local/etc ]; then
-		mkdir -p $XBPS_MASTERDIR/usr/local/etc
+	if [ ! -d $XBPS_MASTERDIR/usr/local/etc/xbps ]; then
+		mkdir -p $XBPS_MASTERDIR/usr/local/etc/xbps
 	fi
 
 	XBPSSRC_CF=$XBPS_MASTERDIR/usr/local/etc/xbps/xbps-src.conf

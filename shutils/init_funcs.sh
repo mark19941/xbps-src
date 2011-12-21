@@ -56,8 +56,7 @@ set_defvars()
 	for i in ${DDIRS}; do
 		eval val="\$XBPS_$i"
 		if [ ! -d "$val" ]; then
-			echo "ERROR: cannot find $i at $val aborting."
-			exit 1
+			echo "WARNING: cannot find $i at $val."
 		fi
 	done
 
@@ -66,7 +65,7 @@ set_defvars()
 		if [ ! -d "$val" ]; then
 			mdir=$(dirname $XBPS_MASTERDIR)
 			[ -z "$IN_CHROOT" -a "$mdir" = "/" ] && continue
-			mkdir -p $val
+			[ -d $XBPS_DISTDIR/.git ] && mkdir -p $val
 		fi
 	done
 
