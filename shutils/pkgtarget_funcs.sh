@@ -31,8 +31,8 @@ make_repoidx()
 	local f
 
 	case "${XBPS_VERSION}" in
-	# >= 0.11.0
-	[0-9].[1-9][1-9].[0-9])
+	# >= 0.11
+	[0-9].[1-9]*)
 		for f in ${XBPS_MACHINE} noarch nonfree/${XBPS_MACHINE}; do
 			msg_normal "Updating pkg-index for local repository at:\n"
 			msg_normal " $XBPS_PACKAGESDIR/$f\n"

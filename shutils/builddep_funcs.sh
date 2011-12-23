@@ -35,7 +35,7 @@ install_pkg_from_repos()
 	msg_normal "$pkgver: installing '$1'... "
 
 	case "${XBPS_VERSION}" in
-	0.1[1-9].[0-9]*)
+	0.1[1-9]*) # XBPS >= 0.11
 		_pkgdepname=$($XBPS_PKGDB_CMD getpkgdepname "$1")
 		$XBPS_REPO_CMD -oversion show ${_pkgdepname} >/dev/null 2>&1
 		if [ $? -ne 0 ]; then
