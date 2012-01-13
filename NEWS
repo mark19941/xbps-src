@@ -1,3 +1,9 @@
+v14:
+ * Strip shared and static libraries with --strip-unneeded.
+ * XBPS_LDFLAGS now contains -Wl,-zdefs by default, to abort if there
+   are unresolved symbols at build time.
+ * Adjust the code to make it work with xbps>=0.12.
+
 v13:
  * Renamed XBPS_DISTRIBUTIONDIR in xbps-src.conf to XBPS_DISTDIR (shorter).
  * Set XBPS_DISTDIR to $HOME/xbps-packages by default.

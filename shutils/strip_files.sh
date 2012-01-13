@@ -50,7 +50,7 @@ strip_files_real()
 			${strip_cmd} "$f" && \
 				echo "   Stripped executable: $(basename $f)";;
 		application/x-sharedlib*|application/x-archive*)
-			${strip_cmd} -S "$f" && \
+			${strip_cmd} --strip-unneeded "$f" && \
 				echo "   Stripped library: $(basename $f)";;
 		esac
 	done

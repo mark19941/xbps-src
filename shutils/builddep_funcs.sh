@@ -35,7 +35,7 @@ install_pkg_from_repos()
 	msg_normal "$pkgver: installing '$1'... "
 
 	case "${XBPS_VERSION}" in
-	0.1[1-9]*) # XBPS >= 0.11
+	0.[1-9][1-9]*) # XBPS >= 0.11
 		_pkgdepname=$($XBPS_PKGDB_CMD getpkgdepname "$1")
 		$XBPS_REPO_CMD -oversion show ${_pkgdepname} >/dev/null 2>&1
 		if [ $? -ne 0 ]; then
@@ -80,7 +80,7 @@ install_pkg_from_repos()
 
 autoremove_pkg_dependencies()
 {
-	local cmd curpkgname f
+	local cmd curpkgname f purge_flag
 
 	[ -n "$1" ] && return 0
 
@@ -92,7 +92,15 @@ autoremove_pkg_dependencies()
 	if [ -n "$XBPS_PREFER_BINPKG_DEPS" -a -z "$bootstrap" ]; then
 		msg_normal "$pkgver: removing automatically installed dependencies ...\n"
 		# Autoremove installed binary packages.
-		${cmd} -y reconfigure all && ${cmd} -Rpyf autoremove
+		case "${XBPS_VERSION}" in
+		0.[1-9][2-9]*)
+			# XBPS >= 0.12 purge flag doesn't exist.
+			;;
+		*)
+			# XBPS < 0.12 purge flag required.
+			purge_flag="p";;
+		esac
+		${cmd} -y reconfigure all && ${cmd} -Ryf${purge_flag} autoremove
 		if [ $? -ne 0 ]; then
 			msg_red "$pkgver: failed to remove automatic dependencies!\n"
 			exit 1
