@@ -1,3 +1,7 @@
+v15:
+ * Remove -Wl,-zdefs from XBPS_LDFLAGS. Too many packages are broken with
+   that enabled, and there's not enough time to fix all them.
+
 v14:
  * Strip shared and static libraries with --strip-unneeded.
  * XBPS_LDFLAGS now contains -Wl,-zdefs by default, to abort if there
