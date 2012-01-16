@@ -3,6 +3,12 @@ v15:
    that enabled, and there's not enough time to fix all them.
  * New [optional] var for templates 'shlib_depends'. This overwrites the
    required pattern for a run dependency set by its `depends' file.
+ * Fixed issue 20 in googlecode "xbps-src dependency version check isn't working".
+   When building packages with srcpkg deps and installed dependency isn't
+   satisfied, do the following:
+	- If pkgdep is installed but not satisfied and srcpkg satisfies the
+	  dependency, remove pkgdep and reinstall new dependency from srcpkgs.
+	- Or if dependency from srcpkgs doesn't satisfy requirement error out.
 
 v14:
  * Strip shared and static libraries with --strip-unneeded.

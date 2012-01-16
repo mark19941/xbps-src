@@ -135,7 +135,26 @@ install_pkg_deps()
 		msg_normal "Installing $saved_prevpkg dependency: '$curpkg'.\n"
 	fi
 
-	setup_tmpl "$curpkgname"
+	setup_subpkg_tmpl "${curpkgname}"
+	check_pkgdep_matched "${curpkg}"
+	if [ $? -eq 1 ]; then
+		if [ -z "$XBPS_PREFER_BINPKG_DEPS" ]; then
+			local iver=$($XBPS_PKGDB_CMD version "${curpkgname}")
+			${XBPS_PKGDB_CMD} pkgmatch "${pkgver}" "${curpkg}"
+			if [ $? -eq 1 ]; then
+				if [ -n "$iver" ]; then
+					msg_normal "Installed package ${curpkgname}-${iver} doesn't match ${curpkg}, reinstalling...\n"
+					remove_pkg
+				fi
+			else
+				if [ -z "$saved_prevpkg" -a -n "${_ORIGINPKG}" ]; then
+					msg_error "${_ORIGINPKG} requires ${curpkg}, but srcpkg provides ${pkgver}!\n"
+				else
+					msg_error "${saved_prevpkg} requires ${curpkg}, but srcpkg provides ${pkgver}!\n"
+				fi
+			fi
+		fi
+	fi
 	check_build_depends_pkg
 	if [ $? -eq 0 ]; then
 		msg_normal "Package '$curpkgname' requires:\n"
@@ -228,10 +247,15 @@ install_dependencies_pkg()
 		pkgn=$($XBPS_PKGDB_CMD getpkgdepname "${i}")
 		iver=$($XBPS_PKGDB_CMD version "${pkgn}")
 		check_pkgdep_matched "${i}"
-		if [ $? -eq 0 ]; then
+		local rval=$?
+		if [ $rval -eq 0 ]; then
 			echo "   ${i}: found '$pkgn-$iver'."
 		else
-			echo "   ${i}: not found."
+			if [ $rval -eq 1 ]; then
+				echo "   ${i}: installed ${iver}, unsatisfied."
+			else
+				echo "   ${i} not found."
+			fi
 			if [ -z "$missing_deps" ]; then
 				missing_deps="${i}"
 			else
@@ -270,7 +294,7 @@ install_dependencies_pkg()
 
 #
 # Returns 0 if pkgpattern in $1 is matched against current installed
-# package, 1 otherwise.
+# package, 1 if no match and 2 if not installed.
 #
 check_pkgdep_matched()
 {
@@ -285,6 +309,8 @@ check_pkgdep_matched()
 	if [ -n "$iver" ]; then
 		${XBPS_PKGDB_CMD} pkgmatch "${pkgn}-${iver}" "${pkg}"
 		[ $? -eq 1 ] && return 0
+	else
+		return 2
 	fi
 
 	return 1
