@@ -1,5 +1,5 @@
 #-
-# Copyright (c) 2008-2011 Juan Romero Pardines.
+# Copyright (c) 2008-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -42,13 +42,14 @@ xbps_write_metadata_pkg()
 			msg_error "Cannot find subpkg '${subpkg}' build template!\n"
 		fi
 		setup_tmpl ${sourcepkg}
-		unset run_depends conf_files noarch triggers replaces \
+		unset conf_files noarch triggers replaces \
 			revision system_accounts system_groups \
 			preserve xml_entries sgml_entries \
 			xml_catalogs sgml_catalogs gconf_entries gconf_schemas \
 			gtk_iconcache_dirs font_dirs dkms_modules provides \
 			kernel_hooks_version conflicts pycompile_dirs \
-			pycompile_module systemd_services make_dirs
+			pycompile_module systemd_services make_dirs \
+			run_depends shlib_depends
 		. $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template
 		pkgname=${subpkg}
 		set_tmpl_common_vars
@@ -329,6 +330,20 @@ _EOF
 		echo "<key>run_depends</key>" >> $TMPFPROPS
 		echo "<array>" >> $TMPFPROPS
 		for f in ${run_depends}; do
+			for j in ${shlib_depends}; do
+				local pkgrdepn pkgrdepo
+				pkgrdepn=$($XBPS_PKGDB_CMD getpkgdepname "$f")
+				pkgrdepo=$($XBPS_PKGDB_CMD getpkgdepname "$j")
+				if [ "${pkgrdepn}" != "${pkgrdepo}" ]; then
+					continue
+				fi
+				echo "<string>$(echo $j|sed "s|<|\&lt;|g;s|>|\&gt;|g")</string>" >> $TMPFPROPS
+				found=1
+			done
+			if [ -n "$found" ]; then
+				unset found
+				continue
+			fi
 			echo "<string>$(echo $f|sed "s|<|\&lt;|g;s|>|\&gt;|g")</string>" >> $TMPFPROPS
 		done
 		echo "</array>" >> $TMPFPROPS

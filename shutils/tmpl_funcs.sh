@@ -1,5 +1,5 @@
 #-
-# Copyright (c) 2008-2011 Juan Romero Pardines.
+# Copyright (c) 2008-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,7 @@ reset_tmpl_vars()
 	local TMPL_VARS="pkgname distfiles configure_args strip_cmd \
 			make_build_args make_install_args build_style	\
 			short_desc maintainer long_desc checksum wrksrc	\
-			make_cmd bootstrap register_shell \
+			make_cmd bootstrap register_shell shlib_depends \
 			make_build_target configure_script noextract nofetch \
 			build_depends nostrip nonfree build_requires \
 			make_install_target version revision patch_args \

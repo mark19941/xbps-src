@@ -1,6 +1,8 @@
 v15:
  * Remove -Wl,-zdefs from XBPS_LDFLAGS. Too many packages are broken with
    that enabled, and there's not enough time to fix all them.
+ * New [optional] var for templates 'shlib_depends'. This overwrites the
+   required pattern for a run dependency set by its `depends' file.
 
 v14:
  * Strip shared and static libraries with --strip-unneeded.
