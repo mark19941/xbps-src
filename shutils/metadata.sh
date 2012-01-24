@@ -49,7 +49,7 @@ xbps_write_metadata_pkg()
 			gtk_iconcache_dirs font_dirs dkms_modules provides \
 			kernel_hooks_version conflicts pycompile_dirs \
 			pycompile_module systemd_services make_dirs \
-			run_depends shlib_depends
+			run_depends shlib_depends mutable_files
 		. $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template
 		pkgname=${subpkg}
 		set_tmpl_common_vars
@@ -257,6 +257,14 @@ _EOF
 		echo "<key>sha256</key>" >> $TMPFPLIST
 		echo "<string>$(${XBPS_DIGEST_CMD} "$f")</string>"  \
 			>> $TMPFPLIST
+		for i in ${mutable_files}; do
+			[ "$j" = "$i" ] && found=1 && break
+		done
+		if [ -n "$found" ]; then
+			echo "<key>mutable</key>" >>$TMPFPLIST
+			echo "<true/>" >>$TMPFPLIST
+			unset found
+		fi
 		echo "</dict>" >> $TMPFPLIST
 	done
 	echo "</array>" >> $TMPFPLIST

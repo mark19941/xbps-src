@@ -1,3 +1,13 @@
+v16:
+ * Try harder when resolving every component in every symlink, emulate
+   'readlink -f' which doesn't work if target files aren't available.
+ * New [optional] var for templates: 'mutable_files'. This accepts a file
+   list to specify some files that could be modified once a binary package
+   has been installed; such example could be the kernel package and
+   its files "modules.dep and modules.symbols" that could be modified when
+   a new external module has been built (from virtualbox for example).
+   Please note that this only will have effect with XBPS>=0.12.
+
 v15:
  * Remove -Wl,-zdefs from XBPS_LDFLAGS. Too many packages are broken with
    that enabled, and there's not enough time to fix all them.
