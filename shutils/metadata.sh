@@ -73,6 +73,24 @@ xbps_write_metadata_pkg()
 	xbps_write_metadata_pkg_real
 }
 
+canonicalize_symlink()
+{
+	local lnk="$1" lnkat dirat
+
+	# 1: every component must exist
+	lnkat=$(readlink -f "$lnk")
+	if [ -n "$lnkat" ]; then
+		echo "$lnkat"
+		return 0
+	fi
+
+	# 2: if target is a symlink, follow again.
+	lnkat=$(readlink "$lnk")
+	if [ -h "${DESTDIR}/${lnkat}" ]; then
+		canonicalize_symlink "${DESTDIR}/${lnkat}"
+	fi
+}
+
 #
 # This function writes the metadata files into package's destdir,
 # these will be used for binary packages.
@@ -207,10 +225,14 @@ _EOF
 		echo "<key>file</key>" >> $TMPFPLIST
 		echo "<string>$j</string>" >> $TMPFPLIST
 		echo "<key>target</key>" >> $TMPFPLIST
-		lnk=$(readlink -f "$f"|sed -e "s|${DESTDIR}||")
-		if [ -z "$lnk" -o "$lnk" = "" ]; then
-			lnk=$(readlink "$f"|sed -e "s|${DESTDIR}||")
+		lnk=$(readlink -f "$f")
+		if [ -z "$lnk" ]; then
+			lnk=$(canonicalize_symlink "$f")
+			if [ -z "$lnk" ]; then
+				lnk=$(readlink "$f")
+			fi
 		fi
+		lnk=$(echo "$lnk"|sed -e "s|${DESTDIR}||")
 		echo "<string>$lnk</string>" >> $TMPFPLIST
 		echo "</dict>" >> $TMPFPLIST
 	done
