@@ -1,3 +1,7 @@
+v17:
+ * Fixed a bug that made all pkgs contain INSTALL/REMOVE scripts even
+   if they aren't necessary.
+
 v16:
  * Try harder when resolving every component in every symlink, emulate
    'readlink -f' which doesn't work if target files aren't available.

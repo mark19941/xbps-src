@@ -1,5 +1,5 @@
 #-
-# Copyright (c) 2009-2011 Juan Romero Pardines.
+# Copyright (c) 2009-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -314,6 +314,11 @@ _EOF
 		printf "\t;;\n" >> $tmpf
 		echo "esac" >> $tmpf
 		echo >> $tmpf
+	fi
+
+	if [ -z "$triggers" -a ! -f "$action_file" ]; then
+		rm -f $tmpf
+		return 0
 	fi
 
 	case "$action" in
