@@ -1,6 +1,6 @@
 #!/bin/sh
 #-
-# Copyright (c) 2010-2011 Juan Romero Pardines.
+# Copyright (c) 2010-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -124,10 +124,18 @@ install_src_phase()
 			run_func do_install
 			if [ $? -eq 0 ]; then
 				touch -f ${wrksrc}/.xbps_do_install_${pkgname}_done
+				# Remove empty directories by default.
+				for f in $(find ${DESTDIR} -depth -type d); do
+					rmdir $f 2>/dev/null && msg_warn "removed empty dir: ${f##${DESTDIR}}\n"
+				done
 			fi
 		else
 			msg_warn "$pkgver: skipping '$pkgname' subpkg, already installed into destdir.\n"
 		fi
+	done
+	# Remove empty directories by default.
+	for f in $(find ${DESTDIR} -depth -type d); do
+		rmdir $f 2>/dev/null && msg_warn "removed empty dir: ${f##${DESTDIR}}\n"
 	done
 	touch -f $XBPS_INSTALL_DONE
 }

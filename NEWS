@@ -1,3 +1,6 @@
+v18:
+ * Removed empty directories for main pkg and all its subpkgs.
+
 v17:
  * Fixed a bug that made all pkgs contain INSTALL/REMOVE scripts even
    if they aren't necessary.
