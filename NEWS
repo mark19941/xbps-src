@@ -1,4 +1,7 @@
 v18:
+ * Disabled automatic revision bump due to unmatched changes in required
+   shared libraries (.rshlibs files). The user must find out why
+   the shlibs do not match anymore and revbump manually if necessary.
  * Removed empty directories for main pkg and all its subpkgs.
 
 v17:

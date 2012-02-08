@@ -1,5 +1,5 @@
 #-
-# Copyright (c) 2010-2011 Juan Romero Pardines.
+# Copyright (c) 2010-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -218,24 +218,17 @@ verify_rundeps()
 		exec 0<&3 # restore stdin
 	fi
 
-	if [ -n "$broken" ]; then
-		msg_warn "$pkgver: shlibs changed... package has been revbumped!\n"
-		_rev=$(egrep '^revision=.*' $tmplf)
-		if [ -n "${_rev}" ]; then
-			if [ -z "$revbumped" ]; then
-				readonly newrev=$((${_rev#revision=} + 1))
-				sed -i "s/^revision=.*$/revision=${newrev}/" $tmplf
-				export revision=${newrev}
-				export pkgver="${pkgname}-${version}_${revision}"
-				revbumped=1
-			fi
-		else
-			if [ -z "$revbumped" ]; then
-				sed -i "/^short_desc=.*$/irevision=1" $tmplf
-				export revision=1
-				export pkgver="${pkgname}-${version}_${revision}"
-				revbumped=1
-			fi
-		fi
-	fi
+	[ -z "$broken" ] && return 0
+
+	# ERROR shlibs unmatched.
+	msg_red "$pkgver: required run-time shared libraries do not match!\n"
+	msg_red "  Please check why required shared libraries were modified and bump\n"
+	msg_red "  revision number if necessary in package's template file.\n"
+	msg_red "  Possible reasons:\n"
+	msg_red "   - A package was detected in configure that added new features.\n"
+	msg_red "   - A package wasn't detected in configure that removed some features.\n"
+	msg_red "   - A required package that was used in previous build is not being used.\n"
+	msg_red "   - A required package bumped the major version of any of its SONAMEs.\n"
+	msg_red "  If you don't know what to do please contact the package maintainer.\n"
+	msg_error "$pkgver: can't continue because required shlibs do not match.\n"
 }
