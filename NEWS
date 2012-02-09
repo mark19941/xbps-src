@@ -1,4 +1,7 @@
 v18:
+ * Improved stow code: only files that were successfully stowed into
+   the masterdir can now be unstowed, therefore avoiding the risk of
+   unstowing files not owned by the same package.
  * Disabled automatic revision bump due to unmatched changes in required
    shared libraries (.rshlibs files). The user must find out why
    the shlibs do not match anymore and revbump manually if necessary.
