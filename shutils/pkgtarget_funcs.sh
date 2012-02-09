@@ -1,5 +1,5 @@
 #-
-# Copyright (c) 2008-2011 Juan Romero Pardines.
+# Copyright (c) 2008-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -141,11 +141,12 @@ install_pkg()
 	# Strip binaries/libraries.
 	strip_files
 
-	# Always write metadata to package's destdir.
+	# Write metadata to package's destdir.
 	trap 'remove_pkgdestdir_sighandler $pkgname $KEEP_AUTODEPS' INT
 	xbps_write_metadata_pkg
 	if [ $? -ne 0 ]; then
 		msg_red "cannot write package metadata for '$pkgname'!\n"
+		remove_pkgdestdir_sighandler $pkgname
 		trap - INT
 		return 1
 	fi
