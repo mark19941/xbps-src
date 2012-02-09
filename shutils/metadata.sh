@@ -55,6 +55,7 @@ xbps_write_metadata_pkg()
 		set_tmpl_common_vars
 		verify_rundeps ${DESTDIR}
 		xbps_write_metadata_pkg_real
+		verify_flist
 	done
 
 	if [ -n "$build_style" -a "$build_style" = "meta-template" -a -z "${run_depends}" ]; then
@@ -71,6 +72,7 @@ xbps_write_metadata_pkg()
 	# Verify pkg deps.
 	verify_rundeps ${DESTDIR}
 	xbps_write_metadata_pkg_real
+	verify_flist
 }
 
 canonicalize_symlink()
