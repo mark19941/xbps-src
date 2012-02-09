@@ -1,5 +1,5 @@
 #-
-# Copyright (c) 2008-2011 Juan Romero Pardines.
+# Copyright (c) 2008-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -117,7 +117,7 @@ install_pkg_deps()
 	local curpkg="$1"
 	local curpkgname=$(${XBPS_PKGDB_CMD} getpkgdepname "$1")
 	local saved_prevpkg=$(${XBPS_PKGDB_CMD} getpkgdepname "$2")
-	local j jver jname reqver
+	local j jver jname reqver rval
 
 	[ -z "$curpkg" -o -z "$curpkgname" ] && return 2
 
@@ -127,7 +127,8 @@ install_pkg_deps()
 	fi
 
 	check_pkgdep_matched "$curpkg"
-	[ $? -eq 0 ] && return 0
+	rval=$?
+	[ $rval -eq 0 ] && return 0
 
 	if [ -z "$saved_prevpkg" -a -n "${_ORIGINPKG}" ]; then
 		msg_normal "Installing ${_ORIGINPKG} dependency: '$curpkg'.\n"
@@ -135,16 +136,17 @@ install_pkg_deps()
 		msg_normal "Installing $saved_prevpkg dependency: '$curpkg'.\n"
 	fi
 
-	setup_subpkg_tmpl "${curpkgname}"
-	check_pkgdep_matched "${curpkg}"
-	if [ $? -eq 1 ]; then
+	setup_tmpl "${curpkgname}"
+	if [ $rval -eq 1 ]; then
 		if [ -z "$XBPS_PREFER_BINPKG_DEPS" ]; then
+			setup_subpkg_tmpl "${curpkgname}"
 			local iver=$($XBPS_PKGDB_CMD version "${curpkgname}")
 			${XBPS_PKGDB_CMD} pkgmatch "${pkgver}" "${curpkg}"
 			if [ $? -eq 1 ]; then
 				if [ -n "$iver" ]; then
 					msg_normal "Installed package ${curpkgname}-${iver} doesn't match ${curpkg}, reinstalling...\n"
 					remove_pkg
+					setup_tmpl "${sourcepkg}"
 				fi
 			else
 				if [ -z "$saved_prevpkg" -a -n "${_ORIGINPKG}" ]; then
