@@ -1,4 +1,6 @@
 v18:
+ * If writing package's metadata failed, also remove the package destdir
+   directory; avoiding the risk of unwanted files on it.
  * Improved stow code: only files that were successfully stowed into
    the masterdir can now be unstowed, therefore avoiding the risk of
    unstowing files not owned by the same package.
