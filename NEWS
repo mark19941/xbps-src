@@ -1,9 +1,4 @@
 v18:
- * New flist code: each pkg now contains (in the srcpkgs tree) a flist
-   file that lists files/links installed by template's version. Use this
-   to check for changes on them and error out if new files on destdir or
-   obsolete files in flist are found. This will help to create (somewhat)
-   successful and reproducable binary packages in all systems.
  * If writing package's metadata failed, also remove the package destdir
    directory; avoiding the risk of unwanted files on it.
  * Improved stow code: only files that were successfully stowed into
