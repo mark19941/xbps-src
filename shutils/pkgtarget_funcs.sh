@@ -146,7 +146,7 @@ install_pkg()
 	xbps_write_metadata_pkg
 	if [ $? -ne 0 ]; then
 		msg_red "cannot write package metadata for '$pkgname'!\n"
-		remove_pkgdestdir_sighandler $pkgname $KEEP_AUTODEPS
+		remove_pkgdestdir_sighandler $pkgname
 		trap - INT
 		return 1
 	fi
