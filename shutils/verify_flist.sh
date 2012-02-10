@@ -49,7 +49,7 @@ verify_flist()
 	fi
 
 	# Check for new files/links in DESTDIR.
-	msg_normal "$pkgver: checking for flist changes...\n"
+	msg_normal "$pkgver: checking for new files in destdir, please wait...\n"
 
 	for f in $(cat $metadir/flist); do
 		unset found
@@ -64,12 +64,12 @@ verify_flist()
 		# file unmatched, update flist.
 		if [ -z "$found" ]; then
 			flist_modified=1
-			echo "$f" >>$flist
-			echo "  Added new file to flist: $f"
+			echo "   $f"
 		fi
 	done
 
 	# Check for obsolete files/links found in $pkgname.flist.
+	msg_normal "$pkgver: checking for obsolete files in flist, please wait...\n"
 	for f in $(cat $flist); do
 		unset found
 		for j in $(cat $metadir/flist); do
@@ -81,9 +81,7 @@ verify_flist()
 		if [ -z "$found" ]; then
 			# file in flist but not in DESTDIR.
 			flist_modified=1
-			local pat=$(echo "$f"|sed -e 's|\/|\\/|g')
-			sed -i "/^$pat/d" $flist
-			echo "  Removed obsolete file from flist: $f"
+			echo "   $f"
 		fi
 	done
 
