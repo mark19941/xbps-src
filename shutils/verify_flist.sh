@@ -32,7 +32,7 @@ verify_flist()
 {
 	local metadir=$DESTDIR/var/db/xbps/metadata/$pkgname
 	local flist=$XBPS_SRCPKGDIR/$pkgname/$pkgname.flist
-	local f j x found flist_modified
+	local f j found flist_modified
 
 	[ -z "$pkgname" ] && return 1
 	[ "$build_style" = "meta-template" ] && return 0
@@ -55,22 +55,12 @@ verify_flist()
 		unset found
 		# ignore directories.
 		[ -d $DESTDIR/$f ] && continue
-		# Check in shared flist.
 		for j in $(cat $flist); do
 			if [ "$f" = "$j" ]; then
 				found=1
 				break
 			fi
 		done
-		# Check in arch flist.
-		if [ -f "${flist}.${XBPS_MACHINE}" ]; then
-			for j in $(cat ${flist}.${XBPS_MACHINE}); do
-				if [ "$f" = "$j" ]; then
-					found=1
-					break
-				fi
-			done
-		fi
 		# file unmatched, update flist.
 		if [ -z "$found" ]; then
 			flist_modified=1
@@ -82,23 +72,12 @@ verify_flist()
 	msg_normal "$pkgver: checking for obsolete files in flist, please wait...\n"
 	for f in $(cat $flist); do
 		unset found
-		if [ -f "${flist}.${XBPS_MACHINE}" ]; then
-			for x in $(cat ${flist}.${XBPS_MACHINE}); do
-				for j in $(cat $metadir/flist); do
-					if [ "$f" = "$j" -o "$x" = "$j" ]; then
-						found=1
-						break
-					fi
-				done
-			done
-		else
-			for j in $(cat $metadir/flist); do
-				if [ "$f" = "$j" ]; then
-					found=1
-					break
-				fi
-			done
-		fi
+		for j in $(cat $metadir/flist); do
+			if [ "$f" = "$j" ]; then
+				found=1
+				break
+			fi
+		done
 		if [ -z "$found" ]; then
 			# file in flist but not in DESTDIR.
 			flist_modified=1
