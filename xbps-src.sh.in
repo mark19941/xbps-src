@@ -149,6 +149,9 @@ Targets:
   Show required dependencies for <pkgname>. If <build> is set, only build time
   dependencies are shown, if <run> is set only run time dependencies are shown.
 
+ show-deps-dirs <pkgname>
+  Show the directories for required build dependencies of <pkgname>.
+
  show-files <pkgname>
   Show package files from <pkgname>. Package must be fully installed
   into <masterdir> for this to work (stowed).
@@ -530,6 +533,10 @@ show-deps)
 		msg_error "missing dependency type: build or run.\n"
 	fi
 	show_tmpl_deps ${_optarget}
+	;;
+show-deps-dirs)
+	setup_subpkg_tmpl ${_pkgname}
+	show_tmpl_bdeps_dirs ${pkgname}
 	;;
 show-files)
 	list_pkg_files ${_pkgname}

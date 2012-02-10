@@ -1,5 +1,5 @@
 #-
-# Copyright (c) 2008-2011 Juan Romero Pardines.
+# Copyright (c) 2008-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -65,6 +65,16 @@ show_tmpl()
 		[ -n "$i" ] && echo "conflicts:	$i"
 	done
 	echo "long_desc: $long_desc"
+}
+
+show_tmpl_bdeps_dirs()
+{
+	local f pkgn
+
+	for f in ${build_depends}; do
+		pkgn=$($XBPS_PKGDB_CMD getpkgdepname "$f")
+		echo "$XBPS_SRCPKGDIR/$pkgn"
+	done
 }
 
 show_tmpl_deps()
