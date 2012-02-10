@@ -109,10 +109,6 @@ install_src_phase()
 		else
 			spkgrev="${subpkg}-${version}"
 		fi
-		check_installed_pkg ${spkgrev}
-		if [ $? -eq 0 -a -z "$BOOTSTRAP_PKG_REBUILD" ]; then
-			continue
-		fi
 		msg_normal "$pkgver: preparing subpackage '${subpkg}'...\n"
 		if [ ! -f $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template ]; then
 			msg_error "Cannot find '${subpkg}' subpkg build template!\n"
