@@ -42,11 +42,11 @@ install_pkg_from_repos()
 			msg_normal_append "not found, building from source...\n"
 			return 2
 		fi
-		_pkgver=$($XBPS_REPO_CMD} -oversion show ${_pkgdepname})
+		_pkgver=$($XBPS_REPO_CMD -oversion show ${_pkgdepname})
 		msg_normal_append "found ${_pkgver} "
 		$XBPS_PKGDB_CMD pkgmatch "${_pkgdepname}-${_pkgver}" "${1}"
 		if [ $? -eq 1 ]; then
-			_repoloc=$($XBPS_REPO_CMD} -orepository show ${_pkgdepname})
+			_repoloc=$($XBPS_REPO_CMD -orepository show ${_pkgdepname})
 			msg_normal_append "(${_repoloc})\n"
 		else
 			msg_normal_append "not matched, building from source...\n"
@@ -57,7 +57,8 @@ install_pkg_from_repos()
 	esac
 
 	tmplogf=$(mktemp)
-	$FAKEROOT_CMD $FAKEROOT_CMD_ARGS $XBPS_BIN_CMD -Ay install ${_pkgdepname} >$tmplogf 2>&1
+	$FAKEROOT_CMD $FAKEROOT_CMD_ARGS $XBPS_BIN_CMD -Ay \
+		install ${_pkgdepname} >$tmplogf 2>&1
 	rval=$?
 	if [ $rval -ne 0 -a $rval -ne 6 ]; then
 		# xbps-bin can return:
