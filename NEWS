@@ -1,3 +1,9 @@
+v19:
+ * Don't strip static libraries with --strip-unneeded, this broke
+   a lot of static binaries that used pthreads.
+ * Added new [optional] var for templates: 'nostrip_files'. This accepts
+   a list of filenames to not strip, i.e nostrip_files="foo.so.0.0 blah".
+
 v18:
  * If writing package's metadata failed, also remove the package destdir
    directory; avoiding the risk of unwanted files on it.

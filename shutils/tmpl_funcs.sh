@@ -46,7 +46,7 @@ reset_tmpl_vars()
 			gconf_entries gconf_schemas stow_copy stow_copy_files \
 			pycompile_dirs pycompile_module systemd_services  \
 			homepage license kernel_hooks_version makejobs \
-			mutable_files \
+			mutable_files nostrip_files \
 			SUBPKG XBPS_EXTRACT_DONE XBPS_CONFIGURE_DONE \
 			XBPS_BUILD_DONE XBPS_INSTALL_DONE FILESDIR DESTDIR \
 			SRCPKGDESTDIR PATCHESDIR CFLAGS CXXFLAGS CPPFLAGS \
