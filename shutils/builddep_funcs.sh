@@ -28,11 +28,21 @@
 #
 #	xbps-bin -Ay install "pattern"
 #
+# Returns 0 if package already installed or installed successfully. 1 if
+# package not found in repos.
+#
 install_pkg_from_repos()
 {
 	local rval tmplogf tmpdepf
 
 	msg_normal "$pkgver: installing '$1'... "
+
+	# Check if pkg is already installed.
+	check_installed_pkg "$1"
+	if [ $? -eq 0 ]; then
+		msg_normal_append "already installed.\n"
+		return 0
+	fi
 
 	case "${XBPS_VERSION}" in
 	0.[1-9][1-9]*) # XBPS >= 0.11
@@ -40,7 +50,7 @@ install_pkg_from_repos()
 		$XBPS_REPO_CMD -oversion show ${_pkgdepname} >/dev/null 2>&1
 		if [ $? -ne 0 ]; then
 			msg_normal_append "not found, building from source...\n"
-			return 2
+			return 1
 		fi
 		_pkgver=$($XBPS_REPO_CMD -oversion show ${_pkgdepname})
 		msg_normal_append "found ${_pkgver} "
@@ -50,7 +60,7 @@ install_pkg_from_repos()
 			msg_normal_append "(${_repoloc})\n"
 		else
 			msg_normal_append "not matched, building from source...\n"
-			return 2
+			return 1
 		fi
 		;;
 	*)	msg_normal_append "\n";;
@@ -60,13 +70,13 @@ install_pkg_from_repos()
 	$FAKEROOT_CMD $FAKEROOT_CMD_ARGS $XBPS_BIN_CMD -Ay \
 		install ${_pkgdepname} >$tmplogf 2>&1
 	rval=$?
-	if [ $rval -ne 0 -a $rval -ne 6 ]; then
+	if [ $rval -ne 0 -a $rval -ne 2 -a $rval -ne 17 -a $rval -ne 95 ]; then
 		# xbps-bin can return:
 		#
-		#	SUCCESS (0): package installed successfully.
-		#	ENOENT  (2): package missing in repositories.
-		#	EEXIST  (6): package already installed.
-		#	ENODEV (19): package depends on missing dependencies.
+		#	SUCCESS  (0): package installed successfully.
+		#	ENOENT   (2): package missing in repositories.
+		#	EEXIST  (17): package already installed.
+		#	ENOTSUP (95): no repositories registered.
 		#
 		# Any other error returned is critical.
 		autoremove_pkg_dependencies $KEEP_AUTODEPS
@@ -76,6 +86,7 @@ install_pkg_from_repos()
 	fi
 	rm -f $tmplogf
 
+	[ $rval -ne 0 ] && rval=1
 	return $rval
 }
 
@@ -207,7 +218,7 @@ install_pkg_deps()
 		if [ $? -eq 255 ]; then
 			# xbps-bin returned unexpected error
 			return $?
-		elif [ $? -eq 2 ]; then
+		elif [ $? -eq 1 ]; then
 			# Package not found, build from source.
 			install_pkg "${curpkgname}"
 			if [ $? -eq 1 ]; then
@@ -274,8 +285,8 @@ install_dependencies_pkg()
 		msg_normal "$pkgver: installing dependencies from repositories ...\n"
 		for i in ${missing_deps}; do
 			install_pkg_from_repos "${i}"
-			if [ $? -eq 2 ]; then
-				# ENOENT; install from source
+			if [ $? -eq 1 ]; then
+				# package not found in repos, install from source.
 				install_pkg_deps "${i}" "${pkg}" || return 1
 				curpkgdepname="$($XBPS_PKGDB_CMD getpkgdepname ${i})"
 				setup_tmpl $curpkgdepname
