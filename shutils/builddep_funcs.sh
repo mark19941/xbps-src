@@ -38,7 +38,7 @@ install_pkg_from_repos()
 	msg_normal "$pkgver: installing '$1'... "
 
 	# Check if pkg is already installed.
-	check_installed_pkg "$1"
+	check_pkgdep_matched "$1"
 	if [ $? -eq 0 ]; then
 		msg_normal_append "already installed.\n"
 		return 0
