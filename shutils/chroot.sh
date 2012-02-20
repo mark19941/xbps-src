@@ -134,7 +134,6 @@ prepare_chroot()
 	fi
 
 	# Create some required files.
-	cp -f /etc/mtab $XBPS_MASTERDIR/etc
 	cp -f /etc/resolv.conf $XBPS_MASTERDIR/etc
 	cp -f /etc/services $XBPS_MASTERDIR/etc
 	[ -f /etc/localtime ] && cp -f /etc/localtime $XBPS_MASTERDIR/etc
