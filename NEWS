@@ -1,3 +1,9 @@
+v20:
+ * /etc/mtab is no longer copied to the masterdir; avoids a warning.
+ * Improved package dependencies installation from repositories, this
+   now handles all returned values from xbps-bin and checks if a
+   dependency is already installed before querying the repositories.
+
 v19:
  * Don't strip static libraries with --strip-unneeded, this broke
    a lot of static binaries that used pthreads.
