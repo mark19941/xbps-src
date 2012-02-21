@@ -1,3 +1,9 @@
+v21:
+ * Improved output for the 'checkvers' target.
+ * New target 'repo-checkvers' to compare newest package version
+   in repository against the version in srcpkgs.
+ * Fixed a regression in install_pkg_from_repos() added in v20.
+
 v20:
  * /etc/mtab is no longer copied to the masterdir; avoids a warning.
  * Improved package dependencies installation from repositories, this
