@@ -142,6 +142,10 @@ Targets:
  remove [pkgname]
   Remove package completely from <destdir> and <masterdir>.
 
+ repo-checkvers
+  Compares available version from local repository against version in
+  srcpkgs and tells you when a binary package is outdated.
+
  show [pkgname]
   Show information for the specified package.
 
@@ -518,6 +522,9 @@ remove)
         else
 		remove_pkg
 	fi
+	;;
+repo-checkvers)
+	check_repository_packages
 	;;
 show)
 	if [ -z "${_pkgname}" ]; then
