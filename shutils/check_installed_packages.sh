@@ -26,11 +26,6 @@
 # Check installed package versions against the source packages repository.
 #
 
-# A simple wrapper to speed it up a bit.
-Add_dependency() {
-	:
-}
-
 check_installed_packages()
 {
 	local f lpkgn lpkgver rv srcpkgver srcver
@@ -52,15 +47,12 @@ check_installed_packages()
 		fi
 		if [ -n "$revision" ]; then
 			srcver="${version}_${revision}"
-			srcpkgver="${lpkgn}-${version}_${revision}"
 		else
 			srcver="${version}"
-			srcpkgver="${lpkgn}-${version}"
 		fi
-		${XBPS_CMPVER_CMD} ${f} ${srcpkgver}
-		rv=$?
-		if [ $rv -eq 255 ]; then
-			echo "${lpkgn} ${lpkgver} ${srcver}"
+		${XBPS_CMPVER_CMD} ${lpkgver} ${srcver}
+		if [ $? -eq 255 ]; then
+			echo "pkgname: ${lpkgn} masterdir: ${lpkgver} srcpkgs: ${srcver}"
 		fi
 		unset pkgname version revision
 	done
