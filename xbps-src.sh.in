@@ -39,8 +39,7 @@ fi
 
 XBPS_CONFIG_FILE=${XBPS_ETCDIR}/xbps-src.conf
 PROGNAME=$(basename $0)
-FAKEROOT_CMD=/usr/bin/fakeroot
-FAKEROOT_CMD_ARGS="--"
+FAKEROOT_CMD="fakeroot --"
 SUDO_CMD=sudo
 CHROOT_CMD=chroot
 XBPS_MACHINE=$(uname -m)
@@ -351,10 +350,7 @@ if [ "$(id -u)" -eq 0 ]; then
 	# disable sudo and fakeroot if uid==0
 	CHROOT_CMD="chroot"
 	unset SUDO_CMD
-	if [ -n "$IN_CHROOT" ]; then
-		unset FAKEROOT_CMD
-		unset FAKEROOT_CMD_ARGS
-	fi
+	[ -n "$IN_CHROOT" ] && unset FAKEROOT_CMD
 fi
 
 #
@@ -422,7 +418,7 @@ bootstrap-update)
 	if [ -z "$IN_CHROOT" ]; then
 		xbps_chroot_handler ${target} dummy
 	else
-		${FAKEROOT_CMD} ${FAKEROOT_CMD_ARGS} ${XBPS_BIN_CMD} -y autoupdate
+		${FAKEROOT_CMD} ${XBPS_BIN_CMD} -y autoupdate
 	fi
 	;;
 build-pkg)

@@ -67,8 +67,7 @@ install_pkg_from_repos()
 	esac
 
 	tmplogf=$(mktemp)
-	$FAKEROOT_CMD $FAKEROOT_CMD_ARGS $XBPS_BIN_CMD -Ay \
-		install ${_pkgdepname} >$tmplogf 2>&1
+	$FAKEROOT_CMD $XBPS_BIN_CMD -Ay install ${_pkgdepname} >$tmplogf 2>&1
 	rval=$?
 	if [ $rval -ne 0 -a $rval -ne 2 -a $rval -ne 17 -a $rval -ne 95 ]; then
 		# xbps-bin can return:
@@ -96,7 +95,7 @@ autoremove_pkg_dependencies()
 
 	[ -n "$1" ] && return 0
 
-	cmd="${FAKEROOT_CMD} ${FAKEROOT_CMD_ARGS} ${XBPS_BIN_CMD}"
+	cmd="${FAKEROOT_CMD} ${XBPS_BIN_CMD}"
 
 	# If XBPS_PREFER_BINPKG_DEPS is set, we should remove those
 	# package dependencies installed by the target package, do it.

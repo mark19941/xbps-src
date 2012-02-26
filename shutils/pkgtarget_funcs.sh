@@ -134,8 +134,7 @@ install_pkg()
 		MASTERDIR="${XBPS_MASTERDIR}"			\
 		BOOTSTRAP_PKG_REBUILD=$BOOTSTRAP_PKG_REBUILD	\
 		CONFIG_FILE=${XBPS_CONFIG_FILE}			\
-		${FAKEROOT_CMD} ${FAKEROOT_CMD_ARGS}		\
-		${XBPS_LIBEXECDIR}/doinst-helper.sh 		\
+		${FAKEROOT_CMD} ${XBPS_LIBEXECDIR}/doinst-helper.sh \
 		${curpkgn} || return $?
 
 	# Strip binaries/libraries.
