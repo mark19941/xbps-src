@@ -95,8 +95,7 @@ that will be used in the chroot, i.e a bootstrap:
 	$ xbps-src bootstrap
 
 This will build all required packages via fakeroot in masterdir, therefore you
-can run it as normal user (unless you had disabled XBPS_USE_CAPABILITIES in
-the `xbps-src.conf` configuration file). Once the bootstrap has been built and
+can run it as normal user. Once the bootstrap packages have been built and
 installed into the 'masterdir' all packages will be built within the chroot.
 
 Alternatively if you are using Void GNU/Linux you can install a bootstrap

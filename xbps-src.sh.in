@@ -338,10 +338,7 @@ done
 #
 check_reqhost_utils
 
-#
-# Fix up some vars when XBPS_USE_CAPABILITIES is set.
-#
-if [ -z "$IN_CHROOT" -a -n "$XBPS_USE_CAPABILITIES" ]; then
+if [ -z "$IN_CHROOT" ]; then
 	CHROOT_CMD="@@XBPS_INSTALL_LIBEXECDIR@@/capchroot"
 	unset SUDO_CMD
 fi
@@ -349,8 +346,7 @@ fi
 if [ "$(id -u)" -eq 0 ]; then
 	# disable sudo and fakeroot if uid==0
 	CHROOT_CMD="chroot"
-	unset SUDO_CMD
-	[ -n "$IN_CHROOT" ] && unset FAKEROOT_CMD
+	unset SUDO_CMD FAKEROOT_CMD
 fi
 
 #
