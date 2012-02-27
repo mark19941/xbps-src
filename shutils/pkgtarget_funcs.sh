@@ -47,6 +47,8 @@ _build_pkg_and_update_repos() {
 }
 
 install_pkg() {
+	local target="$1"
+
 	[ -z "$pkgname" ] && return 1
 
 	# Install dependencies required by this package.
@@ -72,12 +74,12 @@ install_pkg() {
 
 	if [ ! -f "$XBPS_CONFIGURE_DONE" ]; then
 		configure_src_phase || return $?
-		[ "$INSTALL_TARGET" = "configure" ] && return 0
+		[ "$target" = "configure" ] && return 0
 	fi
 
 	if [ ! -f "$XBPS_BUILD_DONE" ]; then
 		build_src_phase || return $?
-		[ "$INSTALL_TARGET" = "build" ] && return 0
+		[ "$target" = "build" ] && return 0
 	fi
 
 	# Install pkg into destdir.
@@ -103,9 +105,22 @@ install_pkg() {
 		# no bootstrap case: remove autodeps, build binpkg,
 		# remove pkg from destdir and remove wrksrc.
 		remove_pkg_autodeps $KEEP_AUTODEPS || return $?
+
+		# If install-destdir specified, we are done.
+		if [ "$target" = "install-destdir" ]; then
+			if [ "$pkgname" = "${_ORIGINPKG}" ]; then
+				exit 0
+			fi
+		fi
 		_build_pkg_and_update_repos
 		remove_pkg || return $?
 	else
+		# If install-destdir specified, we are done.
+		if [ "$target" = "install-destdir" ]; then
+			if [ "$pkgname" = "${_ORIGINPKG}" ]; then
+				exit 0
+			fi
+		fi
 		# bootstrap case: stow, build binpkg and remove wrksrc.
 		stow_pkg_handler stow || return $?
 		_build_pkg_and_update_repos
@@ -123,7 +138,7 @@ install_pkg() {
 # Removes a currently installed package (unstow + removed from destdir).
 #
 remove_pkg() {
-	local subpkg= found= pkg=
+	local subpkg= found= pkg= target="$1"
 
 	[ -z $pkgname ] && msg_error "unexistent package, aborting.\n"
 
@@ -156,7 +171,7 @@ remove_pkg() {
 	[ -f $XBPS_POST_INSTALL_DONE ] && rm -f $XBPS_POST_INSTALL_DONE
 	[ -f $XBPS_INSTALL_DONE ] && rm -f $XBPS_INSTALL_DONE
 
-	[ -n "$IN_CHROOT" ] && return 0
+	[ -n "$IN_CHROOT" -o "$target" = "remove-destdir" ] && return 0
 
 	stow_pkg_handler unstow || return $?
 	[ -n "$found" ] && return 0

@@ -122,6 +122,14 @@ Targets: (only one may be specified)
    Fetches the "xbps-packages" repository from XBPS_SRCPKGS_REPOURL settting
    in xbps-src.conf into XBPS_DISTDIR.
 
+ install-destdir [pkgname]
+   Install target package into <destdir> but not building the binary package
+   and not removing build directory for inspection purposes.
+
+ remove-destdir [pkgname]
+   Remove target package from <destdir>. If <pkgname>-<version> is not matched
+   from build template nothing is removed.
+
  make-repoidx
    Build a package index for the local repository associated with the
    master directory <masterdir>. By default set to <masterdir/host/binpkgs.
@@ -312,6 +320,10 @@ else
 	fi
 fi
 
+if [ -f $XBPS_MASTERDIR/.xbps_perms_done ]; then
+	CHROOT_READY=1
+fi
+
 #
 # Main switch.
 #
@@ -335,7 +347,7 @@ bootstrap)
 	setup_tmpl ${_ORIGINPKG} && install_pkg
 	;;
 bootstrap-update)
-	if [ -z "$IN_CHROOT" ]; then
+	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
 		chroot_handler ${target} dummy
 	else
 		${FAKEROOT_CMD} ${XBPS_BIN_CMD} -y autoupdate
@@ -356,7 +368,7 @@ clean)
 	remove_tmpl_wrksrc $wrksrc
 	;;
 remove-autodeps)
-	if [ -z "$IN_CHROOT" ]; then
+	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
 		chroot_handler clean-autodeps dummy
 	else
 		pkgver=xbps-src
@@ -384,18 +396,26 @@ fetch-srcpkgs)
 		git clone $XBPS_SRCPKGS_REPOURL $XBPS_DISTDIR
 	fi
 	;;
-build|configure|build-pkg)
+build|configure|install-destdir|build-pkg)
 	if [ -z "${_pkgname}" ]; then
 		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
 		_pkgname=$(basename_cwd)
 	fi
 	setup_tmpl ${_pkgname}
 	_ORIGINPKG="${_pkgname}"
-	if [ -z "$IN_CHROOT" ]; then
+	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
 		chroot_handler $target ${_ORIGINPKG} || exit $?
 	else
-		INSTALL_TARGET=$target install_pkg || exit $?
+		install_pkg "$target" || exit $?
 	fi
+	;;
+remove-destdir)
+	if [ -z "${_pkgname}" ]; then
+		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
+		_pkgname=$(basename_cwd)
+	fi
+	setup_tmpl ${_pkgname}
+	remove_pkg $target
 	;;
 list)
 	$XBPS_BIN_CMD list
