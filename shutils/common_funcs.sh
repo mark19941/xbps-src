@@ -26,8 +26,7 @@
 #
 # Common functions for xbps.
 #
-run_func_error()
-{
+run_func_error() {
 	local func="$1"
 
 	remove_pkgdestdir_sighandler ${pkgname} $KEEP_AUTODEPS
@@ -35,9 +34,8 @@ run_func_error()
 	msg_error "$pkgver: '$func' interrupted!\n"
 }
 
-remove_pkgdestdir_sighandler()
-{
-	local subpkg _pkgname="$1" _kwrksrc="$2"
+remove_pkgdestdir_sighandler() {
+	local subpkg= _pkgname="$1" _kwrksrc="$2"
 
 	setup_tmpl ${_pkgname}
 	[ -z "$sourcepkg" ] && return 0
@@ -59,12 +57,11 @@ remove_pkgdestdir_sighandler()
 		msg_red "$pkgver: removed files from DESTDIR...\n"
 	fi
 
-	autoremove_pkg_dependencies ${_kwrksrc}
+	remove_pkg_autodeps ${_kwrksrc}
 }
 
-run_func()
-{
-	local rval logpipe logfile
+run_func() {
+	local rval= logpipe= logfile=
 
 	[ -z "$1" ] && return 1
 
@@ -98,8 +95,7 @@ run_func()
 	return 255 # function not found.
 }
 
-msg_red()
-{
+msg_red() {
 	# error messages in bold/red
 	printf >&2 "\033[1m\033[31m"
 	if [ -n "$IN_CHROOT" ]; then
@@ -110,22 +106,17 @@ msg_red()
 	printf >&2 "\033[m"
 }
 
-msg_error()
-{
+msg_error() {
 	msg_red "$@"
-
 	exit 1
 }
 
-msg_error_nochroot()
-{
+msg_error_nochroot() {
 	printf >&2 "\033[1m\033[31m>= ERROR: $@\033[m"
-
 	exit 1
 }
 
-msg_warn()
-{
+msg_warn() {
 	# warn messages in bold/yellow
 	printf >&2 "\033[1m\033[33m"
 	if [ -n "$IN_CHROOT" ]; then
@@ -136,13 +127,11 @@ msg_warn()
 	printf >&2  "\033[m"
 }
 
-msg_warn_nochroot()
-{
+msg_warn_nochroot() {
 	printf >&2 "\033[1m\033[33m=> WARNING: $@\033[m"
 }
 
-msg_normal()
-{
+msg_normal() {
 	# normal messages in bold
 	printf "\033[1m"
 	if [ -n "$IN_CHROOT" ]; then
@@ -153,7 +142,6 @@ msg_normal()
 	printf "\033[m"
 }
 
-msg_normal_append()
-{
+msg_normal_append() {
 	printf "\033[1m$@\033[m"
 }

@@ -23,21 +23,10 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #-
 
-xbps_write_metadata_pkg()
-{
-	local subpkg spkgrev
+write_metadata() {
+	local subpkg=
 
 	for subpkg in ${subpackages}; do
-		if [ -n "${revision}" ]; then
-			spkgrev="${subpkg}-${version}_${revision}"
-		else
-			spkgrev="${subpkg}-${version}"
-		fi
-		check_installed_pkg ${spkgrev}
-		if [ $? -eq 0 -a -z "$DESTDIR_ONLY_INSTALL" ]; then
-			continue
-		fi
-
 		if [ ! -f $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template ]; then
 			msg_error "Cannot find subpkg '${subpkg}' build template!\n"
 		fi
@@ -54,28 +43,18 @@ xbps_write_metadata_pkg()
 		pkgname=${subpkg}
 		set_tmpl_common_vars
 		verify_rundeps ${DESTDIR}
-		xbps_write_metadata_pkg_real
+		write_metadata_real || return $?
 	done
 
-	if [ -n "$build_style" -a "$build_style" = "meta-template" -a -z "${run_depends}" ]; then
-		for spkg in ${subpackages}; do
-			if [ -n "${revision}" ]; then
-				spkgrev="${spkg}-${version}_$revision"
-			else
-				spkgrev="${spkg}-${version}"
-			fi
-			run_depends="${run_depends} ${spkgrev}"
-		done
-	fi
 	setup_tmpl ${sourcepkg}
 	# Verify pkg deps.
 	verify_rundeps ${DESTDIR}
-	xbps_write_metadata_pkg_real
+	write_metadata_real
+	return $?
 }
 
-canonicalize_symlink()
-{
-	local lnk="$1" lnkat dirat
+canonicalize_symlink() {
+	local lnk="$1" lnkat= dirat=
 
 	# 1: every component must exist
 	lnkat=$(readlink -f "$lnk")
@@ -95,10 +74,10 @@ canonicalize_symlink()
 # This function writes the metadata files into package's destdir,
 # these will be used for binary packages.
 #
-xbps_write_metadata_pkg_real()
-{
+write_metadata_real() {
 	local metadir=${DESTDIR}/var/db/xbps/metadata/$pkgname
-	local f i j found arch dirat lnkat newlnk lver TMPFLIST TMPFPLIST
+	local f= i= j= found= arch= dirat= lnkat= newlnk=
+	local lver= TMPFLIST= TMPFPLIST=
 	local fpattern="s|${DESTDIR}||g;s|^\./$||g;/^$/d"
 
 	if [ ! -d "${DESTDIR}" ]; then
@@ -477,10 +456,10 @@ _EOF
 		meta_install=${XBPS_SRCPKGDIR}/${pkgname}/INSTALL
 		meta_remove=${XBPS_SRCPKGDIR}/${pkgname}/REMOVE
 	fi
-	xbps_write_metadata_scripts_pkg install ${meta_install} || \
+	write_metadata_scripts install ${meta_install} || \
 		msg_error "$pkgname: failed to write INSTALL metadata file!\n"
 
-	xbps_write_metadata_scripts_pkg remove ${meta_remove} || \
+	write_metadata_scripts remove ${meta_remove} || \
 		msg_error "$pkgname: failed to write REMOVE metadata file!\n"
 
 	msg_normal "$pkgver: successfully created package metadata.\n"

@@ -1,5 +1,5 @@
 #-
-# Copyright (c) 2010 Juan Romero Pardines.
+# Copyright (c) 2010-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,9 +26,8 @@
 # Check installed package versions against the source packages repository.
 #
 
-check_installed_packages()
-{
-	local f lpkgn lpkgver rv srcpkgver srcver
+check_installed_packages() {
+	local f= lpkgn= lpkgver= rv= srcpkgver= srcver=
 
 	for f in $(${XBPS_BIN_CMD} list|awk '{print $1}'); do
 		lpkgn=$(${XBPS_PKGDB_CMD} getpkgname ${f})

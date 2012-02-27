@@ -27,9 +27,8 @@
 # Applies to the build directory all patches found in PATCHESDIR
 # (srcpkgs/$pkgname/patches).
 #
-_process_patch()
-{
-	local args _patch i=$1
+_process_patch() {
+	local args= _patch= i=$1
 
 	args="-Np0"
 	_patch=$(basename $i)
@@ -70,9 +69,8 @@ _process_patch()
 	fi
 }
 
-apply_tmpl_patches()
-{
-	local f
+apply_tmpl_patches() {
+	local f=
 
 	[ ! -d $PATCHESDIR ] && return 0
 

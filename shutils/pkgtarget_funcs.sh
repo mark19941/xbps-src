@@ -26,86 +26,41 @@
 #
 # Installs a pkg by reading its build template file.
 #
-make_repoidx()
-{
-	local f
+make_repoidx() {
+	local f=
 
-	case "${XBPS_VERSION}" in
-	# >= 0.11
-	0.[1-9][1-9]*)
-		for f in ${XBPS_MACHINE} noarch nonfree/${XBPS_MACHINE}; do
-			msg_normal "Updating pkg-index for local repository at:\n"
-			msg_normal " $XBPS_PACKAGESDIR/$f\n"
-			${XBPS_REPO_CMD} genindex ${XBPS_PACKAGESDIR}/${f} 2>/dev/null
-		done
-		;;
-	*)
-		msg_normal "Updating pkg-index for local repository at:\n"
-		msg_normal " $XBPS_PACKAGESDIR\n"
-		${XBPS_REPO_CMD} genindex ${XBPS_PACKAGESDIR} 2>/dev/null
-		;;
-	esac
+	for f in ${XBPS_MACHINE} noarch nonfree/${XBPS_MACHINE}; do
+		msg_normal "Updating repository index at:\n"
+		msg_normal " $XBPS_PACKAGESDIR/$f\n"
+		${XBPS_REPO_CMD} genindex ${XBPS_PACKAGESDIR}/${f} 2>/dev/null
+	done
 }
 
-_build_pkg_and_update_repos()
-{
-	local rval f
-
-	[ -z "$BUILD_BINPKG" ] && return 0
+_build_pkg_and_update_repos() {
+	local rval= f=
 
 	# Build binary package and update local repo index if -B is set.
-	xbps_make_binpkg
-	if [ $? -ne 0 -a $? -ne 6 ]; then
-		return $?
-	fi
+	make_binpkg
+	rval=$?
+	[ $rval -ne 0 -a $rval -ne 6 ] && return $rval
 	make_repoidx
-
-	return 0
 }
 
-install_pkg()
-{
-	local curpkgn="$1" fullpkg pkg cdestdir
+install_pkg() {
+	[ -z "$pkgname" ] && return 1
 
-	pkg="$curpkgn-$version"
-	[ -n "$INSTALLING_DEPS" ] && setup_tmpl $curpkgn
-	#
-	# Refuse to install the same package that is already installed.
-	#
-	check_installed_pkg "$pkg"
-	if [ $? -eq 1 -o $? -eq 0 ]; then
-		instver="$($XBPS_PKGDB_CMD version $pkgname)"
-		if [ -n "$instver" -a -z "$DESTDIR_ONLY_INSTALL" ]; then
-			echo "=> $pkgname-$instver already installed."
-			return 0
-		fi
-	fi
-
-	# Always fetch distfiles before installing dependencies if
-	# template doesn't use nofetch and do_fetch().
-	[ -z "$nofetch" ] && fetch_distfiles
-
-	#
 	# Install dependencies required by this package.
-	#
-	if [ -z "$INSTALLING_DEPS" ]; then
-		install_dependencies_pkg $pkg || return $?
-		#
-		# At this point all required deps are installed, and
-		# only remaining is the origin package; install it.
-		#
-		unset INSTALLING_DEPS
-		setup_tmpl $curpkgn
-		msg_normal "$pkgver: starting installation...\n"
+	install_pkg_deps || return 1
+	if [ -n "$ORIGIN_PKGDEPS_DONE" ]; then
+		unset ORIGIN_PKGDEPS_DONE
+		setup_tmpl ${_ORIGINPKG}
 	fi
 
 	# Fetch distfiles after installing required dependencies,
 	# because some of them might be required for do_fetch().
-	[ -n "$nofetch" ] && fetch_distfiles
+	fetch_distfiles
 
-	#
 	# Fetch, extract, build and install into the destination directory.
-	#
 	if [ ! -f "$XBPS_EXTRACT_DONE" ]; then
 		extract_distfiles || return $?
 	fi
@@ -117,114 +72,58 @@ install_pkg()
 
 	if [ ! -f "$XBPS_CONFIGURE_DONE" ]; then
 		configure_src_phase || return $?
-		if [ "$INSTALL_TARGET" = "configure" ]; then
-			return 0
-		fi
+		[ "$INSTALL_TARGET" = "configure" ] && return 0
 	fi
 
 	if [ ! -f "$XBPS_BUILD_DONE" ]; then
 		build_src_phase || return $?
-		if [ "$INSTALL_TARGET" = "build" ]; then
-			return 0
-		fi
+		[ "$INSTALL_TARGET" = "build" ] && return 0
 	fi
 
 	# Install pkg into destdir.
 	env XBPS_MACHINE=${XBPS_MACHINE} wrksrc=${wrksrc}	\
 		MASTERDIR="${XBPS_MASTERDIR}"			\
-		BOOTSTRAP_PKG_REBUILD=$BOOTSTRAP_PKG_REBUILD	\
 		CONFIG_FILE=${XBPS_CONFIG_FILE}			\
 		${FAKEROOT_CMD} ${XBPS_LIBEXECDIR}/doinst-helper.sh \
-		${curpkgn} || return $?
+		${sourcepkg} || return $?
 
 	# Strip binaries/libraries.
 	strip_files
 
 	# Write metadata to package's destdir.
-	trap 'remove_pkgdestdir_sighandler $pkgname $KEEP_AUTODEPS' INT
-	xbps_write_metadata_pkg
+	write_metadata
 	if [ $? -ne 0 ]; then
-		msg_red "cannot write package metadata for '$pkgname'!\n"
+		msg_red "$pkgver: failed to create package metadata!\n"
 		remove_pkgdestdir_sighandler $pkgname
-		trap - INT
 		return 1
 	fi
-	trap - INT
 
-	# If only installation to destdir, return.
-	if [ -n "$DESTDIR_ONLY_INSTALL" ]; then
-		if [ -d "$wrksrc" -a -z "$KEEP_WRKSRC" ]; then
-			remove_tmpl_wrksrc $wrksrc
-		fi
-		autoremove_pkg_dependencies $KEEP_AUTODEPS
+	cd $XBPS_MASTERDIR
+	if [ -n "$IN_CHROOT" ]; then
+		# no bootstrap case: remove autodeps, build binpkg,
+		# remove pkg from destdir and remove wrksrc.
+		remove_pkg_autodeps $KEEP_AUTODEPS || return $?
 		_build_pkg_and_update_repos
-		return $?
+		remove_pkg || return $?
+	else
+		# bootstrap case: stow, build binpkg and remove wrksrc.
+		stow_pkg_handler stow || return $?
+		_build_pkg_and_update_repos
 	fi
 
-	# Stow package into masterdir.
-	stow_pkg_handler stow || return $?
-
-	# Copy generated pkg metadata files into its metadata dir.
-	if [ ! -f ${DESTDIR}/files.plist ]; then
-		msg_error "${pkgname}: missing metadata files.plist!"
-	fi
-	cp -f ${DESTDIR}/files.plist ${XBPS_PKGMETADIR}/${pkgname}
-	if [ ! -f ${DESTDIR}/props.plist ]; then
-		msg_error "${pkgname}: missing metadata props.plist!"
-	fi
-	cp -f ${DESTDIR}/props.plist ${XBPS_PKGMETADIR}/${pkgname}
-	if [ -f ${DESTDIR}/INSTALL ]; then
-		install -m750 ${DESTDIR}/INSTALL \
-			${XBPS_PKGMETADIR}/${pkgname}
-	fi
-	if [ -f ${DESTDIR}/REMOVE ]; then
-		install -m750 ${DESTDIR}/REMOVE \
-			${XBPS_PKGMETADIR}/${pkgname}
-	fi
-	#
 	# Remove $wrksrc if -C not specified.
-	#
 	if [ -d "$wrksrc" -a -z "$KEEP_WRKSRC" ]; then
 		remove_tmpl_wrksrc $wrksrc
 	fi
 
-	#
-	# Autoremove packages installed as dependencies if
-	# XBPS_PREFER_BINPKG_DEPS is set.
-	#
-	autoremove_pkg_dependencies $KEEP_AUTODEPS || return $?
-	#
-	# Build binary package and update local repo index if -B is set.
-	#
-	_build_pkg_and_update_repos
-
-	return $?
-}
-
-#
-# Lists files installed by a package.
-#
-list_pkg_files()
-{
-	local pkg="$1" ver=
-
-	[ -z $pkg ] && msg_error "unexistent package, aborting.\n"
-
-	ver=$($XBPS_PKGDB_CMD version $pkg)
-	if [ -z "$ver" ]; then
-		msg_warn "$pkg is not installed.\n"
-		return 1
-	fi
-
-	cat $XBPS_PKGMETADIR/$pkg/flist
+	[ "$pkgname" = "${_ORIGINPKG}" ] && exit 0
 }
 
 #
 # Removes a currently installed package (unstow + removed from destdir).
 #
-remove_pkg()
-{
-	local subpkg found pkg
+remove_pkg() {
+	local subpkg= found= pkg=
 
 	[ -z $pkgname ] && msg_error "unexistent package, aborting.\n"
 
@@ -257,16 +156,9 @@ remove_pkg()
 	[ -f $XBPS_POST_INSTALL_DONE ] && rm -f $XBPS_POST_INSTALL_DONE
 	[ -f $XBPS_INSTALL_DONE ] && rm -f $XBPS_INSTALL_DONE
 
-	if [ -n "$DESTDIR_ONLY_INSTALL" ]; then
-		if [ -n "$found" ]; then
-			return 0
-		else
-			msg_warn "${pkg}: not installed in destdir!\n"
-		fi
-	fi
+	[ -n "$IN_CHROOT" ] && return 0
 
 	stow_pkg_handler unstow || return $?
-
 	[ -n "$found" ] && return 0
 
 	return 1

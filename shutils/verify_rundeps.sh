@@ -30,9 +30,8 @@
 # libraries and reports if any of them was not added.
 #
 
-find_rundep()
-{
-	local dep="$1" i rpkgdep
+find_rundep() {
+	local dep="$1" i rpkgdep=
 
 	for i in ${run_depends}; do
 		rpkgdep="$($XBPS_PKGDB_CMD getpkgdepname $i)"
@@ -41,10 +40,9 @@ find_rundep()
 	done
 }
 
-verify_rundeps()
-{
-	local j f nlib verify_deps maplib found_dup igndir soname_arch
-	local broken rdep found rsonamef soname_list revbumped tmplf newrev
+verify_rundeps() {
+	local j= f= nlib= verify_deps maplib= found_dup= igndir= soname_arch=
+	local broken= rdep= found= rsonamef= soname_list= tmplf=
 
 	maplib=$XBPS_COMMONDIR/shlibs
 

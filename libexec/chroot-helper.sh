@@ -1,6 +1,6 @@
 #!/bin/sh
 #-
-# Copyright (c) 2010-2011 Juan Romero Pardines.
+# Copyright (c) 2010-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,8 +28,7 @@ HANDLER="$1"
 
 REQFS="sys proc dev xbps host"
 
-mount_chroot_fs()
-{
+mount_chroot_fs() {
 	local cnt f blah dowrite
 
 	for f in ${REQFS}; do
@@ -73,8 +72,7 @@ mount_chroot_fs()
 	done
 }
 
-umount_chroot_fs()
-{
+umount_chroot_fs() {
 	local fs dir cnt
 
 	for fs in ${REQFS}; do

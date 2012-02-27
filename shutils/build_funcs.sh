@@ -1,5 +1,5 @@
 #-
-# Copyright (c) 2008-2011 Juan Romero Pardines.
+# Copyright (c) 2008-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,9 +27,8 @@
 # Runs the "build" phase for a pkg. This builds the binaries and other
 # related stuff.
 #
-build_src_phase()
-{
-	local rval
+build_src_phase() {
+	local rval=
 
 	[ -z $pkgname -o -z $version ] && return 1
 
@@ -68,6 +67,5 @@ build_src_phase()
 	fi
 
 	[ "$rval" -eq 0 ] && touch -f $XBPS_BUILD_DONE
-
 	return 0
 }

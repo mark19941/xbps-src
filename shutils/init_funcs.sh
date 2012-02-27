@@ -1,5 +1,5 @@
 #-
-# Copyright (c) 2008-2011 Juan Romero Pardines.
+# Copyright (c) 2008-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,9 +23,8 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #-
 
-set_defvars()
-{
-	local DDIRS i xbps_conf
+set_defvars() {
+	local DDIRS= i= xbps_conf=
 
 	XBPS_HELPERSDIR=$XBPS_SHAREDIR/helpers
 	XBPS_SHUTILSDIR=$XBPS_SHAREDIR/shutils
@@ -69,8 +68,12 @@ set_defvars()
 		fi
 	done
 
-	xbps_conf="-C /usr/local/etc/xbps/xbps.conf"
-
+	for f in $XBPS_SHUTILSDIR/*.sh $XBPS_COMMONDIR/*.sh; do
+		[ -r "$f" ] && . $f
+	done
+	if [ -n "$IN_CHROOT" ]; then
+		xbps_conf="-C /usr/local/etc/xbps/xbps.conf"
+	fi
 	export XBPS_VERSION=$(xbps-bin.static -V|awk '{print $2}')
 	export XBPS_APIVER=$(xbps-bin.static -V|awk '{print $4}')
 	export XBPS_PKGDB_CMD="xbps-uhelper.static -r $XBPS_MASTERDIR"

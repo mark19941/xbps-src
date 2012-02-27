@@ -1,5 +1,5 @@
 #-
-# Copyright (c) 2008-2011 Juan Romero Pardines.
+# Copyright (c) 2008-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,9 +31,8 @@ export CONFIGURE_SHARED_ARGS="--prefix=/usr --sysconfdir=/etc \
 	--infodir=/usr/share/info --mandir=/usr/share/man \
 	--localstatedir=/var"
 
-configure_src_phase()
-{
-	local f rval
+configure_src_phase() {
+	local f= rval=
 
 	[ -z $pkgname ] && return 1
 
@@ -67,6 +66,5 @@ configure_src_phase()
 	fi
 
 	[ "$rval" -eq 0 ] && touch -f $XBPS_CONFIGURE_DONE
-
 	return 0
 }

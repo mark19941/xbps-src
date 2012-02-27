@@ -26,13 +26,8 @@
 #
 # Shows info about a template.
 #
-show_tmpl()
-{
-	local i
-
-	for i in $XBPS_COMMONDIR/*.sh; do
-		[ -r ${i} ] && . ${i}
-	done
+show_tmpl() {
+	local i=
 
 	echo "pkgname:	$pkgname"
 	echo "version:	$version"
@@ -67,19 +62,8 @@ show_tmpl()
 	echo "long_desc: $long_desc"
 }
 
-show_tmpl_bdeps_dirs()
-{
-	local f pkgn
-
-	for f in ${build_depends}; do
-		pkgn=$($XBPS_PKGDB_CMD getpkgdepname "$f")
-		echo "$XBPS_SRCPKGDIR/$pkgn"
-	done
-}
-
-show_tmpl_deps()
-{
-	local f MAPLIB RSHLIB soname rdep pkg tmpver
+show_tmpl_deps() {
+	local f= MAPLIB= RSHLIB= soname= rdep= pkg= tmpver=
 
 	if [ "$1" = "build" ]; then
 		# build time deps

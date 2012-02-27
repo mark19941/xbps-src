@@ -25,7 +25,7 @@
 
 strip_files()
 {
-	local subpkg
+	local subpkg=
 
 	for subpkg in ${subpackages}; do
 		. $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template
@@ -40,7 +40,7 @@ strip_files()
 
 strip_files_real()
 {
-	local f x found fname
+	local f= x= found= fname=
 
 	[ -n "$nostrip" -o -n "$noarch" ] && return 0
 	[ -z "$strip_cmd" ] && strip_cmd=strip

@@ -23,9 +23,8 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #-
 
-_add_trigger()
-{
-	local f found name="$1"
+_add_trigger() {
+	local f= found= name="$1"
 
 	for f in ${triggers}; do
 		[ "$f" = "$name" ] && found=1
@@ -33,14 +32,13 @@ _add_trigger()
 	[ -z "$found" ] && triggers="$triggers $name"
 }
 
-xbps_write_metadata_scripts_pkg()
-{
+write_metadata_scripts() {
 	local action="$1"
 	local action_file="$2"
 	local tmpf=$(mktemp -t xbps-install.XXXXXXXXXX) || exit 1
 	local fpattern="s|${DESTDIR}||g;s|^\./$||g;/^$/d"
-	local targets f info_files home shell descr groups
-	local found triggers_found
+	local targets= f= info_files= home= shell= descr= groups=
+	local found= triggers_found=
 
 	case "$action" in
 		install) ;;

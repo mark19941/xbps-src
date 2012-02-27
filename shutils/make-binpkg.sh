@@ -1,5 +1,5 @@
 #-
-# Copyright (c) 2008-2011 Juan Romero Pardines.
+# Copyright (c) 2008-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,9 +23,8 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #-
 
-xbps_make_binpkg()
-{
-	local subpkg
+make_binpkg() {
+	local subpkg=
 
 	[ -z "$pkgname" ] && return 1
 
@@ -34,17 +33,16 @@ xbps_make_binpkg()
 		. $XBPS_SRCPKGDIR/$pkgname/$subpkg.template
 		pkgname=${subpkg}
 		set_tmpl_common_vars
-		xbps_make_binpkg_real
+		make_binpkg_real
 		setup_tmpl ${sourcepkg}
 	done
 
 	[ -n "${subpackages}" ] && set_tmpl_common_vars
-	xbps_make_binpkg_real
+	make_binpkg_real
 	return $?
 }
 
-binpkg_cleanup()
-{
+binpkg_cleanup() {
 	local pkgdir="$1" binpkg="$2"
 
 	[ -z "$pkgdir" -o -z "$binpkg" ] && return 1
@@ -57,9 +55,8 @@ binpkg_cleanup()
 # This function builds a binary package from an installed xbps
 # package in destdir.
 #
-xbps_make_binpkg_real()
-{
-	local mfiles binpkg pkgdir arch dirs _dirs d clevel
+make_binpkg_real() {
+	local mfiles= binpkg= pkgdir= arch= dirs= _dirs= d= clevel=
 
 	if [ ! -d "${DESTDIR}" ]; then
 		msg_warn "cannot find destdir for $pkgname... skipping!\n"

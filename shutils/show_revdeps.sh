@@ -1,5 +1,5 @@
 #-
-# Copyright (c) 2011 Juan Romero Pardines.
+# Copyright (c) 2011-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,9 +23,8 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #-
 
-_show_hard_pkg_deps()
-{
-	local f tmplf deps revdepname _pkgn
+_show_hard_pkg_deps() {
+	local f= tmplf= deps= revdepname= _pkgn=
 
 	_pkgn=$(echo "$1"|sed 's|\+|\\+|g')
 	deps=$(grep -E "^Add_dependency[[:blank:]]+(run|full|build)[[:blank:]]+${_pkgn}([[:space:]]+\".*\")*$" $XBPS_SRCPKGDIR/*/*template|sed 's/:Add_dependency.*//g')
@@ -41,9 +40,8 @@ _show_hard_pkg_deps()
 	done
 }
 
-_show_shlib_pkg_deps()
-{
-	local f j soname
+_show_shlib_pkg_deps() {
+	local f= j= soname=
 
 	soname=$(echo "$1"|sed 's|\+|\\+|g')
 
@@ -61,10 +59,9 @@ _show_shlib_pkg_deps()
 	done
 }
 
-show_pkg_revdeps()
-{
+show_pkg_revdeps() {
 	local SHLIBS_MAP=$XBPS_COMMONDIR/shlibs
-	local _pkgn shlibs
+	local _pkgn= shlibs=
 
 	[ -z "$1" ] && return 1
 

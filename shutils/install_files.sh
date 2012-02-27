@@ -1,5 +1,5 @@
 #-
-# Copyright (c) 2011 Juan Romero Pardines.
+# Copyright (c) 2011-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,12 +23,8 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #-
 
-vinstall()
-{
-	local file="$1"
-	local mode="$2"
-	local targetdir="$3"
-	local targetfile="$4"
+vinstall() {
+	local file="$1" mode="$2" targetdir="$3" targetfile="$4"
 
 	if [ -z "$DESTDIR" ]; then
 		msg_red "vinstall: DESTDIR unset, can't continue...\n"
@@ -52,10 +48,8 @@ vinstall()
 	fi
 }
 
-vcopy()
-{
-	local files=$1
-	local targetdir="$2"
+vcopy() {
+	local files="$1" targetdir="$2"
 
 	if [ -z "$DESTDIR" ]; then
 		msg_red "vcopy: DESTDIR unset, can't continue...\n"
@@ -69,10 +63,8 @@ vcopy()
 	cp -a $files ${DESTDIR}/${targetdir}
 }
 
-vmove()
-{
-	local files=$1
-	local targetdir="$2"
+vmove() {
+	local files="$1" targetdir="$2"
 
 	if [ -z "$DESTDIR" ]; then
 		msg_red "vmove: DESTDIR unset, can't continue...\n"
@@ -94,10 +86,8 @@ vmove()
 	fi
 }
 
-vmkdir()
-{
-	local dir="$1"
-	local mode="$2"
+vmkdir() {
+	local dir="$1" mode="$2"
 
 	if [ -z "$DESTDIR" ]; then
 		msg_red "vmkdir: DESTDIR unset, can't continue...\n"

@@ -26,8 +26,7 @@
 #
 # Resets all vars used by a template.
 #
-reset_tmpl_vars()
-{
+reset_tmpl_vars() {
 	local TMPL_VARS="pkgname distfiles configure_args strip_cmd \
 			make_build_args make_install_args build_style	\
 			short_desc maintainer long_desc checksum wrksrc	\
@@ -43,7 +42,7 @@ reset_tmpl_vars()
 			replaces system_accounts system_groups provides \
 			build_wrksrc create_wrksrc broken_as_needed pkgver \
 			ignore_vdeps_dir noverifyrdeps conflicts dkms_modules \
-			gconf_entries gconf_schemas stow_copy stow_copy_files \
+			gconf_entries gconf_schemas \
 			pycompile_dirs pycompile_module systemd_services  \
 			homepage license kernel_hooks_version makejobs \
 			mutable_files nostrip_files \
@@ -64,8 +63,7 @@ reset_tmpl_vars()
 #
 # Reads a template file and setups required variables for operations.
 #
-setup_tmpl()
-{
+setup_tmpl() {
 	local pkg="$1"
 
 	[ -z "$pkg" ] && return 1
@@ -73,10 +71,6 @@ setup_tmpl()
 	if [ "$pkgname" = "$pkg" ]; then
 		[ -n "$DESTDIR" ] && return 0
 	fi
-
-	for f in $XBPS_COMMONDIR/*.sh; do
-		[ -r ${f} ] && . ${f}
-	done
 
 	if [ -f $XBPS_SRCPKGDIR/${pkg}/template ]; then
 		reset_tmpl_vars
@@ -88,9 +82,8 @@ setup_tmpl()
 
 }
 
-setup_subpkg_tmpl()
-{
-	local f
+setup_subpkg_tmpl() {
+	local f=
 
 	[ -z "$1" ] && return 1
 
@@ -110,9 +103,8 @@ setup_subpkg_tmpl()
 	fi
 }
 
-check_builddep_dup()
-{
-	local dep="$1" i
+check_builddep_dup() {
+	local dep="$1" i=
 
 	for i in ${build_depends}; do
 		[ "${i}" != "${dep}" ] && continue
@@ -120,9 +112,8 @@ check_builddep_dup()
 	done
 }
 
-check_rundep_dup()
-{
-	local dep="$1" i
+check_rundep_dup() {
+	local dep="$1" i=
 
 	for i in ${run_depends}; do
 		[ "${i}" != "${dep}" ] && continue
@@ -130,8 +121,7 @@ check_rundep_dup()
 	done
 }
 
-dependency_version()
-{
+dependency_version() {
 	local type="$1" pkgn="$2"
 
 	if [ -f $XBPS_SRCPKGDIR/${pkgn}/${pkgn}.depends ]; then
@@ -157,8 +147,7 @@ dependency_version()
 	unset abi_depends api_depends
 }
 
-Add_dependency()
-{
+Add_dependency() {
 	local type="$1" pkgn="$2" ver="$3"
 
 	case "$type" in
@@ -212,9 +201,8 @@ Add_dependency()
 #
 # Checks some vars used in templates and sets some of them required.
 #
-prepare_tmpl()
-{
-	local REQ_VARS i found
+prepare_tmpl() {
+	local REQ_VARS= i= found=
 
 	REQ_VARS="pkgname version short_desc long_desc"
 
@@ -270,8 +258,7 @@ prepare_tmpl()
 	set_tmpl_common_vars
 }
 
-remove_tmpl_wrksrc()
-{
+remove_tmpl_wrksrc() {
 	local lwrksrc="$1"
 
 	if [ ! -d "$lwrksrc" ]; then
@@ -283,9 +270,8 @@ remove_tmpl_wrksrc()
 	return $?
 }
 
-set_tmpl_common_vars()
-{
-	local cflags cxxflags cppflags ldflags
+set_tmpl_common_vars() {
+	local cflags= cxxflags= cppflags= ldflags=
 
 	[ -z "$pkgname" ] && return 1
 
@@ -296,10 +282,6 @@ set_tmpl_common_vars()
 	fi
 
 	. $XBPS_SHUTILSDIR/install_files.sh
-
-	if [ -n "$BOOTSTRAP_PKG_REBUILD" ]; then
-		unset bootstrap
-	fi
 
 	FILESDIR=$XBPS_SRCPKGDIR/$pkgname/files
 	PATCHESDIR=$XBPS_SRCPKGDIR/$pkgname/patches

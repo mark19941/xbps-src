@@ -26,7 +26,7 @@
 # Check binary package versions against the source packages version.
 
 check_repository_packages() {
-	local f tmpl subtmpl pkgn binpkgver srcpkgver
+	local f= tmpl= subtmpl= pkgn= binpkgver= srcpkgver=
 
 	if [ -n "$IN_CHROOT" ]; then
 		XREPOCMD="$XBPS_REPO_CMD"

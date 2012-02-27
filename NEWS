@@ -1,4 +1,20 @@
 v21:
+ * The 'clean-autodeps' target has been renamed to 'remove-autodeps'.
+ * The 'build-pkg' target now installs the target package to destdir
+   and builds the binary package for itself and its dependencies,
+   local repositories are updated with generated binary packages.
+   This one replaces previous 'install' target.
+ * Removed the following targets: show-depends-dirs, show-files,
+   install, remove, list, stow, unstow (obsolete, not useful).
+ * Removed the following flags: -B and -D (enabled by default) and
+   -f, -p, -S and -s (not really useful).
+ * XBPS_USE_CAPABILITIES has been removed from configuration file
+   and is enabled by default unless uid==0.
+ * Rototill build system completely: XBPS_PREFER_BINPKG_DEPS is the
+   default for non bootstrap packages and has been removed from
+   configuration file. That means that dependencies
+   are always installed from binary packages (if available), otherwise
+   those are built from source.
  * Improved output for the 'checkvers' target.
  * New target 'repo-checkvers' to compare newest package version
    in repository against the version in srcpkgs.

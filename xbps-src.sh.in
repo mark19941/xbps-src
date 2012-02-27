@@ -50,8 +50,7 @@ REQHOST_UTILS_BOOTSTRAP="awk bash bison sed gcc msgfmt patch makeinfo \
 # Required utilities in host system for chroot ops.
 REQHOST_UTILS="xbps-bin.static xbps-repo.static xbps-uhelper.static"
 
-check_reqhost_utils()
-{
+check_reqhost_utils() {
 	local broken
 
 	[ -n "$IN_CHROOT" ] && return 0
@@ -75,143 +74,100 @@ check_reqhost_utils()
 	[ -n "$broken" ] && exit 1
 }
 
-usage()
-{
+usage() {
 	cat << _EOF
-$PROGNAME: [-BCDhKS] [-c file] [-m dir] [-p dir] [-s dir] [target] [pkgname]
+$PROGNAME: [-Chk] [-c file] [-m dir] <target> [pkgname]
 
-Targets:
+Targets: (only one may be specified)
+ binary-bootstrap
+   Install bootstrap packages from host repositories into <masterdir>.
+
  bootstrap
-  Build and install from source the bootstrap packages into <masterdir>.
-  If -B flag is specified, the bootstrap packages will be installed from
-  binary packages as found in host repositories.
+   Build and install from source the bootstrap packages into <masterdir>.
 
  bootstrap-update
-  Updates bootstrap packages with latest versions available from registered
-  repositories in the XBPS configuration file, by default set to
-  <masterdir>/usr/local/etc/xbps/repositories.plist.
+   Updates bootstrap packages with latest versions available from registered
+   repositories in the XBPS configuration file, by default set to
+   <masterdir>/usr/local/etc/xbps/xbps.conf.
 
  build [pkgname]
-  Build package source (fetch + extract + configure + build).
+   Build package source (fetch + extract + configure + build).
 
- build-pkg [pkgname|all]
-  Build a binary package from <pkgname> or all packages with the <all>
-  keyword. The package(s) must be installed into <destdir> for this to work.
+ build-pkg [pkgname]
+   Build binary package for <pkgname> and all required dependencies.
 
  checkvers
-  Checks installed package versions in <masterdir> against the srcpkgs tree
-  for new available versions.
+   Checks installed package versions in <masterdir> against the srcpkgs tree
+   for new available versions.
 
  chroot
-  Enter to the chroot in <masterdir>.
+   Enter to the chroot in <masterdir>.
 
  clean [pkgname]
-  Remove <pkgname> build directory.
+   Remove <pkgname> build directory.
 
- clean-autodeps
-  Removes all package dependencies installed automatically.
+ remove-autodeps
+   Removes all package dependencies installed automatically.
 
  configure [pkgname]
-  Configure a package (fetch + extract + configure).
+   Configure a package (fetch + extract + configure).
 
  extract [pkgname]
-  Extract package source distribution file(s) into the build directory.
-  By default set to <masterdir>/builddir.
+   Extract package source distribution file(s) into the build directory.
+   By default set to <masterdir>/builddir.
 
  fetch [pkgname]
-  Download package source distribution file(s).
+   Download package source distribution file(s).
 
  fetch-srcpkgs
-  Fetches the "xbps-packages" repository from XBPS_SRCPKGS_REPOURL settting
-  in xbps-src.conf into XBPS_DISTDIR.
-
- install [pkgname]
-  Installs a package into destination directory and \`stows' its files into
-  <masterdir>. If a package is not from bootstrap group, its files will be
-  symlinked rather than being fully copied.
-
- list
-  List installed packages in <masterdir>.
+   Fetches the "xbps-packages" repository from XBPS_SRCPKGS_REPOURL settting
+   in xbps-src.conf into XBPS_DISTDIR.
 
  make-repoidx
-  Build a package index for the local repository associated with the
-  master directory <masterdir>. By default set to <masterdir/host/binpkgs.
-  To specify another repo, use -p <dir>.
-
- remove [pkgname]
-  Remove package completely from <destdir> and <masterdir>.
+   Build a package index for the local repository associated with the
+   master directory <masterdir>. By default set to <masterdir/host/binpkgs.
+   To specify another repo, use -p <dir>.
 
  repo-checkvers
-  Compares available version from local repository against version in
-  srcpkgs and tells you when a binary package is outdated.
+   Compares available version from local repository against version in
+   srcpkgs and tells you when a binary package is outdated.
 
  show [pkgname]
-  Show information for the specified package.
+   Show information for the specified package.
 
  show-deps <pkgname> <build|run>
-  Show required dependencies for <pkgname>. If <build> is set, only build time
-  dependencies are shown, if <run> is set only run time dependencies are shown.
-
- show-deps-dirs <pkgname>
-  Show the directories for required build dependencies of <pkgname>.
-
- show-files <pkgname>
-  Show package files from <pkgname>. Package must be fully installed
-  into <masterdir> for this to work (stowed).
+   Show required dependencies for <pkgname>. If <build> is set, only build time
+   dependencies are shown, if <run> is set only run time dependencies are shown.
 
  show-revdeps <pkgname>
-  Show reverse dependencies for <pkgname>, i.e packages that are currently
-  depending on <pkgname>.
-
- stow [pkgname]
-  Stow <pkgname> files from <destdir> into <masterdir> and register package
-  in database. When a package is \`stowed', its files will be available in
-  <masterdir>, and other packages will be able to found it.
-
- unstow [pkgname]
-  Remove <pkgname> files from <masterdir> and unregister package
-  from database.
+   Show reverse dependencies for <pkgname>, i.e packages that are currently
+   depending on <pkgname>.
 
 On targets that accept [pkgname], a package name can be specified and xbps-src
 will execute the task on any CWD (Current Working Directory). If the argument
 is omitted xbps-src assumes that CWD is in the target package. Example:
 
-	$ cd srcpkgs/libX11 && xbps-src install
-	$ xbps-src install libX11
+	$ cd srcpkgs/xbps && xbps-src build-pkg
+	$ xbps-src build-pkg xbps
 
 Both ways are equivalent.
 
 Options:
- -B  Used in the install target, a binary package is built for any
-     required dependency as well as for <pkgname>. The local repository
-     pkg-index is created or updated after a successful package installation.
  -C  Do not remove build directory after successful installation.
  -c  Path to global configuration file:
      if not specified ${XBPS_ETCDIR}/xbps-src.conf is used.
- -D  Only install <pkgname> to package's destdir (set to
-     <masterdir>/destdir/<pkgname>-<version> by default).
- -f  Force flag. Force <target>, currently used in stow target.
  -h  Usage output.
- -K  Do not remove automatic package dependencies while building
-     or installing a package with XBPS_PREFER_BINPKG_DEPS enabled.
- -m  Master directory, overwritting the value set in the configuration
-     file xbps-src.conf.
- -p  Local packages repository, overwritting default path at
-     <masterdir>/host/binpkgs or if XBPS_HOSTDIR is set <hostdir>/binpkgs.
- -S  Overrides and disables XBPS_PREFER_BINPKG_DEPS even if it was
-     set in the configuration file xbps-src.conf.
- -s  Source distribution files directory, overwritting default path at
-     <masterdir>/host/sources or if XBPS_HOSTDIR is set <hostdir>/sources.
+ -K  Do not remove automatic package dependencies.
+ -m  Master directory to install packages and build binary packages,
+     overwritting the value set in configuration file xbps-src.conf.
 _EOF
 }
 
-basename_cwd()
-{
+basename_cwd() {
 	echo $(basename $(pwd))
 }
 
-check_path()
-{
+check_path() {
 	eval local orig="$1"
 
 	case "$orig" in
@@ -223,17 +179,15 @@ check_path()
 	path_fixed="$orig"
 }
 
-run_file()
-{
+run_file() {
 	local file="$1"
 
 	check_path "$file"
 	. $path_fixed
 }
 
-check_config_vars()
-{
-	local val cffound f cfpaths cf="xbps-src.conf"
+check_config_vars() {
+	local val= cffound= f= cfpaths= cf="xbps-src.conf"
 
 	if [ -z "$XBPS_CONFIG_FILE" ]; then
 		cfpaths="@@XBPS_INSTALL_PREFIX@@/etc/${cf} ./etc/${cf}"
@@ -274,13 +228,10 @@ check_config_vars()
 #
 # main()
 #
-while getopts "CBc:DfhKm:p:Ss:V" opt; do
+while getopts "Cc:hKm:V" opt; do
 	case $opt in
-	B) export BUILD_BINPKG=1;;
 	C) export KEEP_WRKSRC=1;;
 	c) XBPS_CONFIG_FILE="$OPTARG";;
-	D) export DESTDIR_ONLY_INSTALL=1;;
-	f) export FORCE_FLAG=1;;
 	h) usage && exit 0;;
 	K) export KEEP_AUTODEPS=1;;
 	m)
@@ -290,15 +241,6 @@ while getopts "CBc:DfhKm:p:Ss:V" opt; do
 			mkdir -p ${_MASTERDIR}
 		fi
 		;;
-	p)
-		_PACKAGEDIR="$OPTARG"
-		if [ ! -d ${_PACKAGEDIR} ]; then
-			mkdir -p ${_PACKAGEDIR}/${XBPS_MACHINE}
-			mkdir -p ${_PACKAGEDIR}/noarch
-		fi
-		;;
-	S) UNSET_PREFER_BINPKG_DEPS=1;;
-	s) export XBPS_SRCDISTDIR="$OPTARG";;
 	V) echo $XBPS_SRC_VERSION && exit 0;;
 	--) shift; break;;
 	esac
@@ -311,10 +253,10 @@ target="$1"
 _pkgname="$2"
 _optarget="$3"
 
-if [ -z "$target" ]; then
-	echo "=> ERROR: missing target."
-	usage && exit 1
-fi
+#
+# Check for required utilities in host system.
+#
+check_reqhost_utils
 
 #
 # Check configuration vars before anyting else, and set defaults vars.
@@ -324,20 +266,9 @@ if [ -n "${_MASTERDIR}" ]; then
 	export XBPS_MASTERDIR=${_MASTERDIR}
 fi
 . ${XBPS_SHAREDIR}/shutils/init_funcs.sh
-
 set_defvars
-for f in $XBPS_SHUTILSDIR/*.sh; do
-	[ -r "$f" ] && . $f
-done
 
-# Disable XBPS_PREFER_BINPKG_DEPS if requested.
-[ -n "$UNSET_PREFER_BINPKG_DEPS" ] && unset XBPS_PREFER_BINPKG_DEPS
-
-#
-# Check for required utilities in host system.
-#
-check_reqhost_utils
-
+# Override stuff for user/root builds.
 if [ -z "$IN_CHROOT" ]; then
 	CHROOT_CMD="@@XBPS_INSTALL_LIBEXECDIR@@/capchroot"
 	unset SUDO_CMD
@@ -378,71 +309,39 @@ else
 fi
 
 #
-# If masterdir is ready (base-chroot installed and chroot set up) and
-# XBPS_PREFER_BINPKG_DEPS enabled, force ignoring rules to handle
-# bootstrap packages.
-#
-if [ -n "$DESTDIR_ONLY_INSTALL" -a -n "$XBPS_PREFER_BINPKG_DEPS" \
-     -a -f "$XBPS_MASTERDIR/.xbps_perms_done" ]; then
-	export BOOTSTRAP_PKG_REBUILD=1
-fi
-
-#
 # Main switch.
 #
 case "$target" in
+binary-bootstrap)
+	# binary bootstrap
+	msg_normal "Installing bootstrap from binary package repositories...\n"
+	xbps-repo.static -r $XBPS_MASTERDIR sync && \
+		xbps-bin.static -r $XBPS_MASTERDIR \
+			-c $XBPS_MASTERDIR/host/repocache \
+			-y install base-chroot && \
+			msg_normal "Installed bootstrap successfully!\n"
+	;;
 bootstrap)
-	if [ -n "$BUILD_BINPKG" ]; then
-		# binary bootstrap
-		msg_normal "Installing bootstrap from binary package repositories...\n"
-		xbps-repo.static -r $XBPS_MASTERDIR sync && \
-			xbps-bin.static -r $XBPS_MASTERDIR \
-				-c $XBPS_MASTERDIR/host/repocache \
-				-y install base-chroot && \
-				msg_normal "Installed bootstrap successfully!\n"
-	else
-		# bootstrap from sources
-		# check for required host utils
-		check_reqhost_utils bootstrap
-		[ ! -d $XBPS_SRCPKGDIR/base-chroot ] && \
-			msg_error "Cannot find $XBPS_SRCPKGDIR/base-chroot directory!\n"
-		cd $XBPS_SRCPKGDIR/base-chroot && _ORIGINPKG="$(basename_cwd)"
-		setup_tmpl ${_ORIGINPKG} && install_pkg $pkgname
-	fi
+	# bootstrap from sources
+	# check for required host utils
+	check_reqhost_utils bootstrap
+	[ ! -d $XBPS_SRCPKGDIR/base-chroot ] && \
+		msg_error "Cannot find $XBPS_SRCPKGDIR/base-chroot directory!\n"
+	cd $XBPS_SRCPKGDIR/base-chroot && _ORIGINPKG="$(basename_cwd)"
+	setup_tmpl ${_ORIGINPKG} && install_pkg
 	;;
 bootstrap-update)
 	if [ -z "$IN_CHROOT" ]; then
-		xbps_chroot_handler ${target} dummy
+		chroot_handler ${target} dummy
 	else
 		${FAKEROOT_CMD} ${XBPS_BIN_CMD} -y autoupdate
-	fi
-	;;
-build-pkg)
-	if [ -n "${_PACKAGEDIR}" ]; then
-		export XBPS_PACKAGESDIR=${_PACKAGEDIR}
-	fi
-	if [ "$2" = "all" ]; then
-		for f in $($XBPS_BIN_CMD list|awk '{print $1}'); do
-			pkg=$(${XBPS_PKGDB_CMD} getpkgname $f)
-			setup_tmpl $pkg
-			if [ "${pkg}" = "${sourcepkg}" ]; then
-				xbps_make_binpkg
-			fi
-		done
-	else
-		if [ -z "${_pkgname}" ]; then
-			[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
-			_pkgname=$(basename_cwd)
-		fi
-		setup_tmpl ${_pkgname}
-		xbps_make_binpkg
 	fi
 	;;
 checkvers)
 	check_installed_packages
 	;;
 chroot)
-	xbps_chroot_handler chroot dummy
+	chroot_handler chroot dummy
 	;;
 clean)
 	if [ -z "${_pkgname}" ]; then
@@ -452,12 +351,12 @@ clean)
 	setup_tmpl ${_pkgname}
 	remove_tmpl_wrksrc $wrksrc
 	;;
-clean-autodeps)
+remove-autodeps)
 	if [ -z "$IN_CHROOT" ]; then
-		xbps_chroot_handler clean-autodeps dummy
+		chroot_handler clean-autodeps dummy
 	else
 		pkgver=xbps-src
-		autoremove_pkg_dependencies
+		remove_pkg_autodeps
 	fi
 	;;
 extract|fetch)
@@ -481,39 +380,24 @@ fetch-srcpkgs)
 		git clone $XBPS_SRCPKGS_REPOURL $XBPS_DISTDIR
 	fi
 	;;
-build|configure|install)
+build|configure|build-pkg)
 	if [ -z "${_pkgname}" ]; then
 		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
 		_pkgname=$(basename_cwd)
 	fi
 	setup_tmpl ${_pkgname}
 	_ORIGINPKG="${_pkgname}"
-	if [ -z "$IN_CHROOT" -a -z "$bootstrap" ]; then
-		xbps_chroot_handler $target ${_ORIGINPKG} || exit $?
+	if [ -z "$IN_CHROOT" ]; then
+		chroot_handler $target ${_ORIGINPKG} || exit $?
 	else
-		INSTALL_TARGET=$target install_pkg $pkgname || exit $?
+		INSTALL_TARGET=$target install_pkg || exit $?
 	fi
 	;;
 list)
 	$XBPS_BIN_CMD list
 	;;
 make-repoidx)
-	if [ -n "${_PACKAGEDIR}" ]; then
-		export XBPS_PACKAGESDIR=${_PACKAGEDIR}
-	fi
 	make_repoidx
-	;;
-remove)
-	if [ -z "${_pkgname}" ]; then
-		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
-		_pkgname=$(basename_cwd)
-	fi
-	setup_tmpl ${_pkgname}
-	if [ -z "$IN_CHROOT" -a -z "$bootstrap" ]; then
-		xbps_chroot_handler $target ${_pkgname}
-        else
-		remove_pkg
-	fi
 	;;
 repo-checkvers)
 	check_repository_packages
@@ -523,7 +407,7 @@ show)
 		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
 		_pkgname=$(basename_cwd)
 	fi
-	setup_tmpl ${_pkgname}
+	setup_subpkg_tmpl ${_pkgname}
 	show_tmpl
 	;;
 show-deps)
@@ -533,33 +417,8 @@ show-deps)
 	fi
 	show_tmpl_deps ${_optarget}
 	;;
-show-deps-dirs)
-	setup_subpkg_tmpl ${_pkgname}
-	show_tmpl_bdeps_dirs ${pkgname}
-	;;
-show-files)
-	list_pkg_files ${_pkgname}
-	;;
 show-revdeps)
 	show_pkg_revdeps ${_pkgname}
-	;;
-stow)
-	stow_flag=yes
-	if [ -z "${_pkgname}" ]; then
-		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
-		_pkgname=$(basename_cwd)
-	fi
-	setup_tmpl ${_pkgname}
-	stow_pkg_handler stow
-	;;
-unstow)
-	if [ -z "${_pkgname}" ]; then
-		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
-		_pkgname=$(basename_cwd)
-	else
-		pkgname=${_pkgname}
-	fi
-	stow_pkg_handler unstow
 	;;
 *)
 	msg_red "xbps-src: invalid target $target.\n"

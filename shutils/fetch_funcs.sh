@@ -1,5 +1,5 @@
 #-
-# Copyright (c) 2008-2011 Juan Romero Pardines.
+# Copyright (c) 2008-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,10 +27,8 @@
 # Verifies that file's checksum downloaded matches what it's specified
 # in template file.
 #
-verify_sha256_cksum()
-{
-	local file="$1"
-	local origsum="$2"
+verify_sha256_cksum() {
+	local file="$1" origsum="$2"
 
 	[ -z "$file" -o -z "$cksum" ] && return 1
 
@@ -46,12 +44,10 @@ verify_sha256_cksum()
 #
 # Downloads the distfiles and verifies checksum for all them.
 #
-fetch_distfiles()
-{
-	local pkg="$1" upcksum="$2" dfiles localurl dfcount=0 ckcount=0 f
+fetch_distfiles() {
+	local pkg="$1" upcksum="$2" dfiles= localurl= dfcount=0 ckcount=0 f
 
 	[ -z $pkgname ] && return 1
-
 	#
 	# There's nothing of interest if we are a meta template.
 	#

@@ -35,16 +35,10 @@ if [ -n "${MASTERDIR}" ]; then
 fi
 
 . ${XBPS_SHAREDIR}/shutils/init_funcs.sh
-
 set_defvars
 
-for f in $XBPS_SHUTILSDIR/*.sh; do
-	[ -r "$f" ] && . $f
-done
-
-install_src_phase()
-{
-	local f i subpkg spkgrev
+install_src_phase() {
+	local f= i= subpkg=
 
 	[ -z $pkgname ] && return 2
 	#
@@ -104,11 +98,6 @@ install_src_phase()
 	# Build subpackages if found.
 	#
 	for subpkg in ${subpackages}; do
-		if [ -n "$revision" ]; then
-			spkgrev="${subpkg}-${version}_${revision}"
-		else
-			spkgrev="${subpkg}-${version}"
-		fi
 		msg_normal "$pkgver: preparing subpackage '${subpkg}'...\n"
 		if [ ! -f $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template ]; then
 			msg_error "Cannot find '${subpkg}' subpkg build template!\n"
@@ -116,17 +105,17 @@ install_src_phase()
 		. $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template
 		pkgname=${subpkg}
 		set_tmpl_common_vars
-		if [ ! -f ${wrksrc}/.xbps_do_install_${pkgname}_done ]; then
-			run_func do_install
-			if [ $? -eq 0 ]; then
-				touch -f ${wrksrc}/.xbps_do_install_${pkgname}_done
-				# Remove empty directories by default.
-				for f in $(find ${DESTDIR} -depth -type d); do
-					rmdir $f 2>/dev/null && msg_warn "removed empty dir: ${f##${DESTDIR}}\n"
-				done
-			fi
-		else
+		if [ -f ${wrksrc}/.xbps_do_install_${pkgname}_done ]; then
 			msg_warn "$pkgver: skipping '$pkgname' subpkg, already installed into destdir.\n"
+			continue
+		fi
+		run_func do_install
+		if [ $? -eq 0 ]; then
+			touch -f ${wrksrc}/.xbps_do_install_${pkgname}_done
+			# Remove empty directories by default.
+			for f in $(find ${DESTDIR} -depth -type d); do
+				rmdir $f 2>/dev/null && msg_warn "removed empty dir: ${f##${DESTDIR}}\n"
+			done
 		fi
 	done
 	# Remove empty directories by default.

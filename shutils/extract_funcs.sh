@@ -1,5 +1,5 @@
 #-
-# Copyright (c) 2008-2010 Juan Romero Pardines.
+# Copyright (c) 2008-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,9 +27,8 @@
 # Extracts contents of distfiles specified in a template into
 # the $wrksrc directory.
 #
-extract_distfiles()
-{
-	local pkg="$1" curfile cursufx f
+extract_distfiles() {
+	local pkg="$1" curfile= cursufx= f=
 
 	[ -f $XBPS_EXTRACT_DONE ] && return 0
 	[ -z "$IN_CHROOT" -a ! -w $XBPS_BUILDDIR ] && \

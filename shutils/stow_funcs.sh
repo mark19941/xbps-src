@@ -23,16 +23,10 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #-
 
-stow_pkg_handler()
-{
-	local action="$1" subpkg spkgrev
+stow_pkg_handler() {
+	local action="$1" subpkg=
 
 	for subpkg in ${subpackages}; do
-		if [ -n "$revision" ]; then
-			spkgrev="${subpkg}-${version}_${revision}"
-		else
-			spkgrev="${subpkg}-${version}"
-		fi
 		if [ ! -f $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template ]; then
 			msg_error "Cannot find $subpkg subpkg build template!\n"
 		fi
@@ -61,15 +55,14 @@ stow_pkg_handler()
 # Stow a package, i.e copy/symlink files from destdir into masterdir
 # and register pkg into pkgdb.
 #
-stow_pkg_real()
-{
-	local i lfile lver regpkgdb_flags flist
+stow_pkg_real() {
+	local i= lfile= lver= regpkgdb_flags= flist=
 
 	[ -z "$pkgname" ] && return 2
 
 	flist=$XBPS_PKGMETADIR/$pkgname/flist
 
-	if [ -z "$FORCE_FLAG" -a -f "$flist" ]; then
+	if [ -f "$flist" ]; then
 		msg_normal "$pkgver: already stowed.\n"
 		return 0
 	fi
@@ -107,46 +100,19 @@ stow_pkg_real()
 		# Skip flist from pkg's destdir
 		elif [ "$(basename $i)" = "flist" ]; then
 			continue
-		# Skip files that are already in masterdir if FORCE_FLAG unset.
-		elif [ -z "$FORCE_FLAG" -a -f "$XBPS_MASTERDIR/$lfile" ]; then
+		# Skip files that are already in masterdir.
+		elif [ -f "$XBPS_MASTERDIR/$lfile" ]; then
 			echo "   Skipping $lfile file, already exists!"
 			continue
-		elif [ -z "$FORCE_FLAG" -a -h "$XBPS_MASTERDIR/$lfile" ]; then
+		elif [ -h "$XBPS_MASTERDIR/$lfile" ]; then
 			echo "   Skipping $lfile link, already exists!"
 			continue
 		elif [ -d "$XBPS_MASTERDIR/$lfile" ]; then
 			continue
 		fi
 		if [ -f "$i" -o -h "$i" ]; then
-			if [ -n "$IN_CHROOT" -a -n "$stow_copy_files" ]; then
-				# Templates that set stow_copy_files require
-				# some files to be copied, rather than symlinked.
-				local found
-				for j in ${stow_copy_files}; do
-					if [ "/$lfile" = "${j}" ]; then
-						found=1
-						break
-					fi
-				done
-				if [ -n "$found" ]; then
-					cp -dp $i $XBPS_MASTERDIR/$lfile
-					[ $? -eq 0 ] && echo "$lfile" >>$flist
-					continue
-				fi
-			fi
-			if [ -n "$IN_CHROOT" -a -n "$stow_copy" -o -z "$IN_CHROOT" ]; then
-				# In the no-chroot case and templates that
-				# set $stow_copy, we can't stow with symlinks.
-				# Just copy them.
-				cp -dp $i $XBPS_MASTERDIR/$lfile
-				[ $? -eq 0 ] && echo "$lfile" >>$flist
-			else
-				# Always use symlinks in the chroot with pkgs
-				# that don't have $stow_copy set, they can have
-				# full path.
-				ln -sf $DESTDIR/$lfile $XBPS_MASTERDIR/$lfile
-				[ $? -eq 0 ] && echo "$lfile" >>$flist
-			fi
+			cp -dp $i $XBPS_MASTERDIR/$lfile
+			[ $? -eq 0 ] && echo "$lfile" >>$flist
 		elif [ -d "$i" ]; then
 			mkdir -p $XBPS_MASTERDIR/$lfile
 		fi
@@ -164,9 +130,8 @@ stow_pkg_real()
 # Unstow a package, i.e remove its files from masterdir and
 # unregister pkg from pkgdb.
 #
-unstow_pkg_real()
-{
-	local f ver flist
+unstow_pkg_real() {
+	local f= ver= flist=
 
 	[ -z $pkgname ] && return 1
 

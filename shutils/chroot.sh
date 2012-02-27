@@ -1,5 +1,5 @@
 #-
-# Copyright (c) 2008-2011 Juan Romero Pardines.
+# Copyright (c) 2008-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,8 +23,7 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #-
 
-_mount()
-{
+_mount() {
 	MASTERDIR="${XBPS_MASTERDIR}" DISTDIR="${XBPS_DISTDIR}" \
 		HOSTDIR="${XBPS_HOSTDIR}" XBPS_ETCDIR="${XBPS_ETCDIR}" \
 		XBPS_SHAREDIR="${XBPS_SHAREDIR}" ${SUDO_CMD} \
@@ -32,8 +31,7 @@ _mount()
 	return $?
 }
 
-_umount()
-{
+_umount() {
 	MASTERDIR="${XBPS_MASTERDIR}" DISTDIR="${XBPS_DISTDIR}" \
 		HOSTDIR="${XBPS_HOSTDIR}" XBPS_ETCDIR="${XBPS_ETCDIR}" \
 		XBPS_SHAREDIR="${XBPS_SHAREDIR}" ${SUDO_CMD} \
@@ -41,11 +39,8 @@ _umount()
 	return $?
 }
 
-chroot_init()
-{
+chroot_init() {
 	trap "_umount && return $?" 0 INT QUIT TERM
-
-	[ -n "$bootstrap" ] && return 0
 
 	if [ "${CHROOT_CMD}" = "chroot" ]; then
 		if [ "$(id -u)" -ne 0 ]; then
@@ -53,10 +48,10 @@ chroot_init()
 		fi
 	fi
 
-	check_installed_pkg base-chroot-0.11
+	check_installed_pkg base-chroot-0.25
 	if [ $? -ne 0 ]; then
 		echo "${XBPS_MASTERDIR} has not been prepared for chroot operations."
-		echo "Please install 'base-chroot>=0.11' and try again."
+		echo "Please install 'base-chroot>=0.25' and try again."
 		exit 1
 	fi
 
@@ -78,12 +73,8 @@ XBPS_LDFLAGS="$XBPS_LDFLAGS"
 XBPS_FETCH_CMD="xbps-uhelper.static fetch"
 XBPS_COMPRESS_CMD="$XBPS_COMPRESS_CMD"
 _EOF
-
 	if [ -n "$XBPS_MAKEJOBS" ]; then
 		echo "XBPS_MAKEJOBS=$XBPS_MAKEJOBS" >> $XBPSSRC_CF
-	fi
-	if [ -n "$XBPS_PREFER_BINPKG_DEPS" ]; then
-		echo "XBPS_PREFER_BINPKG_DEPS=$XBPS_PREFER_BINPKG_DEPS" >> $XBPSSRC_CF
 	fi
 	if [ -n "$XBPS_COMPRESS_LEVEL" ]; then
 		echo "XBPS_COMPRESS_LEVEL=$XBPS_COMPRESS_LEVEL" >> $XBPSSRC_CF
@@ -125,9 +116,8 @@ _EOF
 	chmod 755 $XBPS_MASTERDIR/bin/xbps-shell
 }
 
-prepare_chroot()
-{
-	local f
+prepare_chroot() {
+	local f=
 
 	if [ ! -f $XBPS_MASTERDIR/bin/bash ]; then
 		msg_error "Bootstrap not installed in $XBPS_MASTERDIR, can't continue."
@@ -199,8 +189,7 @@ _EOF
 	touch $XBPS_MASTERDIR/.xbps_perms_done
 }
 
-create_binsh_symlink()
-{
+create_binsh_symlink() {
 	if [ ! -h $XBPS_MASTERDIR/bin/sh ]; then
 		cd $XBPS_MASTERDIR/bin
 		if [ -x bash ]; then
@@ -216,20 +205,19 @@ create_binsh_symlink()
 	fi
 }
 
-prepare_binpkg_repos()
-{
-	local f
+prepare_binpkg_repos() {
+	local f=
 
 	if [ ! -f ${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf ]; then
 		install -Dm644 ${XBPS_SHAREDIR}/chroot/xbps.conf \
 			${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf
 	fi
 	msg_normal "Synchronizing index for remote repositories...\n"
-	${XBPS_REPO_CMD} sync
+	${CHROOT_CMD} ${XBPS_MASTERDIR} sh -c \
+		'fakeroot -- xbps-repo.static -C /usr/local/etc/xbps/xbps.conf sync'
 }
 
-create_busybox_links()
-{
+create_busybox_links() {
 	local lbindir=$XBPS_MASTERDIR/usr/local/bin
 
 	[ ! -d ${lbindir} ] && mkdir -p ${lbindir}
@@ -245,9 +233,8 @@ create_busybox_links()
 	done
 }
 
-install_xbps_utils()
-{
-	local needed _cmd
+install_xbps_utils() {
+	local needed= _cmd=
 	local xbps_prefix=$XBPS_MASTERDIR/usr/local
 
 	if [ ! -f ${XBPS_MASTERDIR}/.xbps_utils_done ]; then
@@ -264,8 +251,7 @@ install_xbps_utils()
 	fi
 }
 
-install_xbps_src()
-{
+install_xbps_src() {
 	set -e
 	install -Dm755 ${XBPS_SBINDIR}/xbps-src \
 		${XBPS_MASTERDIR}/usr/local/sbin/xbps-src
@@ -280,31 +266,26 @@ install_xbps_src()
 	set +e
 }
 
-xbps_chroot_handler()
-{
-	local action="$1" pkg="$2" rv=0 arg
+chroot_handler() {
+	local action="$1" pkg="$2" rv=0 arg=
 
 	[ -z "$action" -a -z "$pkg" ] && return 1
 
 	if [ ! -f $XBPS_MASTERDIR/.xbps_perms_done ]; then
 		echo -n "==> Preparing chroot on $XBPS_MASTERDIR... "
-		prepare_chroot
+		prepare_chroot || return $?
 		echo "done."
 	fi
 
 	[ ! -d "$XBPS_MASTERDIR/tmp" ] && mkdir -p "$XBPS_MASTERDIR/tmp"
 
-	chroot_init
-	create_binsh_symlink
-	create_busybox_links
-	install_xbps_utils
-	install_xbps_src
-
+	chroot_init || return $?
+	create_binsh_symlink || return $?
+	create_busybox_links || return $?
+	install_xbps_utils || return $?
+	install_xbps_src || return $?
 	_mount || return $?
-
-	if [ -n "$XBPS_PREFER_BINPKG_DEPS" ]; then
-		prepare_binpkg_repos
-	fi
+	prepare_binpkg_repos || return $?
 
 	# Update ld.so(8) cache
 	msg_normal "Updating ld.so(8) cache...\n"
@@ -316,11 +297,9 @@ xbps_chroot_handler()
 	else
 		[ -n "$KEEP_WRKSRC" ] && arg="$arg -C"
 		[ -n "$KEEP_AUTODEPS" ] && arg="$arg -K"
-		[ -n "$DESTDIR_ONLY_INSTALL" ] && arg="$arg -D"
-		[ -n "$BUILD_BINPKG" ] && arg="$arg -B"
 
 		action="$arg $action"
-		env in_chroot=1 IN_CHROOT=1 LANG=C _ORIGINPKG="$pkg" \
+		env in_chroot=1 IN_CHROOT=1 LANG=C \
 			${CHROOT_CMD} $XBPS_MASTERDIR sh -c \
 			"xbps-src $action $pkg" || rv=$?
 	fi
