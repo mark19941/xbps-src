@@ -40,7 +40,6 @@ fi
 XBPS_CONFIG_FILE=${XBPS_ETCDIR}/xbps-src.conf
 PROGNAME=$(basename $0)
 FAKEROOT_CMD="fakeroot --"
-SUDO_CMD=sudo
 CHROOT_CMD=chroot
 XBPS_MACHINE=$(uname -m)
 
@@ -131,6 +130,12 @@ Targets: (only one may be specified)
  repo-checkvers
    Compares available version from local repository against version in
    srcpkgs and tells you when a binary package is outdated.
+
+ setcaps
+   Sets required capabilities in xbps-src utilities to be able to build
+   binary packages in a chroot with a regular user (not root).
+   Please note that you must be root for this and the filesystem storing
+   <masterdir> must support extended attributes.
 
  show [pkgname]
    Show information for the specified package.
@@ -271,13 +276,12 @@ set_defvars
 # Override stuff for user/root builds.
 if [ -z "$IN_CHROOT" ]; then
 	CHROOT_CMD="@@XBPS_INSTALL_LIBEXECDIR@@/capchroot"
-	unset SUDO_CMD
 fi
 
 if [ "$(id -u)" -eq 0 ]; then
 	# disable sudo and fakeroot if uid==0
 	CHROOT_CMD="chroot"
-	unset SUDO_CMD FAKEROOT_CMD
+	unset FAKEROOT_CMD
 fi
 
 #
@@ -401,6 +405,29 @@ make-repoidx)
 	;;
 repo-checkvers)
 	check_repository_packages
+	;;
+setcaps)
+	if [ -z "$IN_CHROOT" ]; then
+		if [ "$(id -u)" -ne 0 ]; then
+			msg_error "only root can set capabilities!\n"
+		fi
+		for f in mount umount; do
+			echo -n "Setting CAP_SYS_ADMIN capability to $XBPS_LIBEXECDIR/cap${f}... "
+			setcap cap_sys_admin=ep $XBPS_LIBEXECDIR/cap${f}
+			if [ $? -eq 0 ]; then
+				echo "done."
+			else
+				echo "FAILED!"
+			fi
+		done
+		echo -n "Setting CAP_SYS_CHROOT capability to $XBPS_LIBEXECDIR/capchroot... "
+		setcap cap_sys_chroot=ep $XBPS_LIBEXECDIR/capchroot
+		if [ $? -eq 0 ]; then
+			echo "done."
+		else
+			echo "FAILED!"
+		fi
+	fi
 	;;
 show)
 	if [ -z "${_pkgname}" ]; then

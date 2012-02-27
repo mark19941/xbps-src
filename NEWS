@@ -1,4 +1,6 @@
 v21:
+ * Added new target 'setcaps' to set required capabilities to the
+   helpers. The target must be run as root.
  * The 'clean-autodeps' target has been renamed to 'remove-autodeps'.
  * The 'build-pkg' target now installs the target package to destdir
    and builds the binary package for itself and its dependencies,

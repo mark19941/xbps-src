@@ -106,7 +106,11 @@ from binary packages with:
 thanks to the *POSIX.1e Capabilities* support in the Linux kernel. To use this
 the target filesystem must support *extended attributes*; right now they
 are supported on almost all Linux filesytems, such as *ext2*, *ext3*, *ext4*,
-*xfs*, and others. This option is enabled by default unless uid==0.
+*xfs*, and others. This option is enabled by default unless uid==0. To build
+binary packages with your normal user the capabilities must be set to some
+helpers as root:
+
+	$ xbps-src setcaps
 
 I believe it's the most easier and faster way to handle clean dependencies;
 another reason would be that xbps packages are meant to be used in a system and

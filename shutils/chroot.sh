@@ -26,7 +26,7 @@
 _mount() {
 	MASTERDIR="${XBPS_MASTERDIR}" DISTDIR="${XBPS_DISTDIR}" \
 		HOSTDIR="${XBPS_HOSTDIR}" XBPS_ETCDIR="${XBPS_ETCDIR}" \
-		XBPS_SHAREDIR="${XBPS_SHAREDIR}" ${SUDO_CMD} \
+		XBPS_SHAREDIR="${XBPS_SHAREDIR}" \
 		${XBPS_LIBEXECDIR}/chroot-helper.sh mount
 	return $?
 }
@@ -34,7 +34,7 @@ _mount() {
 _umount() {
 	MASTERDIR="${XBPS_MASTERDIR}" DISTDIR="${XBPS_DISTDIR}" \
 		HOSTDIR="${XBPS_HOSTDIR}" XBPS_ETCDIR="${XBPS_ETCDIR}" \
-		XBPS_SHAREDIR="${XBPS_SHAREDIR}" ${SUDO_CMD} \
+		XBPS_SHAREDIR="${XBPS_SHAREDIR}" \
 		${XBPS_LIBEXECDIR}/chroot-helper.sh umount
 	return $?
 }
@@ -238,7 +238,7 @@ install_xbps_utils() {
 	local xbps_prefix=$XBPS_MASTERDIR/usr/local
 
 	if [ ! -f ${XBPS_MASTERDIR}/.xbps_utils_done ]; then
-		echo "=> Installing static XBPS utils into masterdir."
+		msg_normal "Installing static XBPS utils into masterdir..."
 		for f in bin repo uhelper; do
 			_cmd=$(which xbps-${f}.static 2>/dev/null)
 			if [ -z "${_cmd}" ]; then
@@ -272,9 +272,9 @@ chroot_handler() {
 	[ -z "$action" -a -z "$pkg" ] && return 1
 
 	if [ ! -f $XBPS_MASTERDIR/.xbps_perms_done ]; then
-		echo -n "==> Preparing chroot on $XBPS_MASTERDIR... "
+		msg_normal "Preparing chroot on $XBPS_MASTERDIR... "
 		prepare_chroot || return $?
-		echo "done."
+		msg_normal_append "done.\n"
 	fi
 
 	[ ! -d "$XBPS_MASTERDIR/tmp" ] && mkdir -p "$XBPS_MASTERDIR/tmp"
