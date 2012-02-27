@@ -42,11 +42,10 @@ variables:
 	- ETCDIR: PREFIX/etc/xbps by default
 
 Once you installed it with your desired settings you must set the proper
-capabilities to the helpers, as follows with root permissions:
+capabilities to the helpers as root (after that you don't need to be root
+anymore):
 
-	$ setcap cap_sys_admin=ep LIBEXECDIR/xbps-src/capmount
-	$ setcap cap_sys_admin=ep LIBEXECDIR/xbps-src/capumount
-	$ setcap cap_sys_chroot=ep LIBEXECDIR/xbps-src/capchroot
+	$ sudo xbps-src setcaps
 
 See the USAGE file to know more in how to use xbps-src.
 
