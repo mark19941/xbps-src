@@ -104,7 +104,7 @@ write_metadata_real() {
 		_tmpf=$(mktemp) || msg_error "$pkgver: failed to create tempfile.\n"
 		echo "# Virtual packages provided by '${pkgname}':" >>${_tmpf}
 		for f in ${provides}; do
-			echo "virtual-package ${pkgname} { targets = ${f} }" >>${_tmpf}
+			echo "virtual-package ${pkgname} { targets = \"${f}\" }" >>${_tmpf}
 		done
 		install -Dm644 ${_tmpf} \
 			${DESTDIR}/etc/xbps/virtualpkg.d/${pkgname}.conf
