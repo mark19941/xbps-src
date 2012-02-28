@@ -124,7 +124,7 @@ install_pkg_deps() {
 				missing_deps="${missing_deps} ${i}"
 			fi
 		done
-		remove_pkg_autodeps
+		remove_pkg_autodeps $KEEP_AUTODEPS
 		for i in ${missing_deps}; do
 			# packages not found in repos, install from source.
 			curpkgdepname=$($XBPS_PKGDB_CMD getpkgdepname "$i")
