@@ -107,11 +107,11 @@ export XBPS_LIBEXECDIR=/usr/local/libexec/xbps-src
 
 set_defvars
 
-PATH=/tools/bin:/usr/local/sbin:/bin:/usr/bin:/sbin
+PATH=/usr/local/sbin:/bin:/usr/bin:/sbin
 PATH=\$PATH:/usr/local/bin:/usr/lib/perl5/core_perl/bin
 export PATH
 
-exec env PS1="[\u@masterdir-chroot \W]$ " /bin/bash
+exec env PS1="[\u@$XBPS_MASTERDIR \W]$ " /bin/bash +h
 _EOF
 	chmod 755 $XBPS_MASTERDIR/bin/xbps-shell
 }

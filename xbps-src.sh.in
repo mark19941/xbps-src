@@ -303,7 +303,7 @@ if [ -z "$IN_CHROOT" ]; then
 	MYPATH="$MYPATH:$XBPS_MASTERDIR/usr/local/sbin"
 	export PATH="$MYPATH"
 else
-	MYPATH="/tools/bin:/usr/local/sbin:/bin:/sbin:/usr/bin:/usr/sbin"
+	MYPATH="/usr/local/sbin:/bin:/sbin:/usr/bin:/usr/sbin"
 	MYPATH="$MYPATH:/usr/local/bin:/usr/lib/perl5/core_perl/bin"
 	export PATH="$MYPATH"
 	if [ -n "$XBPS_CCACHE" ]; then
