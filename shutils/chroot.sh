@@ -48,10 +48,10 @@ chroot_init() {
 		fi
 	fi
 
-	check_installed_pkg base-chroot-0.25
+	check_installed_pkg base-chroot-$BASE_CHROOT_REQ
 	if [ $? -ne 0 ]; then
 		echo "${XBPS_MASTERDIR} has not been prepared for chroot operations."
-		echo "Please install 'base-chroot>=0.25' and try again."
+		echo "Please install 'base-chroot>=$BASE_CHROOT_REQ' and try again."
 		exit 1
 	fi
 
@@ -217,32 +217,16 @@ prepare_binpkg_repos() {
 		'fakeroot -- xbps-repo.static -C /usr/local/etc/xbps/xbps.conf sync'
 }
 
-create_busybox_links() {
-	local lbindir=$XBPS_MASTERDIR/usr/local/bin
-
-	[ ! -d ${lbindir} ] && mkdir -p ${lbindir}
-
-	# Create other symlinks in /usr/local/bin
-	cd ${lbindir} || return 1
-
-	for f in $(${XBPS_MASTERDIR}/bin/busybox --list); do
-		if [ "$f" = "tar" -o "$f" = "sh" -o "$f" = "xz" ]; then
-			continue
-		fi
-		ln -sf ../../../bin/busybox $f
-	done
-}
-
 install_xbps_utils() {
 	local needed= _cmd=
 	local xbps_prefix=$XBPS_MASTERDIR/usr/local
 
 	if [ ! -f ${XBPS_MASTERDIR}/.xbps_utils_done ]; then
-		msg_normal "Installing static XBPS utils into masterdir..."
+		msg_normal "Installing static XBPS utils into masterdir...\n"
 		for f in bin repo uhelper; do
 			_cmd=$(which xbps-${f}.static 2>/dev/null)
 			if [ -z "${_cmd}" ]; then
-				echo "Unexistent xbps-uhelper.static file!"
+				msg_error "Unexistent ${_cmd} file!"
 				exit 1
 			fi
 			cp -f ${_cmd} $xbps_prefix/sbin
@@ -280,7 +264,6 @@ chroot_handler() {
 
 	chroot_init || return $?
 	create_binsh_symlink || return $?
-	create_busybox_links || return $?
 	install_xbps_utils || return $?
 	install_xbps_src || return $?
 	_mount || return $?

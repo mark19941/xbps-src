@@ -24,6 +24,7 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #-
 readonly XBPS_SRC_VERSION=@@XBPS_SRC_VERSION@@
+readonly BASE_CHROOT_REQ="0.27"
 
 if [ -n "$IN_CHROOT" ]; then
 	export XBPS_ETCDIR=/usr/local/etc/xbps
