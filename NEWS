@@ -1,4 +1,7 @@
 v21:
+ * Needs base-chroot>=0.27 in masterdir for chroot ops.
+ * When initializing chroot in first access, update xbps.conf with
+   virtual packages from base-chroot packages.
  * Added new targets 'install-destdir' and 'remove-destdir' to only
    install/remove target package to/from destdir.
  * Added new target 'setcaps' to set required capabilities to the
