@@ -42,7 +42,7 @@ check_repository_packages() {
 		else
 			pkgn=$(basename $subtmpl)
 		fi
-		binpkgver=$($XREPOCMD show -oversion $pkgn)
+		binpkgver=$($XREPOCMD show -oversion $pkgn 2>/dev/null)
 		[ $? -ne 0 ] && continue
 
 		if [ -r $XBPS_SRCPKGDIR/$pkgn/${pkgn}.template ]; then
