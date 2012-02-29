@@ -1,3 +1,10 @@
+v22:
+ * Fixed 'remove-autodeps' in chroot case (regression from v21).
+ * When checking if required deps are installed, use xbps-bin(8)
+   rather than xbps-uhelper, so that it can detect virtual packages
+   automagically.
+ * Fixed -K to not remove autodeps if set (regression from v21).
+
 v21:
  * Needs base-chroot>=0.27 in masterdir for chroot ops.
  * When initializing chroot in first access, update xbps.conf with

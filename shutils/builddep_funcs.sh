@@ -67,7 +67,7 @@ remove_pkg_autodeps() {
 	# Autoremove installed binary packages.
 	tmplogf=$(mktemp)
 	$FAKEROOT_CMD $XBPS_BIN_CMD reconfigure all && \
-		${FAKEROOT_CMD} ${XBPS_BIN_CMD} -Ryf autoremove >$tmplogf 2>&1
+		${FAKEROOT_CMD} ${XBPS_BIN_CMD} -Ry autoremove >$tmplogf 2>&1
 	if [ $? -ne 0 ]; then
 		msg_red "$pkgver: failed to remove automatic dependencies:\n"
 		cat $tmplogf && rm -f $tmplogf
@@ -94,15 +94,20 @@ install_pkg_deps() {
 		#
 		for i in ${build_depends}; do
 			pkgn=$($XBPS_PKGDB_CMD getpkgdepname "${i}")
-			iver=$($XBPS_PKGDB_CMD version "${pkgn}")
 			check_pkgdep_matched "${i}"
 			local rval=$?
 			if [ $rval -eq 0 ]; then
-				echo "   ${i}: found '$pkgn-$iver'."
-				continue
+				iver=$($XBPS_BIN_CMD show -oversion "${pkgn}")
+				if [ $? -eq 0 -a -n "$iver" ]; then
+					echo "   ${i}: found '$pkgn-$iver'."
+					continue
+				fi
 			elif [ $rval -eq 1 ]; then
-				echo "   ${i}: installed ${iver} (unresolved) removing..."
-				$FAKEROOT_CMD $XBPS_BIN_CMD -yFf remove $pkgn >/dev/null 2>&1
+				iver=$($XBPS_BIN_CMD show -oversion "${pkgn}")
+				if [ $? -eq 0 -a -n "$iver" ]; then
+					echo "   ${i}: installed ${iver} (unresolved) removing..."
+					$FAKEROOT_CMD $XBPS_BIN_CMD -yFf remove $pkgn >/dev/null 2>&1
+				fi
 			else
 				repover=$($XBPS_REPO_CMD -oversion show $pkgn 2>/dev/null)
 				if [ $? -eq 0 ]; then
@@ -197,8 +202,8 @@ check_pkgdep_matched() {
 	pkgn="$($XBPS_PKGDB_CMD getpkgdepname ${pkg})"
 	[ -z "$pkgn" ] && return 255
 
-	iver="$($XBPS_PKGDB_CMD version $pkgn)"
-	if [ -n "$iver" ]; then
+	iver="$($XBPS_BIN_CMD show -oversion $pkgn)"
+	if [ $? -eq 0 -a -n "$iver" ]; then
 		${XBPS_PKGDB_CMD} pkgmatch "${pkgn}-${iver}" "${pkg}"
 		[ $? -eq 1 ] && return 0
 	else
@@ -220,8 +225,8 @@ check_installed_pkg() {
 	pkgn="$($XBPS_PKGDB_CMD getpkgname ${pkg})"
 	[ -z "$pkgn" ] && return 2
 
-	iver="$($XBPS_PKGDB_CMD version $pkgn)"
-	if [ -n "$iver" ]; then
+	iver="$($XBPS_BIN_CMD show -oversion $pkgn)"
+	if [ $? -eq 0 -a -n "$iver" ]; then
 		${XBPS_CMPVER_CMD} "${pkgn}-${iver}" "${pkg}"
 		[ $? -eq 0 -o $? -eq 1 ] && return 0
 	fi
