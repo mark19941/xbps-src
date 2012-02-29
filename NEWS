@@ -1,4 +1,6 @@
 v22:
+ * Always cd to wrksrc/build_wrksrc before executing pre/post/do
+   functions in packages.
  * Fixed 'remove-autodeps' in chroot case (regression from v21).
  * When checking if required deps are installed, use xbps-bin(8)
    rather than xbps-uhelper, so that it can detect virtual packages
