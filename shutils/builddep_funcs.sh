@@ -203,6 +203,10 @@ check_pkgdep_matched() {
 	[ -z "$pkgn" ] && return 255
 
 	iver="$($XBPS_BIN_CMD show -oversion $pkgn)"
+	if [ $? -ne 0 -o -z "$iver" ]; then
+		iver="$($XBPS_PKGDB_CMD version $pkgn)"
+	fi
+
 	if [ $? -eq 0 -a -n "$iver" ]; then
 		${XBPS_PKGDB_CMD} pkgmatch "${pkgn}-${iver}" "${pkg}"
 		[ $? -eq 1 ] && return 0
