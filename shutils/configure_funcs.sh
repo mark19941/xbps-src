@@ -39,28 +39,34 @@ configure_src_phase() {
 	# Skip this phase for meta-template style builds.
 	[ -n "$build_style" -a "$build_style" = "meta-template" ] && return 0
 
-	cd $wrksrc || msg_error "unexistent build directory [$wrksrc].\n"
+	cd $wrksrc || msg_error "$pkgver: cannot access wrksrc directory [$wrksrc].\n"
+	if [ -n "$build_wrksrc" ]; then
+		cd $build_wrksrc || \
+			msg_error "$pkgver: cannot access build_wrksrc directory [$build_wrksrc].\n"
+	fi
 
 	# Run pre_configure func.
 	if [ ! -f $XBPS_PRECONFIGURE_DONE ]; then
+		cd $wrksrc
+		[ -n "$build_wrksrc" ] && cd $build_wrksrc
 		run_func pre_configure
 		[ $? -eq 0 ] && touch -f $XBPS_PRECONFIGURE_DONE
 	fi
 
-	cd $wrksrc || return 1
-	if [ -n "$build_wrksrc" ]; then
-		cd $build_wrksrc || return 1
-	fi
 
 	if [ -r $XBPS_HELPERSDIR/${build_style}.sh ]; then
 		. $XBPS_HELPERSDIR/${build_style}.sh
 	fi
 	# run do_configure()
+	cd $wrksrc
+	[ -n "$build_wrksrc" ] && cd $build_wrksrc
 	run_func do_configure
 	rval=$?
 
 	# Run post_configure func.
 	if [ ! -f $XBPS_POSTCONFIGURE_DONE ]; then
+		cd $wrksrc
+		[ -n "$build_wrksrc" ] && cd $build_wrksrc
 		run_func post_configure
 		[ $? -eq 0 ] && touch -f $XBPS_POSTCONFIGURE_DONE
 	fi

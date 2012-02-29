@@ -50,10 +50,10 @@ install_src_phase() {
 		return 0
 	fi
 
-	cd $wrksrc || msg_error "can't change cwd to wrksrc!\n"
+	cd $wrksrc || msg_error "$pkgver: cannot access to wrksrc [$wrksrc]\n"
 	if [ -n "$build_wrksrc" ]; then
 		cd $build_wrksrc \
-			|| msg_error "can't change cwd to build_wrksrc!\n"
+			|| msg_error "$pkgver: cannot access to build_wrksrc [$build_wrksrc]\n"
 	fi
 
 	# Run pre_install func.
@@ -66,12 +66,14 @@ install_src_phase() {
 	if [ -r $XBPS_HELPERSDIR/${build_style}.sh ]; then
 		. $XBPS_HELPERSDIR/${build_style}.sh
 	fi
+	cd $wrksrc
+	[ -n "$build_wrksrc" ] && cd $build_wrksrc
 	run_func do_install
-
-	cd ${wrksrc} || msg_error "can't change cwd to wrksrc!\n"
 
 	# Run post_install func.
 	if [ ! -f $XBPS_POST_INSTALL_DONE ]; then
+		cd $wrksrc
+		[ -n "$build_wrksrc" ] && cd $build_wrksrc
 		run_func post_install
 		[ $? -eq 0 ] && touch -f $XBPS_POST_INSTALL_DONE
 	fi
@@ -92,7 +94,8 @@ install_src_phase() {
 	fi
 	# Remove empty directories by default.
 	for f in $(find ${DESTDIR} -depth -type d); do
-		rmdir $f 2>/dev/null && msg_warn "removed empty dir: ${f##${DESTDIR}}\n"
+		rmdir $f 2>/dev/null && \
+			msg_warn "$pkgver: removed empty dir: ${f##${DESTDIR}}\n"
 	done
 	#
 	# Build subpackages if found.
@@ -100,7 +103,7 @@ install_src_phase() {
 	for subpkg in ${subpackages}; do
 		msg_normal "$pkgver: preparing subpackage '${subpkg}'...\n"
 		if [ ! -f $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template ]; then
-			msg_error "Cannot find '${subpkg}' subpkg build template!\n"
+			msg_error "$pkgver: cannot find '${subpkg}' subpkg build template!\n"
 		fi
 		. $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template
 		pkgname=${subpkg}
@@ -109,18 +112,22 @@ install_src_phase() {
 			msg_warn "$pkgver: skipping '$pkgname' subpkg, already installed into destdir.\n"
 			continue
 		fi
+		cd $wrksrc
+		[ -n "$build_wrksrc" ] && cd $build_wrksrc
 		run_func do_install
 		if [ $? -eq 0 ]; then
 			touch -f ${wrksrc}/.xbps_do_install_${pkgname}_done
 			# Remove empty directories by default.
 			for f in $(find ${DESTDIR} -depth -type d); do
-				rmdir $f 2>/dev/null && msg_warn "removed empty dir: ${f##${DESTDIR}}\n"
+				rmdir $f 2>/dev/null && \
+					msg_warn "$pkgver: removed empty dir: ${f##${DESTDIR}}\n"
 			done
 		fi
 	done
 	# Remove empty directories by default.
 	for f in $(find ${DESTDIR} -depth -type d); do
-		rmdir $f 2>/dev/null && msg_warn "removed empty dir: ${f##${DESTDIR}}\n"
+		rmdir $f 2>/dev/null && \
+			msg_warn "$pkgver: removed empty dir: ${f##${DESTDIR}}\n"
 	done
 	touch -f $XBPS_INSTALL_DONE
 }

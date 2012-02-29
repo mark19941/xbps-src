@@ -82,7 +82,7 @@ fetch_distfiles() {
 			done
 
 			if [ -z $found ]; then
-				msg_error "cannot find checksum for $curfile.\n"
+				msg_error "$pkgver: cannot find checksum for $curfile.\n"
 			fi
 
 			verify_sha256_cksum $curfile $cksum
@@ -106,9 +106,9 @@ fetch_distfiles() {
 		if [ $? -ne 0 ]; then
 			unset localurl
 			if [ ! -f $XBPS_SRCDISTDIR/$curfile ]; then
-				msg_error "couldn't fetch $curfile.\n"
+				msg_error "$pkgver: couldn't fetch $curfile.\n"
 			else
-				msg_error "there was an error fetching $curfile.\n"
+				msg_error "$pkgver: there was an error fetching $curfile.\n"
 			fi
 		else
 			unset localurl
@@ -126,7 +126,7 @@ fetch_distfiles() {
 			done
 
 			if [ -z $found ]; then
-				msg_error "cannot find checksum for $curfile.\n"
+				msg_error "$pkgver: cannot find checksum for $curfile.\n"
 			fi
 
 			verify_sha256_cksum $curfile $cksum

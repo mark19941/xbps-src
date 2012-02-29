@@ -71,7 +71,7 @@ remove_pkg_autodeps() {
 	if [ $? -ne 0 ]; then
 		msg_red "$pkgver: failed to remove automatic dependencies:\n"
 		cat $tmplogf && rm -f $tmplogf
-		msg_error "cannot continue!\n"
+		msg_error "$pkgver: cannot continue!\n"
 	fi
 	rm -f $tmplogf
 }

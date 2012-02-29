@@ -28,7 +28,7 @@ stow_pkg_handler() {
 
 	for subpkg in ${subpackages}; do
 		if [ ! -f $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template ]; then
-			msg_error "Cannot find $subpkg subpkg build template!\n"
+			msg_error "$pkgver: cannot find $subpkg subpkg build template!\n"
 		fi
 		unset revision pre_install pre_remove post_install \
 			post_remove post_stow
@@ -67,7 +67,7 @@ stow_pkg_real() {
 		return 0
 	fi
 	if [ $(id -u) -ne 0 ] && [ ! -w $XBPS_MASTERDIR ]; then
-		msg_error "cannot stow $pkgname! (permission denied)\n"
+		msg_error "$pkgver: cannot be stowed! (permission denied)\n"
 	fi
 
 	if [ -n "$build_style" -a "$build_style" = "meta-template" ]; then
@@ -137,7 +137,7 @@ unstow_pkg_real() {
 
 	if [ $(id -u) -ne 0 ] && \
 	   [ ! -w $XBPS_MASTERDIR ]; then
-		msg_error "cannot unstow $pkgname! (permission denied)\n"
+		msg_error "$pkgver: cannot be unstowed! (permission denied)\n"
 	fi
 
 	ver=$($XBPS_PKGDB_CMD version $pkgname)

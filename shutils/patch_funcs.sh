@@ -63,7 +63,7 @@ _process_patch() {
 
 	cd $wrksrc && patch -s ${args} < ${_patch} 2>/dev/null
 	if [ $? -eq 0 ]; then
-		msg_normal "$pkgver: Patch applied: ${_patch}.\n"
+		msg_normal "$pkgver: patch applied: ${_patch}.\n"
 	else
 		msg_error "'$pkgver: couldn't apply patch: ${_patch}.\n"
 	fi

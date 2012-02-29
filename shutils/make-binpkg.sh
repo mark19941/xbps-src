@@ -46,7 +46,7 @@ binpkg_cleanup() {
 	local pkgdir="$1" binpkg="$2"
 
 	[ -z "$pkgdir" -o -z "$binpkg" ] && return 1
-	msg_red "Interrupted! removing $binpkg file!\n"
+	msg_red "$pkgver: Interrupted! removing $binpkg file!\n"
 	rm -f $pkgdir/$binpkg
 	exit 1
 }
@@ -59,7 +59,7 @@ make_binpkg_real() {
 	local mfiles= binpkg= pkgdir= arch= dirs= _dirs= d= clevel=
 
 	if [ ! -d "${DESTDIR}" ]; then
-		msg_warn "cannot find destdir for $pkgname... skipping!\n"
+		msg_warn "$pkgver: cannot find destdir... skipping!\n"
 		return 0
 	fi
 	cd ${DESTDIR}
@@ -79,7 +79,7 @@ make_binpkg_real() {
 	# Don't overwrite existing binpkgs by default, skip them.
 	#
 	if [ -f $pkgdir/$binpkg ]; then
-		msg_normal "Skipping existing $binpkg pkg...\n"
+		msg_normal "$pkgver: skipping existing $binpkg pkg...\n"
 		return 6 # EEXIST
 	fi
 

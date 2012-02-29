@@ -35,11 +35,10 @@ build_src_phase() {
 	# Skip this phase for meta-template style builds.
 	[ -n "$build_style" -a "$build_style" = "meta-template" ] && return 0
 
-	[ ! -d $wrksrc ] && msg_error "unexistent build directory [$wrksrc]\n"
-
-	cd $wrksrc || return 1
+	[ -d $wrksrc ] || msg_error "$pkgver: cannot access wrksrc directory [$wrksrc]\n"
 	if [ -n "$build_wrksrc" ]; then
-		cd $build_wrksrc || return 1
+		cd $build_wrksrc || \
+			msg_error "$pkgver: cannot access build_wrksrc directory [$build_wrksrc]\n"
 	fi
 
 	if [ -n "$XBPS_MAKEJOBS" -a -z "$disable_parallel_build" ]; then
@@ -48,6 +47,8 @@ build_src_phase() {
 
 	# Run pre_build func.
 	if [ ! -f $XBPS_PRE_BUILD_DONE ]; then
+		cd $wrksrc
+		[ -n "$build_wrksrc" ] && cd $build_wrksrc
 		run_func pre_build
 		[ $? -eq 0 ] && touch -f $XBPS_PRE_BUILD_DONE
 	fi
@@ -57,11 +58,15 @@ build_src_phase() {
 	fi
 
 	# do_build()
+	cd $wrksrc
+	[ -n "$build_wrksrc" ] && cd $build_wrksrc
 	run_func do_build
 	rval=$?
 
 	# Run post_build func.
 	if [ ! -f $XBPS_POST_BUILD_DONE ]; then
+		cd $wrksrc
+		[ -n "$build_wrksrc" ] && cd $build_wrksrc
 		run_func post_build
 		[ $? -eq 0 ] && touch -f $XBPS_POST_BUILD_DONE
 	fi

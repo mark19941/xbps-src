@@ -28,7 +28,7 @@ write_metadata() {
 
 	for subpkg in ${subpackages}; do
 		if [ ! -f $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template ]; then
-			msg_error "Cannot find subpkg '${subpkg}' build template!\n"
+			msg_error "$pkgver: cannot find subpkg '${subpkg}' build template!\n"
 		fi
 		setup_tmpl ${sourcepkg}
 		unset conf_files noarch triggers replaces \
@@ -81,7 +81,7 @@ write_metadata_real() {
 	local fpattern="s|${DESTDIR}||g;s|^\./$||g;/^$/d"
 
 	if [ ! -d "${DESTDIR}" ]; then
-		msg_error "$pkgname not installed into destdir.\n"
+		msg_error "$pkgver: not installed in destdir!\n"
 	fi
 
 	if [ -n "$noarch" ]; then
@@ -437,9 +437,9 @@ _EOF
 	mv -f $TMPFPROPS ${DESTDIR}/props.plist
 
 	$XBPS_PKGDB_CMD sanitize-plist ${DESTDIR}/files.plist || \
-		msg_error "$pkgname: failed to externalize files.plist!\n"
+		msg_error "$pkgver: failed to externalize files.plist!\n"
 	$XBPS_PKGDB_CMD sanitize-plist ${DESTDIR}/props.plist || \
-		msg_error "$pkgname: failed to externalize props.plist!\n"
+		msg_error "$pkgver: failed to externalize props.plist!\n"
 
 	chmod 644 ${DESTDIR}/files.plist ${DESTDIR}/props.plist
 	[ -f $metadir/flist ] && chmod 644 $metadir/flist
@@ -457,10 +457,10 @@ _EOF
 		meta_remove=${XBPS_SRCPKGDIR}/${pkgname}/REMOVE
 	fi
 	write_metadata_scripts install ${meta_install} || \
-		msg_error "$pkgname: failed to write INSTALL metadata file!\n"
+		msg_error "$pkgver: failed to write INSTALL metadata file!\n"
 
 	write_metadata_scripts remove ${meta_remove} || \
-		msg_error "$pkgname: failed to write REMOVE metadata file!\n"
+		msg_error "$pkgver: failed to write REMOVE metadata file!\n"
 
 	msg_normal "$pkgver: successfully created package metadata.\n"
 }

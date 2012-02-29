@@ -261,13 +261,10 @@ prepare_tmpl() {
 remove_tmpl_wrksrc() {
 	local lwrksrc="$1"
 
-	if [ ! -d "$lwrksrc" ]; then
-		return 0
+	if [ -d "$lwrksrc" ]; then
+		msg_normal "$pkgver: cleaning build directory...\n"
+		rm -rf $lwrksrc
 	fi
-
-	msg_normal "$pkgver: cleaning build directory...\n"
-	rm -rf $lwrksrc
-	return $?
 }
 
 set_tmpl_common_vars() {
