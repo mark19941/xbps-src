@@ -32,7 +32,7 @@ extract_distfiles() {
 
 	[ -f $XBPS_EXTRACT_DONE ] && return 0
 	[ -z "$IN_CHROOT" -a ! -w $XBPS_BUILDDIR ] && \
-		msg_error "can't extract distfile(s) (permission denied)\n"
+		msg_error "$pkgver: can't extract distfile(s) (permission denied)\n"
 
 	#
 	# If we are being called via the target, just extract and return.
@@ -53,7 +53,7 @@ extract_distfiles() {
 	for f in ${distfiles}; do
 		curfile=$(basename $f)
 		if [ ! -f ${XBPS_SRCDISTDIR}/${curfile} ]; then
-			msg_error "cannot find ${curfile}, use 'xbps-src fetch' first.\n"
+			msg_error "$pkgver: cannot find ${curfile}, use 'xbps-src fetch' first.\n"
 		fi
 	done
 
@@ -89,7 +89,7 @@ extract_distfiles() {
 		elif $(echo $f|grep -q '.zip'); then
 			cursufx="zip"
 		else
-			msg_error "unknown distfile suffix for $curfile.\n"
+			msg_error "$pkgver: unknown distfile suffix for $curfile.\n"
 		fi
 
 		if [ -n "$create_wrksrc" ]; then
@@ -100,24 +100,21 @@ extract_distfiles() {
 
 		case ${cursufx} in
 		txz)
-			if ! command -v unxz 2>&1 >/dev/null; then
-				msg_error "cannot find xz for extraction.\n"
-			fi
 			unxz -cf $XBPS_SRCDISTDIR/$curfile | tar xf - -C $extractdir
 			if [ $? -ne 0 ]; then
-				msg_error "extracting $curfile into $XBPS_BUILDDIR.\n"
+				msg_error "$pkgver: extracting $curfile into $XBPS_BUILDDIR.\n"
 			fi
 			;;
 		tbz)
 			bunzip2 -cf $XBPS_SRCDISTDIR/$curfile | tar xf - -C $extractdir
 			if [ $? -ne 0 ]; then
-				msg_error "extracting $curfile into $XBPS_BUILDDIR.\n"
+				msg_error "$pkgver: extracting $curfile into $XBPS_BUILDDIR.\n"
 			fi
 			;;
 		tgz)
 			gunzip -cf $XBPS_SRCDISTDIR/$curfile | tar xf - -C $extractdir
 			if [ $? -ne 0 ]; then
-				msg_error "extracting $curfile into $XBPS_BUILDDIR.\n"
+				msg_error "$pkgver: extracting $curfile into $XBPS_BUILDDIR.\n"
 			fi
 			;;
 		gz|bz2)
@@ -131,21 +128,21 @@ extract_distfiles() {
 		tar)
 			tar xf $XBPS_SRCDISTDIR/$curfile -C $extractdir
 			if [ $? -ne 0 ]; then
-				msg_error "extracting $curfile into $XBPS_BUILDDIR.\n"
+				msg_error "$pkgver: extracting $curfile into $XBPS_BUILDDIR.\n"
 			fi
 			;;
 		zip)
 			if command -v unzip 2>&1 >/dev/null; then
 				unzip -q $XBPS_SRCDISTDIR/$curfile -d $extractdir
 				if [ $? -ne 0 ]; then
-					msg_error "extracting $curfile into $XBPS_BUILDDIR.\n"
+					msg_error "$pkgver: extracting $curfile into $XBPS_BUILDDIR.\n"
 				fi
 			else
-				msg_error "cannot find unzip bin for extraction.\n"
+				msg_error "$pkgver: cannot find unzip bin for extraction.\n"
 			fi
 			;;
 		*)
-			msg_error "cannot guess $curfile extract suffix. ($cursufx)\n"
+			msg_error "$pkgver: cannot guess $curfile extract suffix. ($cursufx)\n"
 			;;
 		esac
 	done
