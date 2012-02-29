@@ -35,7 +35,7 @@ build_src_phase() {
 	# Skip this phase for meta-template style builds.
 	[ -n "$build_style" -a "$build_style" = "meta-template" ] && return 0
 
-	[ -d $wrksrc ] || msg_error "$pkgver: cannot access wrksrc directory [$wrksrc]\n"
+	cd $wrksrc || msg_error "$pkgver: cannot access wrksrc directory [$wrksrc]\n"
 	if [ -n "$build_wrksrc" ]; then
 		cd $build_wrksrc || \
 			msg_error "$pkgver: cannot access build_wrksrc directory [$build_wrksrc]\n"
