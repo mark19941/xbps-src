@@ -404,7 +404,7 @@ build|configure|install-destdir|build-pkg)
 	fi
 	setup_tmpl ${_pkgname}
 	_ORIGINPKG="${_pkgname}"
-	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
+	if [ -z "$bootstrap" -a -z "$IN_CHROOT" ]; then
 		chroot_handler $target ${_ORIGINPKG} || exit $?
 	else
 		install_pkg "$target" || exit $?
