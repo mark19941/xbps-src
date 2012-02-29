@@ -1,3 +1,6 @@
+v24:
+ * Fixed more regressions added in v21..23.
+
 v23:
  * Revert a commit that broke writing run_depends to pkg metadata.
 
