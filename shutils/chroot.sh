@@ -119,7 +119,7 @@ prepare_chroot() {
 	local f=
 
 	if [ ! -f $XBPS_MASTERDIR/bin/bash ]; then
-		msg_error "Bootstrap not installed in $XBPS_MASTERDIR, can't continue."
+		msg_error "Bootstrap not installed in $XBPS_MASTERDIR, can't continue.\n"
 	fi
 
 	# Create some required files.
