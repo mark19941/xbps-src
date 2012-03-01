@@ -230,6 +230,9 @@ check_installed_pkg() {
 	[ -z "$pkgn" ] && return 2
 
 	iver="$($XBPS_BIN_CMD show -oversion $pkgn)"
+	if [ $? -ne 0 -o -z "$iver" ]; then
+		iver="$($XBPS_PKGDB_CMD version $pkgn)"
+	fi
 	if [ $? -eq 0 -a -n "$iver" ]; then
 		${XBPS_CMPVER_CMD} "${pkgn}-${iver}" "${pkg}"
 		[ $? -eq 0 -o $? -eq 1 ] && return 0
