@@ -28,32 +28,32 @@
 #
 #	xbps-bin -Ay install <pkgname>
 #
-# Returns 0 if package already installed or installed successfully. 1 if
-# package not found in repos.
+# Returns 0 if package already installed or installed successfully.
+# Any other error number otherwise.
 #
 install_pkg_from_repos() {
 	local rval= tmplogf=
 
-	_pkgdepname=$($XBPS_PKGDB_CMD getpkgdepname "$1")
+	_pkgdepname=$($XBPS_PKGDB_CMD getpkgname "$1")
 	tmplogf=$(mktemp)
 	$FAKEROOT_CMD $XBPS_BIN_CMD -Ay install ${_pkgdepname} >$tmplogf 2>&1
 	rval=$?
-	if [ $rval -ne 0 -a $rval -ne 2 -a $rval -ne 17 -a $rval -ne 95 ]; then
+	if [ $rval -ne 0 -a $rval -ne 17 ]; then
 		# xbps-bin can return:
 		#
 		#	SUCCESS  (0): package installed successfully.
 		#	ENOENT   (2): package missing in repositories.
 		#	EEXIST  (17): package already installed.
+		#	ENODEV  (19): package depends on missing dependencies.
 		#	ENOTSUP (95): no repositories registered.
 		#
-		# Any other error returned is critical.
 		remove_pkg_autodeps $KEEP_AUTODEPS
 		msg_red "$pkgver: failed to install '$1' dependency! (error $rval)\n"
 		cat $tmplogf && rm -f $tmplogf
 		msg_error "Please see above for the real error, exiting...\n"
 	fi
 	rm -f $tmplogf
-	[ $rval -ne 0 -a $rval -ne 17 ] && rval=1
+	[ $rval -eq 17 ] && rval=0
 	return $rval
 }
 
@@ -114,9 +114,9 @@ install_pkg_deps() {
 					repoloc=$($XBPS_REPO_CMD -orepository show $pkgn)
 					echo "   ${i}: found $repover in $repoloc."
 					if [ -z "$binpkg_deps" ]; then
-						binpkg_deps="${i}"
+						binpkg_deps="${pkgn}-${repover}"
 					else
-						binpkg_deps="${binpkg_deps} ${i}"
+						binpkg_deps="${binpkg_deps} ${pkgn}-${repover}"
 					fi
 					continue
 				else
@@ -129,7 +129,9 @@ install_pkg_deps() {
 				missing_deps="${missing_deps} ${i}"
 			fi
 		done
-		remove_pkg_autodeps $KEEP_AUTODEPS
+		if [ -n "$missing_deps" -o -n "$binpkg_deps" ]; then
+			remove_pkg_autodeps $KEEP_AUTODEPS
+		fi
 		for i in ${missing_deps}; do
 			# packages not found in repos, install from source.
 			curpkgdepname=$($XBPS_PKGDB_CMD getpkgdepname "$i")
@@ -139,8 +141,6 @@ install_pkg_deps() {
 			install_pkg_deps
 		done
 		for i in ${binpkg_deps}; do
-			check_pkgdep_matched "${i}"
-			[ $? -eq 0 ] && continue
 			msg_normal "$pkgver: installing '$i'...\n"
 			install_pkg_from_repos "${i}"
 		done
