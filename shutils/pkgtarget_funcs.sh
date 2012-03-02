@@ -102,16 +102,16 @@ install_pkg() {
 
 	cd $XBPS_MASTERDIR
 	if [ -n "$IN_CHROOT" ]; then
-		# no bootstrap case: remove autodeps, build binpkg,
-		# remove pkg from destdir and remove wrksrc.
-		remove_pkg_autodeps $KEEP_AUTODEPS || return $?
-
 		# If install-destdir specified, we are done.
 		if [ "$target" = "install-destdir" ]; then
 			if [ "$pkgname" = "${_ORIGINPKG}" ]; then
 				exit 0
 			fi
 		fi
+		# no bootstrap case: remove autodeps, build binpkg,
+		# remove pkg from destdir and remove wrksrc.
+		remove_pkg_autodeps $KEEP_AUTODEPS || return $?
+
 		_build_pkg_and_update_repos
 		remove_pkg || return $?
 	else
