@@ -1,5 +1,6 @@
 v24:
- * Fixed more regressions added in v21..23.
+ * Fixed almost all regressions since v21.
+ * Improved showing repo pkg versions while installing them.
 
 v23:
  * Revert a commit that broke writing run_depends to pkg metadata.
