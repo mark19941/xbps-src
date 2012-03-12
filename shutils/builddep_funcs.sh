@@ -129,8 +129,8 @@ install_pkg_deps() {
 				missing_deps="${missing_deps} ${i}"
 			fi
 		done
-		if [ -n "$missing_deps" -o -n "$binpkg_deps" ]; then
-			remove_pkg_autodeps $KEEP_AUTODEPS
+		if [ "$pkgname" != "${_ORIGINPKG}" ]; then
+			remove_pkg_autodeps || return $?
 		fi
 		for i in ${missing_deps}; do
 			# packages not found in repos, install from source.

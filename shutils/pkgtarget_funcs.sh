@@ -108,10 +108,8 @@ install_pkg() {
 				exit 0
 			fi
 		fi
-		# no bootstrap case: remove autodeps, build binpkg,
+		# no bootstrap case:  build binpkg,
 		# remove pkg from destdir and remove wrksrc.
-		remove_pkg_autodeps $KEEP_AUTODEPS || return $?
-
 		_build_pkg_and_update_repos
 		remove_pkg || return $?
 	else
@@ -131,7 +129,10 @@ install_pkg() {
 		remove_tmpl_wrksrc $wrksrc
 	fi
 
-	[ "$pkgname" = "${_ORIGINPKG}" ] && exit 0
+	if [ "$pkgname" = "${_ORIGINPKG}" ]; then
+		remove_pkg_autodeps $KEEP_AUTODEPS || return 1
+		exit 0
+	fi
 }
 
 #
