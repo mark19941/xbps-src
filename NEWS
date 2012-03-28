@@ -1,3 +1,7 @@
+v25:
+ * If required pkg dependency not matched against best pkg version in
+   repository pool, build dependency from source.
+
 v24:
  * Fixed almost all regressions since v21.
  * Improved showing repo pkg versions while installing them.

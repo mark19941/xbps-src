@@ -86,6 +86,9 @@ install_pkg_deps() {
 	[ -z "$build_depends" ] && return 0
 	[ -n "$ORIGIN_PKGDEPS_DONE" ] && return 0
 
+	if [ "$pkgname" != "${_ORIGINPKG}" ]; then
+		remove_pkg_autodeps || return $?
+	fi
 	msg_normal "$pkgver: required dependencies:\n"
 
 	if [ -n "$IN_CHROOT" ]; then
@@ -111,16 +114,19 @@ install_pkg_deps() {
 			else
 				repover=$($XBPS_REPO_CMD -oversion show $pkgn 2>/dev/null)
 				if [ $? -eq 0 ]; then
-					repoloc=$($XBPS_REPO_CMD -orepository show $pkgn)
-					echo "   ${i}: found $repover in $repoloc."
-					if [ -z "$binpkg_deps" ]; then
-						binpkg_deps="${pkgn}-${repover}"
+					$XBPS_PKGDB_CMD pkgmatch ${pkgn}-${repover} "${i}"
+					if [ $? -eq 1 ]; then
+						repoloc=$($XBPS_REPO_CMD -orepository show $pkgn)
+						echo "   ${i}: found $repover in $repoloc."
+						if [ -z "$binpkg_deps" ]; then
+							binpkg_deps="${pkgn}-${repover}"
+						else
+							binpkg_deps="${binpkg_deps} ${pkgn}-${repover}"
+						fi
+						continue
 					else
-						binpkg_deps="${binpkg_deps} ${pkgn}-${repover}"
+						echo "   ${i}: not found."
 					fi
-					continue
-				else
-					echo "   ${i}: not found."
 				fi
 			fi
 			if [ -z "$missing_deps" ]; then
@@ -129,9 +135,6 @@ install_pkg_deps() {
 				missing_deps="${missing_deps} ${i}"
 			fi
 		done
-		if [ "$pkgname" != "${_ORIGINPKG}" ]; then
-			remove_pkg_autodeps || return $?
-		fi
 		for i in ${missing_deps}; do
 			# packages not found in repos, install from source.
 			curpkgdepname=$($XBPS_PKGDB_CMD getpkgdepname "$i")
