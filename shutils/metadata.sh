@@ -42,14 +42,14 @@ write_metadata() {
 		. $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template
 		pkgname=${subpkg}
 		set_tmpl_common_vars
-		verify_rundeps ${DESTDIR}
+		verify_rundeps ${DESTDIR} || return $?
 		write_metadata_real || return $?
 	done
 
 	setup_tmpl ${sourcepkg}
 	# Verify pkg deps.
-	verify_rundeps ${DESTDIR}
-	write_metadata_real
+	verify_rundeps ${DESTDIR} || return $?
+	write_metadata_real || return $?
 	return $?
 }
 

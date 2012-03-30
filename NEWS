@@ -1,5 +1,6 @@
 v25:
- * Fixed issue 3: "Make sure unwanted files aren't added as pkg metadata"
+ * Fixed issue #4: "When rshlibs are added, stop for base pkg only".
+ * Fixed issue #3: "Make sure unwanted files aren't added as pkg metadata"
    by dave. xbps-src now removes those files (if found) before creating
    the package metadata.
  * If required pkg dependency not matched against best pkg version in

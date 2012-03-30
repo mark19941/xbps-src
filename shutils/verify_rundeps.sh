@@ -228,5 +228,6 @@ verify_rundeps() {
 	msg_red "   - A required package that was used in previous build is not being used.\n"
 	msg_red "   - A required package bumped the major version of any of its SONAMEs.\n"
 	msg_red "  If you don't know what to do please contact the package maintainer.\n"
-	msg_error "$pkgver: can't continue because required shlibs do not match.\n"
+
+	export BROKEN_RSHLIBS=1
 }
