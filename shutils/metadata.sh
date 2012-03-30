@@ -102,7 +102,7 @@ write_metadata_real() {
 	for f in INSTALL REMOVE files.plist props.plist; do
 		[ -f ${DESTDIR}/${f} ] && rm -f ${DESTDIR}/${f}
 	done
-	[ -f ${DESTDIR}/var/db/xbps ] && rm -rf ${DESTDIR}/var/db/xbps
+	[ -d ${DESTDIR}/var/db/xbps ] && rm -rf ${DESTDIR}/var/db/xbps
 
 	#
 	# If package provides virtual packages, create dynamically the
