@@ -97,6 +97,14 @@ write_metadata_real() {
 	fi
 
 	#
+	# Always remove metadata files generated in a previous installation.
+	#
+	for f in INSTALL REMOVE files.plist props.plist; do
+		[ -f ${DESTDIR}/${f} ] && rm -f ${DESTDIR}/${f}
+	done
+	[ -f ${DESTDIR}/var/db/xbps ] && rm -rf ${DESTDIR}/var/db/xbps
+
+	#
 	# If package provides virtual packages, create dynamically the
 	# required configuration file.
 	#
