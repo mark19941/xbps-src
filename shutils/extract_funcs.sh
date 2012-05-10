@@ -28,7 +28,7 @@
 # the $wrksrc directory.
 #
 extract_distfiles() {
-	local pkg="$1" curfile= cursufx= f=
+	local pkg="$1" curfile= cursufx= f= j= found=
 
 	[ -f $XBPS_EXTRACT_DONE ] && return 0
 	[ -z "$IN_CHROOT" -a ! -w $XBPS_BUILDDIR ] && \
@@ -65,6 +65,16 @@ extract_distfiles() {
 
 	for f in ${distfiles}; do
 		curfile=$(basename $f)
+		for j in ${skip_extraction}; do
+			if [ "$curfile" = "$j" ]; then
+				found=1
+				break
+			fi
+		done
+		if [ -n "$found" ]; then
+			unset found
+			continue
+		fi
 
 		if $(echo $f|grep -q '.tar.lzma'); then
 			cursufx="txz"
@@ -120,9 +130,9 @@ extract_distfiles() {
 		gz|bz2)
 			cp -f $XBPS_SRCDISTDIR/$curfile $extractdir
 			if [ "$cursufx" = ".gz" ]; then
-				cd $XBPS_BUILDDIR && gunzip $curfile
+				cd $extractdir && gunzip $curfile
 			else
-				cd $XBPS_BUILDDIR && bunzip2 $curfile
+				cd $extractdir && bunzip2 $curfile
 			fi
 			;;
 		tar)
