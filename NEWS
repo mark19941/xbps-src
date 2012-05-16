@@ -2,6 +2,9 @@ v26:
  * New var for templates: 'skip_extraction'. This expects a list of file names
    that won't be extracted in the extract phase.
  * When extracting gzip/bzip2 files, extract them at a proper PATH.
+ * Fixed a nasty bug which removed all files in pkg's metadata dir and
+   broke xbps-triggers. Regression introduced while fixing issue #3.
+   Thanks to xdave for the notice!
 
 v25:
  * Fixed issue #4: "When rshlibs are added, stop for base pkg only".
