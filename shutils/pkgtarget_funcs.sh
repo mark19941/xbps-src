@@ -27,9 +27,9 @@
 # Installs a pkg by reading its build template file.
 #
 make_repoidx() {
-	local f=
+	local f= defrepos="noarch ${XBPS_MACHINE} nonfree/${XBPS_MACHINE} nonfree/noarch"
 
-	for f in ${XBPS_MACHINE} noarch nonfree/${XBPS_MACHINE}; do
+	for f in ${defrepos}; do
 		msg_normal "Updating repository index at:\n"
 		msg_normal " $XBPS_PACKAGESDIR/$f\n"
 		${XBPS_REPO_CMD} genindex ${XBPS_PACKAGESDIR}/${f} 2>/dev/null

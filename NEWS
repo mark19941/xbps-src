@@ -1,3 +1,7 @@
+v27:
+ * Make 'xbps-src make-repoidx' target also create index for the
+   nonfree/noarch repository. Found by dave.
+
 v26:
  * New var for templates: 'skip_extraction'. This expects a list of file names
    that won't be extracted in the extract phase.
