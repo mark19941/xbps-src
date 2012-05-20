@@ -127,6 +127,8 @@ install_pkg_deps() {
 					else
 						echo "   ${i}: not found."
 					fi
+				else
+					echo "   ${i}: not found."
 				fi
 			fi
 			if [ -z "$missing_deps" ]; then
