@@ -1,3 +1,6 @@
+v28:
+ * Make "revision" shared by main pkg and all its subpkgs.
+
 v27:
  * New var for templates: 'create_srcdir'. If set, distfiles for a template
    will be stored in a new subdirectory on XBPS_SRCDISTDIR. This is for

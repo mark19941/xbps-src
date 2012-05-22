@@ -30,7 +30,7 @@ stow_pkg_handler() {
 		if [ ! -f $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template ]; then
 			msg_error "$pkgver: cannot find $subpkg subpkg build template!\n"
 		fi
-		unset revision pre_install pre_remove post_install \
+		unset pre_install pre_remove post_install \
 			post_remove post_stow
 		. $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template
 		pkgname=${subpkg}

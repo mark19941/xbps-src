@@ -35,7 +35,6 @@ check_installed_packages() {
 
 		if [ -r ${XBPS_SRCPKGDIR}/${lpkgn}/${lpkgn}.template ]; then
 			. ${XBPS_SRCPKGDIR}/${lpkgn}/template
-			unset revision
 			sourcepkg=$pkgname
 			. ${XBPS_SRCPKGDIR}/${lpkgn}/${lpkgn}.template
 		else

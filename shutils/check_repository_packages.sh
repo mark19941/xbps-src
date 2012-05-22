@@ -47,7 +47,6 @@ check_repository_packages() {
 
 		if [ -r $XBPS_SRCPKGDIR/$pkgn/${pkgn}.template ]; then
 			. $XBPS_SRCPKGDIR/$pkgn/template
-			unset revision
 			sourcepkg=$pkgname
 			. $XBPS_SRCPKGDIR/$pkgn/$pkgn.template
 		else

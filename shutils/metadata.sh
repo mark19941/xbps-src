@@ -32,7 +32,7 @@ write_metadata() {
 		fi
 		setup_tmpl ${sourcepkg}
 		unset conf_files noarch triggers replaces \
-			revision system_accounts system_groups \
+			system_accounts system_groups \
 			preserve xml_entries sgml_entries \
 			xml_catalogs sgml_catalogs gconf_entries gconf_schemas \
 			gtk_iconcache_dirs font_dirs dkms_modules provides \
