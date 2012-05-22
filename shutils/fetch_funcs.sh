@@ -28,12 +28,12 @@
 # in template file.
 #
 verify_sha256_cksum() {
-	local file="$1" origsum="$2"
+	local file="$1" origsum="$2" distfile="$3"
 
 	[ -z "$file" -o -z "$cksum" ] && return 1
 
 	msg_normal "$pkgver: verifying checksum for distfile '$file'... "
-	filesum=$(${XBPS_DIGEST_CMD} $XBPS_SRCDISTDIR/$file)
+	filesum=$(${XBPS_DIGEST_CMD} $distfile)
 	if [ "$origsum" != "$filesum" ]; then
 		echo
 		msg_error "SHA256 mismatch for '$file:'\n$filesum\n"
@@ -46,6 +46,7 @@ verify_sha256_cksum() {
 #
 fetch_distfiles() {
 	local pkg="$1" upcksum="$2" dfiles= localurl= dfcount=0 ckcount=0 f
+	local srcdir= distfile= curfile=
 
 	[ -z $pkgname ] && return 1
 	#
@@ -67,10 +68,18 @@ fetch_distfiles() {
 		return 0
 	fi
 
-	cd $XBPS_SRCDISTDIR || return 1
+	if [ -n "$create_srcdir" ]; then
+		srcdir="$XBPS_SRCDISTDIR/$pkgname-$version"
+	else
+		srcdir="$XBPS_SRCDISTDIR"
+	fi
+	[ ! -d "$srcdir" ] && mkdir -p "$srcdir"
+
+	cd $srcdir || return 1
 	for f in ${distfiles}; do
 		curfile=$(basename $f)
-		if [ -f "$XBPS_SRCDISTDIR/$curfile" ]; then
+		distfile="$srcdir/$curfile"
+		if [ -f "$distfile" ]; then
 			for i in ${checksum}; do
 				if [ $dfcount -eq $ckcount -a -n $i ]; then
 					cksum=$i
@@ -85,7 +94,7 @@ fetch_distfiles() {
 				msg_error "$pkgver: cannot find checksum for $curfile.\n"
 			fi
 
-			verify_sha256_cksum $curfile $cksum
+			verify_sha256_cksum $curfile $cksum $distfile
 			if [ $? -eq 0 ]; then
 				unset cksum found
 				ckcount=0
@@ -105,7 +114,7 @@ fetch_distfiles() {
 		$XBPS_FETCH_CMD $localurl
 		if [ $? -ne 0 ]; then
 			unset localurl
-			if [ ! -f $XBPS_SRCDISTDIR/$curfile ]; then
+			if [ ! -f $distfile ]; then
 				msg_error "$pkgver: couldn't fetch $curfile.\n"
 			else
 				msg_error "$pkgver: there was an error fetching $curfile.\n"
@@ -129,7 +138,7 @@ fetch_distfiles() {
 				msg_error "$pkgver: cannot find checksum for $curfile.\n"
 			fi
 
-			verify_sha256_cksum $curfile $cksum
+			verify_sha256_cksum $curfile $cksum $distfile
 			if [ $? -eq 0 ]; then
 				unset cksum found
 				ckcount=0

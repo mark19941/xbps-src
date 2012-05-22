@@ -29,6 +29,7 @@
 #
 extract_distfiles() {
 	local pkg="$1" curfile= cursufx= f= j= found=
+	local srcdir=
 
 	[ -f $XBPS_EXTRACT_DONE ] && return 0
 	[ -z "$IN_CHROOT" -a ! -w $XBPS_BUILDDIR ] && \
@@ -48,11 +49,16 @@ extract_distfiles() {
 		touch -f $XBPS_EXTRACT_DONE
 		return 0
 	fi
+	if [ -n "$create_srcdir" ]; then
+		srcdir="$XBPS_SRCDISTDIR/$pkgname-$version"
+	else
+		srcdir="$XBPS_SRCDISTDIR"
+	fi
 
 	# Check that distfiles are there before anything else.
 	for f in ${distfiles}; do
 		curfile=$(basename $f)
-		if [ ! -f ${XBPS_SRCDISTDIR}/${curfile} ]; then
+		if [ ! -f $srcdir/$curfile ]; then
 			msg_error "$pkgver: cannot find ${curfile}, use 'xbps-src fetch' first.\n"
 		fi
 	done
@@ -110,25 +116,25 @@ extract_distfiles() {
 
 		case ${cursufx} in
 		txz)
-			unxz -cf $XBPS_SRCDISTDIR/$curfile | tar xf - -C $extractdir
+			unxz -cf $srcdir/$curfile | tar xf - -C $extractdir
 			if [ $? -ne 0 ]; then
 				msg_error "$pkgver: extracting $curfile into $XBPS_BUILDDIR.\n"
 			fi
 			;;
 		tbz)
-			bunzip2 -cf $XBPS_SRCDISTDIR/$curfile | tar xf - -C $extractdir
+			bunzip2 -cf $srcdir/$curfile | tar xf - -C $extractdir
 			if [ $? -ne 0 ]; then
 				msg_error "$pkgver: extracting $curfile into $XBPS_BUILDDIR.\n"
 			fi
 			;;
 		tgz)
-			gunzip -cf $XBPS_SRCDISTDIR/$curfile | tar xf - -C $extractdir
+			gunzip -cf $srcdir/$curfile | tar xf - -C $extractdir
 			if [ $? -ne 0 ]; then
 				msg_error "$pkgver: extracting $curfile into $XBPS_BUILDDIR.\n"
 			fi
 			;;
 		gz|bz2)
-			cp -f $XBPS_SRCDISTDIR/$curfile $extractdir
+			cp -f $srcdir/$curfile $extractdir
 			if [ "$cursufx" = ".gz" ]; then
 				cd $extractdir && gunzip $curfile
 			else
@@ -136,14 +142,14 @@ extract_distfiles() {
 			fi
 			;;
 		tar)
-			tar xf $XBPS_SRCDISTDIR/$curfile -C $extractdir
+			tar xf $srcdir/$curfile -C $extractdir
 			if [ $? -ne 0 ]; then
 				msg_error "$pkgver: extracting $curfile into $XBPS_BUILDDIR.\n"
 			fi
 			;;
 		zip)
 			if command -v unzip 2>&1 >/dev/null; then
-				unzip -q $XBPS_SRCDISTDIR/$curfile -d $extractdir
+				unzip -q $srcdir/$curfile -d $extractdir
 				if [ $? -ne 0 ]; then
 					msg_error "$pkgver: extracting $curfile into $XBPS_BUILDDIR.\n"
 				fi

@@ -1,4 +1,10 @@
 v27:
+ * New var for templates: 'create_srcdir'. If set, distfiles for a template
+   will be stored in a new subdirectory on XBPS_SRCDISTDIR. This is for
+   packages that don't use a versioned distribution tarball, i.e
+   chromium/nacl_sdk and adobe-flash-plugin.
+ * When resolving build dependencies and if a dependency is not found in
+   repository pool, show it. There was a case where it was silently skipped.
  * Make 'xbps-src make-repoidx' target also create index for the
    nonfree/noarch repository. Found by dave.
 

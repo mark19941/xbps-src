@@ -1,7 +1,7 @@
 # Common variables.
 
 # Current xbps-src version.
-VERSION	= 26
+VERSION	= 27
 
 PREFIX	?= /usr/local
 SBINDIR	?= $(PREFIX)/sbin

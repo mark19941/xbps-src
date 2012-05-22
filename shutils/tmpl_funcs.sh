@@ -42,7 +42,7 @@ reset_tmpl_vars() {
 			replaces system_accounts system_groups provides \
 			build_wrksrc create_wrksrc broken_as_needed pkgver \
 			ignore_vdeps_dir noverifyrdeps conflicts dkms_modules \
-			gconf_entries gconf_schemas \
+			gconf_entries gconf_schemas create_srcdir \
 			pycompile_dirs pycompile_module systemd_services  \
 			homepage license kernel_hooks_version makejobs \
 			mutable_files nostrip_files skip_extraction \
