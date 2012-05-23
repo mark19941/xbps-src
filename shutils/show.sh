@@ -68,12 +68,12 @@ show_tmpl_deps() {
 
 	if [ "$1" = "build" ]; then
 		# build time deps
-		for f in ${makedepends}; do
+		for f in ${build_depends}; do
 			echo "$f"
 		done
 	else
 		# hard run time deps
-		for f in ${depends}; do
+		for f in ${run_depends}; do
 			echo "$f"
 		done
 		# shlibs run time deps

@@ -91,13 +91,13 @@ setup_subpkg_tmpl() {
 
 	if [ -r "$XBPS_SRCPKGDIR/$1/$1.template" ]; then
 		setup_tmpl $1
-		unset depends run_depends
+		unset build_depends depends run_depends
 		. $XBPS_SRCPKGDIR/$1/$1.template
 		for f in ${subpackages}; do
 			[ "$f" != "$1" ] && continue
 			pkgname=$f
-			set_tmpl_common_vars
 			SUBPKG=1
+			set_tmpl_common_vars
 			break
 		done
 	else
@@ -175,7 +175,7 @@ remove_tmpl_wrksrc() {
 }
 
 set_tmpl_common_vars() {
-	local cflags= cxxflags= cppflags= ldflags= j= _pkgdep= _pkgdepname=
+	local cflags= cxxflags= cppflags= ldflags= j= _pkgdep= _pkgdepname= _deps=
 
 	[ -z "$pkgname" ] && return 1
 
@@ -195,7 +195,12 @@ set_tmpl_common_vars() {
 	fi
 	SRCPKGDESTDIR=${XBPS_DESTDIR}/${sourcepkg}-${version}
 
-	for j in ${depends} ${fulldepends}; do
+	if [ -z "$SUBPKG" ]; then
+		_deps="${depends} ${fulldepends}"
+	else
+		_deps="${depends}"
+	fi
+	for j in ${_deps}; do
 		_pkgdepname="$($XBPS_PKGDB_CMD getpkgdepname ${j} 2>/dev/null)"
 		if [ -z "${_pkgdepname}" ]; then
 			_pkgdep="$j>=0"
