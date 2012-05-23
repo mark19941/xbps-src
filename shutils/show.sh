@@ -64,15 +64,16 @@ show_tmpl() {
 
 show_tmpl_deps() {
 	local f= MAPLIB= RSHLIB= soname= rdep= pkg= tmpver=
+	local rdepname= rdepver=
 
 	if [ "$1" = "build" ]; then
 		# build time deps
-		for f in ${build_depends}; do
+		for f in ${makedepends}; do
 			echo "$f"
 		done
 	else
 		# hard run time deps
-		for f in ${run_depends}; do
+		for f in ${depends}; do
 			echo "$f"
 		done
 		# shlibs run time deps
@@ -81,14 +82,16 @@ show_tmpl_deps() {
 			# run time deps
 			MAPLIB=$XBPS_COMMONDIR/shlibs
 			for f in $(cat $RSHLIB); do
-				unset pkg soname rdep tmpver
+				unset pkg soname rdep tmpver rdepname rdepver
 				soname=$(echo "$f"|sed 's|\+|\\+|g')
 				rdep=$(grep -E "^${soname}.*$" $MAPLIB|awk '{print $2}'|head -1)
-				tmpver=$(echo "$rdep"|sed 's/-//g;s/\+//g')
+				rdepname=$($XBPS_PKGDB_CMD getpkgname "$rdep")
+				tmpver=$(echo "$rdepname"|sed 's/\+//g')
 				eval pkg=\$pkg_"${tmpver}"
 				if [ -z "$pkg" ]; then
 					eval local pkg_${tmpver}=1
-					dependency_version run $rdep
+					rdepver="$($XBPS_PKGDB_CMD getpkgversion ${rdep})"
+					echo "${rdepname}>=${rdepver}"
 				fi
 			done
 		fi

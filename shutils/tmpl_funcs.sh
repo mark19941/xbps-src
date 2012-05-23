@@ -30,12 +30,12 @@ reset_tmpl_vars() {
 	local TMPL_VARS="pkgname distfiles configure_args strip_cmd \
 			make_build_args make_install_args build_style	\
 			short_desc maintainer long_desc checksum wrksrc	\
-			make_cmd bootstrap register_shell shlib_depends \
+			make_cmd bootstrap register_shell \
 			make_build_target configure_script noextract nofetch \
-			build_depends nostrip nonfree build_requires \
+			nostrip nonfree build_requires \
 			make_install_target version revision patch_args \
 			sgml_catalogs xml_catalogs xml_entries sgml_entries \
-			disable_parallel_build run_depends font_dirs preserve \
+			disable_parallel_build font_dirs preserve \
 			only_for_archs conf_files keep_libtool_archives \
 			noarch subpackages sourcepkg gtk_iconcache_dirs \
 			abi_depends api_depends triggers make_dirs \
@@ -46,6 +46,8 @@ reset_tmpl_vars() {
 			pycompile_dirs pycompile_module systemd_services  \
 			homepage license kernel_hooks_version makejobs \
 			mutable_files nostrip_files skip_extraction \
+			run_depends build_depends \
+			depends makedepends fulldepends \
 			SUBPKG XBPS_EXTRACT_DONE XBPS_CONFIGURE_DONE \
 			XBPS_BUILD_DONE XBPS_INSTALL_DONE FILESDIR DESTDIR \
 			SRCPKGDESTDIR PATCHESDIR CFLAGS CXXFLAGS CPPFLAGS \
@@ -89,7 +91,7 @@ setup_subpkg_tmpl() {
 
 	if [ -r "$XBPS_SRCPKGDIR/$1/$1.template" ]; then
 		setup_tmpl $1
-		unset run_depends
+		unset depends run_depends
 		. $XBPS_SRCPKGDIR/$1/$1.template
 		for f in ${subpackages}; do
 			[ "$f" != "$1" ] && continue
@@ -101,101 +103,6 @@ setup_subpkg_tmpl() {
 	else
 		setup_tmpl $1
 	fi
-}
-
-check_builddep_dup() {
-	local dep="$1" i=
-
-	for i in ${build_depends}; do
-		[ "${i}" != "${dep}" ] && continue
-		return 1
-	done
-}
-
-check_rundep_dup() {
-	local dep="$1" i=
-
-	for i in ${run_depends}; do
-		[ "${i}" != "${dep}" ] && continue
-		return 1
-	done
-}
-
-dependency_version() {
-	local type="$1" pkgn="$2"
-
-	if [ -f $XBPS_SRCPKGDIR/${pkgn}/${pkgn}.depends ]; then
-		. $XBPS_SRCPKGDIR/${pkgn}/${pkgn}.depends
-	elif [ -f $XBPS_SRCPKGDIR/${pkgn}/depends ]; then
-		. $XBPS_SRCPKGDIR/${pkgn}/depends
-	fi
-
-	if [ "$type" = "build" ]; then
-		if [ -z "$api_depends" ]; then
-			echo "${pkgn}>=0"
-		else
-			echo "${pkgn}${api_depends}"
-		fi
-	elif [ "$type" = "run" ]; then
-		if [ -z "$abi_depends" ]; then
-			echo "${pkgn}>=0"
-		else
-			echo "${pkgn}${abi_depends}"
-		fi
-	fi
-
-	unset abi_depends api_depends
-}
-
-Add_dependency() {
-	local type="$1" pkgn="$2" ver="$3"
-
-	case "$type" in
-		build|full|run) ;;
-		*) msg_error "[$pkgname] Unknown dependency type for $pkgn.\n" ;;
-	esac
-
-	[ -z "$pkgn" ] && msg_error "[$pkgname] Add_dependency: pkgname empty!\n"
-
-	if [ -f $XBPS_SRCPKGDIR/${pkgn}/${pkgn}.depends ]; then
-		. $XBPS_SRCPKGDIR/${pkgn}/${pkgn}.depends
-	elif [ -f $XBPS_SRCPKGDIR/${pkgn}/depends ]; then
-		. $XBPS_SRCPKGDIR/${pkgn}/depends
-	fi
-
-	if [ "$type" = "full" -o "$type" = "build" ]; then
-		if [ -z "$ver" -a -z "$api_depends" ]; then
-			if check_builddep_dup "${pkgn}>=0"; then
-				build_depends="${build_depends} ${pkgn}>=0"
-			fi
-		elif [ -z "$ver" -a -n "$api_depends" ]; then
-			if check_builddep_dup "${pkgn}${api_depends}"; then
-				build_depends="${build_depends} ${pkgn}${api_depends}"
-			fi
-		else
-			if check_builddep_dup "${pkgn}${version}"; then
-				build_depends="${build_depends} ${pkgn}${ver}"
-			fi
-		fi
-	fi
-
-	if [ "$type" = "full" -o "$type" = "run" ]; then
-		if [ -z "$ver" -a -z "$abi_depends" ]; then
-			if check_rundep_dup "${pkgn}>=0"; then
-				run_depends="${run_depends} ${pkgn}>=0"
-			fi
-		elif [ -z "$ver" -a -n "$abi_depends" ]; then
-			if check_rundep_dup "${pkgn}${api_depends}"; then
-				run_depends="${run_depends} ${pkgn}${abi_depends}"
-			fi
-		else
-			if check_rundep_dup "${pkgn}${ver}"; then
-				run_depends="${run_depends} ${pkgn}${ver}"
-			fi
-		fi
-	fi
-
-	unset abi_depends api_depends
 }
 
 #
@@ -268,7 +175,7 @@ remove_tmpl_wrksrc() {
 }
 
 set_tmpl_common_vars() {
-	local cflags= cxxflags= cppflags= ldflags=
+	local cflags= cxxflags= cppflags= ldflags= j= _pkgdep= _pkgdepname=
 
 	[ -z "$pkgname" ] && return 1
 
@@ -287,6 +194,25 @@ set_tmpl_common_vars() {
 		sourcepkg=${pkgname}
 	fi
 	SRCPKGDESTDIR=${XBPS_DESTDIR}/${sourcepkg}-${version}
+
+	for j in ${depends} ${fulldepends}; do
+		_pkgdepname="$($XBPS_PKGDB_CMD getpkgdepname ${j} 2>/dev/null)"
+		if [ -z "${_pkgdepname}" ]; then
+			_pkgdep="$j>=0"
+		else
+			_pkgdep="$j"
+		fi
+		run_depends="${run_depends} ${_pkgdep}"
+	done
+	for j in ${makedepends} ${fulldepends}; do
+		_pkgdepname="$($XBPS_PKGDB_CMD getpkgdepname ${j} 2>/dev/null)"
+		if [ -z "${_pkgdepname}" ]; then
+			_pkgdep="$j>=0"
+		else
+			_pkgdep="$j"
+		fi
+		build_depends="${build_depends} ${_pkgdep}"
+	done
 
 	[ -n "$XBPS_CFLAGS" ] && cflags="$XBPS_CFLAGS"
 	[ -n "$CFLAGS" ] && cflags="$cflags $CFLAGS"

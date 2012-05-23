@@ -1,4 +1,32 @@
 v28:
+ * Replace Add_dependency() with three new variables for templates:
+
+	Add_dependency run -> depends
+	Add_dependency build -> makedepends
+	Add_dependency full -> fulldepends
+
+   That means that rundeps do not care anymore about srcpkgs/foo/depends
+   abi_depends, and api_depends for build deps.
+
+   If no specified version pattern (i.e 'foo>=2.0', any version will be
+   accepted: 'foo>=0'). As result, shlib_depends has been removed completely
+   and the same functionality can be acomplished with 'depends'.
+
+ * Improve xbps-packages/common/shlibs parsing code with the following
+   scheme:
+
+        libfoo.so.2 foo-2.0 <arch>
+        libblah.so.1 blah-1.0 <arch>
+
+   This expects two fields: exact SONAME (matching output of objdump -p)
+   and the required package name/version, delimited by a blank.
+
+   The third field is optional and will only match in the specified
+   architecture.
+
+   By embedding the minimal required version for that SONAME we can get rid
+   of all "depends" files in source packages.
+
  * Make "revision" shared by main pkg and all its subpkgs.
 
 v27:

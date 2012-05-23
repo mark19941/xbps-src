@@ -31,18 +31,25 @@
 #
 
 find_rundep() {
-	local dep="$1" i rpkgdep=
+	local dep="$1" i= rpkgdep= _depname=
+
+	_depname="$($XBPS_PKGDB_CMD getpkgdepname ${dep})"
 
 	for i in ${run_depends}; do
 		rpkgdep="$($XBPS_PKGDB_CMD getpkgdepname $i)"
-		[ "${rpkgdep}" != "${dep}" ] && continue
+		[ "${rpkgdep}" != "${_depname}" ] && continue
+		$XBPS_PKGDB_CMD cmpver "$i" "$dep"
+		if [ $? -eq 255 ]; then
+			run_depends=$(echo ${run_depends}|sed -e "s|${i}||g")
+		fi
 		return 1
 	done
 }
 
 verify_rundeps() {
-	local j= f= nlib= verify_deps maplib= found_dup= igndir= soname_arch=
+	local j= f= nlib= verify_deps= maplib= found_dup= igndir= soname_arch=
 	local broken= rdep= found= rsonamef= soname_list= tmplf=
+	local _pkgname= _rdepver=
 
 	maplib=$XBPS_COMMONDIR/shlibs
 
@@ -98,7 +105,7 @@ verify_rundeps() {
 	# above, the mapping is done thru the mapping_shlib_binpkg.txt file.
 	#
 	for f in ${verify_deps}; do
-		unset j rdep _rdep rdepcnt soname
+		unset j rdep _rdep rdepcnt soname _pkgname _rdepver
 		rdep="$(grep "^${f}.*$" $maplib|awk '{print $2}')"
 		rdepcnt="$(grep "^${f}.*$" $maplib|awk '{print $2}'|wc -l)"
 		if [ -z "$rdep" ]; then
@@ -115,8 +122,9 @@ verify_rundeps() {
 			unset j found
 			# Check if shlib is provided by multiple pkgs.
 			for j in ${rdep}; do
+				_pkgname=$($XBPS_PKGDB_CMD getpkgname "$j")
 				# if there's a SONAME matching pkgname, use it.
-				[ "${j}" != "${pkgname}" ] && continue
+				[ "${j}" != "${_pkgname}" ] && continue
 				found=1
 				break
 			done
@@ -131,8 +139,10 @@ verify_rundeps() {
 		else
 			_rdep=$rdep
 		fi
-		if [ "${_rdep}" != "$pkgname" ]; then
-			echo "   SONAME: $f <-> ${_rdep}"
+		_pkgname=$($XBPS_PKGDB_CMD getpkgname "${_rdep}")
+		_rdepver=$($XBPS_PKGDB_CMD getpkgversion "${_rdep}")
+		if [ "${_pkgname}" != "${pkgname}" ]; then
+			echo "   SONAME: $f <-> ${_pkgname}>=${_rdepver}"
 		else
 			# Ignore libs by current pkg
 			echo "   SONAME: $f <-> ${_rdep} (ignored)"
@@ -144,10 +154,8 @@ verify_rundeps() {
 		else
 			soname_list="${soname_list} ${f}"
 		fi
-		# Try to remove the line from template
-		sed -i -r "/^Add_dependency run ${_rdep}([[:space:]]+\".*\")*$/d" $tmplf
-		if find_rundep ${_rdep}; then
-			Add_dependency run ${_rdep}
+		if find_rundep "${_pkgname}>=${_rdepver}"; then
+			run_depends="${run_depends} ${_pkgname}>=${_rdepver}"
 		fi
 	done
 	#
@@ -204,7 +212,7 @@ verify_rundeps() {
 
 			# If SONAME is arch specific, only remove it if
 			# matching on the target arch.
-			_soname_arch=$(grep "$f" $maplib|awk '{print $4}')
+			_soname_arch=$(grep "$f" $maplib|awk '{print $3}')
 			if [ -z "${_soname_arch}" ] || \
 			   [ -n "${_soname_arch}" -a "${_soname_arch}" = "$XBPS_MACHINE" ]; then
 				echo "   SONAME: $f (removed, not required)"

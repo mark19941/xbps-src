@@ -38,7 +38,7 @@ write_metadata() {
 			gtk_iconcache_dirs font_dirs dkms_modules provides \
 			kernel_hooks_version conflicts pycompile_dirs \
 			pycompile_module systemd_services make_dirs \
-			run_depends shlib_depends mutable_files
+			depends run_depends mutable_files
 		. $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template
 		pkgname=${subpkg}
 		set_tmpl_common_vars
@@ -346,20 +346,6 @@ _EOF
 		echo "<key>run_depends</key>" >> $TMPFPROPS
 		echo "<array>" >> $TMPFPROPS
 		for f in ${run_depends}; do
-			for j in ${shlib_depends}; do
-				local pkgrdepn pkgrdepo
-				pkgrdepn=$($XBPS_PKGDB_CMD getpkgdepname "$f")
-				pkgrdepo=$($XBPS_PKGDB_CMD getpkgdepname "$j")
-				if [ "${pkgrdepn}" != "${pkgrdepo}" ]; then
-					continue
-				fi
-				echo "<string>$(echo $j|sed "s|<|\&lt;|g;s|>|\&gt;|g")</string>" >> $TMPFPROPS
-				found=1
-			done
-			if [ -n "$found" ]; then
-				unset found
-				continue
-			fi
 			echo "<string>$(echo $f|sed "s|<|\&lt;|g;s|>|\&gt;|g")</string>" >> $TMPFPROPS
 		done
 		echo "</array>" >> $TMPFPROPS
