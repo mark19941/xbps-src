@@ -42,7 +42,20 @@ _show_hard_pkg_deps() {
 			[ "$curpkgn" != "$1" ] && continue
 			found=1 && break
 		done
-		[ -n "$found" ] && echo "$revdepname"
+		if [ -n "$found" ]; then
+			unset found
+			if [ -z "$REVDEPS" ]; then
+				REVDEPS="$revdepname"
+			else
+				for j in ${REVDEPS}; do
+					[ "$j" != "$revdepname" ] && continue
+					found=1 && break
+				done
+				if [ -z "$found" ]; then
+					REVDEPS="$REVDEPS $revdepname"
+				fi
+			fi
+		fi
 	done
 }
 
@@ -60,7 +73,17 @@ _show_shlib_pkg_deps() {
 		eval pkg=\$pkg_"${tmprev}"
 		if [ -z "${pkg}" ]; then
 			eval local pkg_${tmprev}=1
-			echo "$revdepname"
+			if [ -z "$REVDEPS" ]; then
+				REVDEPS="$revdepname"
+			else
+				for j in ${REVDEPS}; do
+					[ "$j" != "$revdepname" ] && continue
+					found=1 && break
+				done
+				if [ -z "$found" ]; then
+					REVDEPS="$REVDEPS $revdepname"
+				fi
+			fi
 		fi
 	done
 }
@@ -80,4 +103,7 @@ show_pkg_revdeps() {
 	fi
 	# show pkgs that use Add_dependency
 	_show_hard_pkg_deps "${_pkgn}"
+
+	echo $REVDEPS
+	unset REVDEPS
 }
