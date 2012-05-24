@@ -325,14 +325,14 @@ _EOF
 	# If package sets $dkms_modules, add dkms rundep.
 	#
 	if [ -n "$dkms_modules" ]; then
-		Add_dependency run dkms
+		run_depends="${run_depends} dkms>=0"
 	fi
 
 	#
 	# If package sets $system_accounts or $system_groups, add shadow rundep.
 	#
 	if [ -n "$system_accounts" -o -n "$system_groups" ]; then
-		Add_dependency run shadow
+		run_depends="${run_depends} shadow>=0"
 	fi
 
 	# pkg needs to preserve its files after removal/upgrade?
