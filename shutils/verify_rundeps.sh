@@ -139,8 +139,13 @@ verify_rundeps() {
 		else
 			_rdep=$rdep
 		fi
-		_pkgname=$($XBPS_PKGDB_CMD getpkgname "${_rdep}")
-		_rdepver=$($XBPS_PKGDB_CMD getpkgversion "${_rdep}")
+		_pkgname=$($XBPS_PKGDB_CMD getpkgname "${_rdep}" 2>/dev/null)
+		_rdepver=$($XBPS_PKGDB_CMD getpkgversion "${_rdep}" 2>/dev/null)
+		if [ -z "${_pkgname}" -o -z "${_rdepver}" ]; then
+			echo "   SONAME: $f <-> UNKNOWN PKG PLEASE FIX!"
+			broken=1
+			continue
+		fi
 		if [ "${_pkgname}" != "${pkgname}" ]; then
 			echo "   SONAME: $f <-> ${_pkgname}>=${_rdepver}"
 		else
