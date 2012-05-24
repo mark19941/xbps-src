@@ -24,19 +24,25 @@
 #-
 
 _show_hard_pkg_deps() {
-	local f= tmplf= deps= revdepname= _pkgn=
+	local f= deps= tmplf= revdepname=
 
-	_pkgn=$(echo "$1"|sed 's|\+|\\+|g')
-	deps=$(grep -E "^Add_dependency[[:blank:]]+(run|full|build)[[:blank:]]+${_pkgn}([[:space:]]+\".*\")*$" $XBPS_SRCPKGDIR/*/*template|sed 's/:Add_dependency.*//g')
+	deps=$(grep -El "^(fulldepends|depends)=\".*${1}.*\"" $XBPS_SRCPKGDIR/*/*template)
 	for f in ${deps}; do
+		unset tmplf revdepname j curpkgn found
 		[ -h "$(dirname $f)" ] && continue
-		tmplf=$(basename $f)
+		tmplf=$(basename "$f")
 		if [ "$tmplf" != template ]; then
 			revdepname=${tmplf%.template}
 		else
-			revdepname=$(basename $(dirname $f))
+			revdepname=$(basename $(dirname "$f"))
 		fi
-		echo $revdepname
+		setup_subpkg_tmpl $revdepname
+		for j in ${run_depends}; do
+			curpkgn=$($XBPS_PKGDB_CMD getpkgdepname "$j")
+			[ "$curpkgn" != "$1" ] && continue
+			found=1 && break
+		done
+		[ -n "$found" ] && echo "$revdepname"
 	done
 }
 
@@ -45,7 +51,7 @@ _show_shlib_pkg_deps() {
 
 	soname=$(echo "$1"|sed 's|\+|\\+|g')
 
-	revshlibs=$(grep -E "^${soname}$" ${XBPS_SRCPKGDIR}/*/*.rshlibs)
+	revshlibs=$(grep -E "^${soname}.*$" ${XBPS_SRCPKGDIR}/*/*.rshlibs)
 	for f in ${revshlibs}; do
 		unset pkg revdepname tmprev
 		revdepname=$(basename "$f")
@@ -73,5 +79,5 @@ show_pkg_revdeps() {
 		_show_shlib_pkg_deps "$shlibs"
 	fi
 	# show pkgs that use Add_dependency
-	_show_hard_pkg_deps "$1"
+	_show_hard_pkg_deps "${_pkgn}"
 }

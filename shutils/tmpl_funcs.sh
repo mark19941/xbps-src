@@ -126,13 +126,13 @@ prepare_tmpl() {
 		fi
 	done
 
-	if [ -n "$only_for_archs" ]; then
+	if [ -n "$BEGIN_INSTALL" -a -n "$only_for_archs" ]; then
 		if $(echo "$only_for_archs"|grep -q "$XBPS_MACHINE"); then
 			found=1
 		fi
-	fi
-	if [ -n "${only_for_archs}" -a -z "$found" ]; then
-		msg_error "$pkgname: this package cannot be built on $XBPS_MACHINE.\n"
+		if [ -z "$found" ]; then
+			msg_error "$pkgname: this package cannot be built on $XBPS_MACHINE.\n"
+		fi
 	fi
 
 	if [ -n "$build_requires" ]; then
