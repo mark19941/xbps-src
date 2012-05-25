@@ -80,6 +80,7 @@ apply_tmpl_patches() {
 		done
 	else
 		for f in $PATCHESDIR/*; do
+			[ ! -f $f ] && continue
 			if $(echo $f|grep -q '.args'); then
 				continue
 			fi
