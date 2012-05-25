@@ -105,7 +105,7 @@ verify_rundeps() {
 	# above, the mapping is done thru the mapping_shlib_binpkg.txt file.
 	#
 	for f in ${verify_deps}; do
-		unset j rdep _rdep rdepcnt soname _pkgname _rdepver
+		unset j rdep _rdep rdepcnt soname _pkgname _rdepver found
 		rdep="$(grep "^${f}.*$" $maplib|awk '{print $2}')"
 		rdepcnt="$(grep "^${f}.*$" $maplib|awk '{print $2}'|wc -l)"
 		if [ -z "$rdep" ]; then
@@ -124,7 +124,7 @@ verify_rundeps() {
 			for j in ${rdep}; do
 				_pkgname=$($XBPS_PKGDB_CMD getpkgname "$j")
 				# if there's a SONAME matching pkgname, use it.
-				[ "${j}" != "${_pkgname}" ] && continue
+				[ "${pkgname}" != "${_pkgname}" ] && continue
 				found=1
 				break
 			done
@@ -217,7 +217,7 @@ verify_rundeps() {
 
 			# If SONAME is arch specific, only remove it if
 			# matching on the target arch.
-			_soname_arch=$(grep "$f" $maplib|awk '{print $3}')
+			_soname_arch=$(grep "$f" $maplib|awk '{print $3}'|head -1)
 			if [ -z "${_soname_arch}" ] || \
 			   [ -n "${_soname_arch}" -a "${_soname_arch}" = "$XBPS_MACHINE" ]; then
 				echo "   SONAME: $f (removed, not required)"
