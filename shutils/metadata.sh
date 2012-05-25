@@ -31,7 +31,7 @@ write_metadata() {
 			msg_error "$pkgver: cannot find subpkg '${subpkg}' build template!\n"
 		fi
 		setup_tmpl ${sourcepkg}
-		unset conf_files noarch triggers replaces \
+		unset conf_files noarch triggers replaces softreplace \
 			system_accounts system_groups \
 			preserve xml_entries sgml_entries \
 			xml_catalogs sgml_catalogs gconf_entries gconf_schemas \
@@ -363,6 +363,10 @@ _EOF
 
 	# Replace package(s).
 	if [ -n "$replaces" ]; then
+		if [ -n "$softreplace" ]; then
+			echo "<key>softreplace</key>" >> $TMPFPROPS
+			echo "<true/>" >> $TMPFPROPS
+		fi
 		echo "<key>replaces</key>" >> $TMPFPROPS
 		echo "<array>" >> $TMPFPROPS
 		for f in ${replaces}; do

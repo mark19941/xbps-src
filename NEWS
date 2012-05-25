@@ -1,4 +1,5 @@
 v28:
+ * Added support for "soft replace" for the upcoming xbps-0.16.
  * Replace Add_dependency() with three new variables for templates:
 
 	Add_dependency run -> depends

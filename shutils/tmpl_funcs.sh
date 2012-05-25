@@ -46,7 +46,7 @@ reset_tmpl_vars() {
 			pycompile_dirs pycompile_module systemd_services  \
 			homepage license kernel_hooks_version makejobs \
 			mutable_files nostrip_files skip_extraction \
-			run_depends build_depends \
+			softreplace run_depends build_depends \
 			depends makedepends fulldepends \
 			SUBPKG XBPS_EXTRACT_DONE XBPS_CONFIGURE_DONE \
 			XBPS_BUILD_DONE XBPS_INSTALL_DONE FILESDIR DESTDIR \
