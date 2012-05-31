@@ -80,7 +80,7 @@ remove_pkg_autodeps() {
 # Installs all dependencies required by a package.
 #
 install_pkg_deps() {
-	local i= pkgn= iver= missing_deps= binpkg_deps=
+	local i= pkgn= iver= missing_deps= binpkg_deps= _props=
 
 	[ -z "$pkgname" ] && return 2
 	[ -z "$build_depends" ] && return 0
@@ -112,21 +112,23 @@ install_pkg_deps() {
 					$FAKEROOT_CMD $XBPS_BIN_CMD -yFf remove $pkgn >/dev/null 2>&1
 				fi
 			else
-				repover=$($XBPS_REPO_CMD -oversion show $pkgn 2>/dev/null)
-				if [ $? -eq 0 ]; then
-					$XBPS_PKGDB_CMD pkgmatch ${pkgn}-${repover} "${i}"
+				_props=$($XBPS_REPO_CMD -oversion,repository show $pkgn 2>/dev/null)
+				if [ -n "${_props}" ]; then
+					set -- ${_props}
+					$XBPS_PKGDB_CMD pkgmatch ${pkgn}-${1} "${i}"
 					if [ $? -eq 1 ]; then
-						repoloc=$($XBPS_REPO_CMD -orepository show $pkgn)
-						echo "   ${i}: found $repover in $repoloc."
+						echo "   ${i}: found $1 in $2."
 						if [ -z "$binpkg_deps" ]; then
-							binpkg_deps="${pkgn}-${repover}"
+							binpkg_deps="${pkgn}-${1}"
 						else
-							binpkg_deps="${binpkg_deps} ${pkgn}-${repover}"
+							binpkg_deps="${binpkg_deps} ${pkgn}-${1}"
 						fi
+						shift 2
 						continue
 					else
 						echo "   ${i}: not found."
 					fi
+					shift 2
 				else
 					echo "   ${i}: not found."
 				fi
