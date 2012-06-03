@@ -1,4 +1,6 @@
 v28:
+ * Always build bootstrap pkgs in the chroot, iff the chroot was
+   already prepared for chroot operations.
  * Added support for "soft replace" for the upcoming xbps-0.16.
  * Replace Add_dependency() with three new variables for templates:
 

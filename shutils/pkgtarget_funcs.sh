@@ -115,25 +115,20 @@ install_pkg() {
 	fi
 
 	cd $XBPS_MASTERDIR
-	if [ -n "$IN_CHROOT" ]; then
-		# If install-destdir specified, we are done.
-		if [ "$target" = "install-destdir" ]; then
-			if [ "$pkgname" = "${_ORIGINPKG}" ]; then
-				exit 0
-			fi
+	# If install-destdir specified, we are done.
+	if [ "$target" = "install-destdir" ]; then
+		if [ "$pkgname" = "${_ORIGINPKG}" ]; then
+			exit 0
 		fi
-		# no bootstrap case:  build binpkg,
-		# remove pkg from destdir and remove wrksrc.
+	fi
+	if [ -n "$CHROOT_READY" ]; then
+		# base-chroot already installed: build binpkg,
+		# remove pkg from destdir.
 		_build_pkg_and_update_repos
 		remove_pkg || return $?
 	else
-		# If install-destdir specified, we are done.
-		if [ "$target" = "install-destdir" ]; then
-			if [ "$pkgname" = "${_ORIGINPKG}" ]; then
-				exit 0
-			fi
-		fi
-		# bootstrap case: stow, build binpkg and remove wrksrc.
+		# base-chroot not installed: stow pkg
+		# and update local repo.
 		stow_pkg_handler stow || return $?
 		_build_pkg_and_update_repos
 	fi
