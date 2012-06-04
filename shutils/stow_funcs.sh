@@ -78,11 +78,7 @@ stow_pkg_real() {
 
 	cd ${DESTDIR} || return 1
 
-	if [ -n "$revision" ]; then
-		lver="${version}_${revision}"
-	else
-		lver="${version}"
-	fi
+	lver="${version}_${revision}"
 	msg_normal "$pkgver: stowing files into masterdir, please wait...\n"
 
 	local metadir=$(dirname $flist)

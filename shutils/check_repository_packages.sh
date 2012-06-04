@@ -52,11 +52,7 @@ check_repository_packages() {
 		else
 			. $XBPS_SRCPKGDIR/$pkgn/template
 		fi
-		if [ -n "$revision" ]; then
-			srcpkgver="${version}_${revision}"
-		else
-			srcpkgver="${version}"
-		fi
+		srcpkgver="${version}_${revision}"
 		$XBPS_CMPVER_CMD ${binpkgver} ${srcpkgver}
 		if [ $? -eq 255 ]; then
 			echo "pkgname: ${pkgn} repover: ${binpkgver} srcpkgver: ${srcpkgver}"

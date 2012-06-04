@@ -31,7 +31,7 @@ show_tmpl() {
 
 	echo "pkgname:	$pkgname"
 	echo "version:	$version"
-	[ -n "$revision" ] && echo "revision:	$revision"
+	echo "revision:	$revision"
 	for i in ${distfiles}; do
 		[ -n "$i" ] && echo "distfiles:	$i"
 	done

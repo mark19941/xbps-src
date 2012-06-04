@@ -90,11 +90,7 @@ write_metadata_real() {
 		arch=$XBPS_MACHINE
 	fi
 
-	if [ -n "$revision" ]; then
-		lver="${version}_${revision}"
-	else
-		lver="${version}"
-	fi
+	lver="${version}_${revision}"
 
 	#
 	# Always remove metadata files generated in a previous installation.

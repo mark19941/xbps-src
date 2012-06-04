@@ -43,11 +43,7 @@ check_installed_packages() {
 			fi
 			. ${XBPS_SRCPKGDIR}/${lpkgn}/template
 		fi
-		if [ -n "$revision" ]; then
-			srcver="${version}_${revision}"
-		else
-			srcver="${version}"
-		fi
+		srcver="${version}_${revision}"
 		${XBPS_CMPVER_CMD} ${lpkgver} ${srcver}
 		if [ $? -eq 255 ]; then
 			echo "pkgname: ${lpkgn} masterdir: ${lpkgver} srcpkgs: ${srcver}"

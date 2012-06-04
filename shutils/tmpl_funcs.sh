@@ -111,7 +111,7 @@ setup_subpkg_tmpl() {
 prepare_tmpl() {
 	local REQ_VARS= i= found=
 
-	REQ_VARS="pkgname version short_desc long_desc"
+	REQ_VARS="pkgname version short_desc long_desc revision"
 
 	if [ -n "$build_style" -a "$build_style" = "meta-template" ]; then
 		nofetch=yes
@@ -179,11 +179,7 @@ set_tmpl_common_vars() {
 
 	[ -z "$pkgname" ] && return 1
 
-	if [ -n "$revision" ]; then
-		pkgver="${pkgname}-${version}_${revision}"
-	else
-		pkgver="${pkgname}-${version}"
-	fi
+	pkgver="${pkgname}-${version}_${revision}"
 
 	. $XBPS_SHUTILSDIR/install_files.sh
 
