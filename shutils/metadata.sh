@@ -391,6 +391,10 @@ _EOF
 		echo "</array>" >> $TMPFPROPS
 	fi
 
+	# Build date.
+	echo "<key>build_date</key>" >> $TMPFPROPS
+	echo "<string>$(LANG=C date -u "+%A %d %B, %Y, %T UTC")</string>" >> $TMPFPROPS
+
 	# Homepage
 	if [ -n "$homepage" ]; then
 		echo "<key>homepage</key>" >> $TMPFPROPS
