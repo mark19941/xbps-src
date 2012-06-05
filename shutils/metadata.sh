@@ -38,7 +38,7 @@ write_metadata() {
 			gtk_iconcache_dirs font_dirs dkms_modules provides \
 			kernel_hooks_version conflicts pycompile_dirs \
 			pycompile_module systemd_services make_dirs \
-			depends run_depends mutable_files
+			depends fulldepends run_depends mutable_files
 		. $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template
 		pkgname=${subpkg}
 		set_tmpl_common_vars
