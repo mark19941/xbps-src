@@ -32,20 +32,10 @@
 # Any other error number otherwise.
 #
 install_pkg_from_repos() {
-	local rval= tmplogf= _pkg= _pkgn= _pkgv=
+	local rval= tmplogf=
 
-	case $XBPS_VERSION in
-		# XBPS >= 0.16
-		0.[1-9][6-9]*)
-			_pkgn=$($XBPS_PKGDB_CMD getpkgname "$1")
-			_pkgv=$($XBPS_PKGDB_CMD getpkgversion "$1")
-			_pkg="${_pkgn}=${_pkgv}"
-			;;
-		# XBPS < 0.16
-		*) _pkg=$($XBPS_PKGDB_CMD getpkgname "$1");;
-	esac
 	tmplogf=$(mktemp)
-	$FAKEROOT_CMD $XBPS_BIN_CMD -Ay install ${_pkg} >$tmplogf 2>&1
+	$FAKEROOT_CMD $XBPS_BIN_CMD -Ay install "$1" >$tmplogf 2>&1
 	rval=$?
 	if [ $rval -ne 0 -a $rval -ne 17 ]; then
 		# xbps-bin can return:

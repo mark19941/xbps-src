@@ -74,12 +74,26 @@ set_defvars() {
 	if [ -n "$IN_CHROOT" ]; then
 		xbps_conf="-C /usr/local/etc/xbps/xbps.conf"
 	fi
-	export XBPS_VERSION=$(xbps-bin.static -V|awk '{print $2}')
-	export XBPS_APIVER=$(xbps-bin.static -V|awk '{print $4}')
-	export XBPS_PKGDB_CMD="xbps-uhelper.static -r $XBPS_MASTERDIR"
-	export XBPS_BIN_CMD="xbps-bin.static $xbps_conf -r $XBPS_MASTERDIR"
-	export XBPS_REPO_CMD="xbps-repo.static $xbps_conf -r $XBPS_MASTERDIR"
-	export XBPS_DIGEST_CMD="xbps-uhelper.static digest"
-	export XBPS_CMPVER_CMD="xbps-uhelper.static cmpver"
-	export XBPS_FETCH_CMD="xbps-uhelper.static fetch"
+	XBPS_VERSION=$(xbps-bin.static -V|awk '{print $2}')
+	XBPS_APIVER=$(xbps-bin.static -V|awk '{print $4}')
+	XBPS_PKGDB_CMD="xbps-uhelper.static -r $XBPS_MASTERDIR"
+	XBPS_BIN_CMD="xbps-bin.static $xbps_conf -r $XBPS_MASTERDIR"
+	XBPS_REPO_CMD="xbps-repo.static $xbps_conf -r $XBPS_MASTERDIR"
+	XBPS_DIGEST_CMD="xbps-uhelper.static digest"
+	XBPS_CMPVER_CMD="xbps-uhelper.static cmpver"
+	XBPS_FETCH_CMD="xbps-uhelper.static fetch"
+
+	$XBPS_PKGDB_CMD cmpver "$XBPS_VERSION" "$XBPS_UTILS_REQVER"
+	if [ $? -eq 255 ]; then
+		echo "ERROR: requires xbps-$XBPS_UTILS_REQVER API: $XBPS_UTILS_REQAPIVER"
+		exit 1
+	fi
+	$XBPS_PKGDB_CMD cmpver "$XBPS_APIVER" "$XBPS_UTILS_REQAPIVER"
+	if [ $? -eq 255 ]; then
+		echo "ERROR: requires xbps-$XBPS_UTILS_REQVER API: $XBPS_UTILS_REQAPIVER"
+		exit 1
+	fi
+
+	export XBPS_VERSION XBPS_APIVER XBPS_PKGDB_CMD XBPS_BIN_CMD
+	export XBPS_REPO_CMD XBPS_DIGEST_CMD XBPS_CMPVER_CMD XBPS_FETCH_CMD
 }
