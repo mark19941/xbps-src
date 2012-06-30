@@ -323,6 +323,15 @@ else
 	fi
 fi
 
+if [ ! -f $XBPS_MASTERDIR/.xbps_perms_done ]; then
+	check_installed_pkg base-chroot-$BASE_CHROOT_REQ
+	if [ $? -eq 0 ]; then
+		# Prepare chroot if required base-chroot pkg is installed.
+		msg_normal "Preparing chroot on $XBPS_MASTERDIR...\n"
+		prepare_chroot || return $?
+	fi
+fi
+
 if [ -f $XBPS_MASTERDIR/.xbps_perms_done ]; then
 	CHROOT_READY=1
 fi

@@ -1,3 +1,8 @@
+v29:
+ * Make the 'build/configure/install-destdir/build-pkg' target work
+   once base-chroot has been installed, but the chroot wasn't prepared
+   before. Reported by xdave.
+
 v28:
  * Requires xbps>=0.16 (API 20120605) and base-chroot>=0.28_1.
  * Always build bootstrap pkgs in the chroot, iff the chroot was

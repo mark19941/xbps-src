@@ -258,11 +258,6 @@ chroot_handler() {
 
 	[ -z "$action" -a -z "$pkg" ] && return 1
 
-	if [ ! -f $XBPS_MASTERDIR/.xbps_perms_done ]; then
-		msg_normal "Preparing chroot on $XBPS_MASTERDIR...\n"
-		prepare_chroot || return $?
-	fi
-
 	[ ! -d "$XBPS_MASTERDIR/tmp" ] && mkdir -p "$XBPS_MASTERDIR/tmp"
 
 	chroot_init || return $?
