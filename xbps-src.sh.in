@@ -258,7 +258,6 @@ while getopts "Cc:D:hKm:V" opt; do
 		if [ ! -d ${_MASTERDIR} ]; then
 			mkdir -p ${_MASTERDIR}
 		fi
-		shift
 		;;
 	V) echo $XBPS_SRC_VERSION && exit 0;;
 	--) shift; break;;
