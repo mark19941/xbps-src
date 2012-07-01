@@ -172,6 +172,7 @@ Options:
  -C  Do not remove build directory after successful installation.
  -c  Path to global configuration file:
      if not specified ${XBPS_ETCDIR}/xbps-src.conf is used.
+ -D  Path to XBPS_DISTDIR, overriding the setting in xbps-src.conf.
  -h  Usage output.
  -K  Do not remove automatic package dependencies.
  -m  Master directory to install packages and build binary packages,
@@ -244,10 +245,11 @@ check_config_vars() {
 #
 # main()
 #
-while getopts "Cc:hKm:V" opt; do
+while getopts "Cc:D:hKm:V" opt; do
 	case $opt in
 	C) export KEEP_WRKSRC=1;;
 	c) XBPS_CONFIG_FILE="$OPTARG";;
+	D) _DISTDIR="$OPTARG";;
 	h) usage && exit 0;;
 	K) export KEEP_AUTODEPS=1;;
 	m)
@@ -256,6 +258,7 @@ while getopts "Cc:hKm:V" opt; do
 		if [ ! -d ${_MASTERDIR} ]; then
 			mkdir -p ${_MASTERDIR}
 		fi
+		shift
 		;;
 	V) echo $XBPS_SRC_VERSION && exit 0;;
 	--) shift; break;;
@@ -279,7 +282,10 @@ check_reqhost_utils
 #
 check_config_vars
 if [ -n "${_MASTERDIR}" ]; then
-	export XBPS_MASTERDIR=${_MASTERDIR}
+	export XBPS_MASTERDIR="${_MASTERDIR}"
+fi
+if [ -n "${_DISTDIR}" ]; then
+	export XBPS_DISTDIR="${_DISTDIR}"
 fi
 . ${XBPS_SHAREDIR}/shutils/init_funcs.sh
 set_defvars
