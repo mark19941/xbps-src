@@ -175,6 +175,7 @@ Options:
  -c  Path to global configuration file:
      if not specified ${XBPS_ETCDIR}/xbps-src.conf is used.
  -D  Path to XBPS_DISTDIR, overriding the setting in xbps-src.conf.
+ -H  Path to XBPS_HOSTDIR, overrinding the setting in xbps-src.conf.
  -h  Usage output.
  -K  Do not remove automatic package dependencies.
  -m  Master directory to install packages and build binary packages,
@@ -247,11 +248,12 @@ check_config_vars() {
 #
 # main()
 #
-while getopts "Cc:D:hKm:V" opt; do
+while getopts "Cc:D:hH:Km:V" opt; do
 	case $opt in
 	C) export KEEP_WRKSRC=1;;
 	c) XBPS_CONFIG_FILE="$OPTARG";;
 	D) _DISTDIR="$OPTARG";;
+	H) _HOSTDIR="$OPTARG";;
 	h) usage && exit 0;;
 	K) export KEEP_AUTODEPS=1;;
 	m)
@@ -287,6 +289,9 @@ if [ -n "${_MASTERDIR}" ]; then
 fi
 if [ -n "${_DISTDIR}" ]; then
 	export XBPS_DISTDIR="${_DISTDIR}"
+fi
+if [ -n "${_HOSTDIR}" ]; then
+	export XBPS_HOSTDIR="${_HOSTDIR}"
 fi
 . ${XBPS_SHAREDIR}/shutils/init_funcs.sh
 set_defvars
