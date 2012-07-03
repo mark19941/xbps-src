@@ -28,14 +28,14 @@
 # (srcpkgs/$pkgname/patches).
 #
 _process_patch() {
-	local args= _patch= i=$1
+	local _args= _patch= i=$1
 
-	args="-Np0"
+	_args="-Np0"
 	_patch=$(basename $i)
 	if [ -f $PATCHESDIR/${_patch}.args ]; then
-		args=$(cat $PATCHESDIR/${_patch}.args)
+		_args=$(cat $PATCHESDIR/${_patch}.args)
 	elif [ -n "$patch_args" ]; then
-		args=$patch_args
+		_args=$patch_args
 	fi
 	cp -f $i $wrksrc
 
@@ -61,7 +61,7 @@ _process_patch() {
 		continue
 	fi
 
-	cd $wrksrc && patch -s ${args} < ${_patch} 2>/dev/null
+	cd $wrksrc && patch -s ${_args} < ${_patch} 2>/dev/null
 	if [ $? -eq 0 ]; then
 		msg_normal "$pkgver: patch applied: ${_patch}.\n"
 	else
@@ -81,7 +81,7 @@ apply_tmpl_patches() {
 	else
 		for f in $PATCHESDIR/*; do
 			[ ! -f $f ] && continue
-			if $(echo $f|grep -q '.args'); then
+			if $(echo $f|grep -Eq '^.*.args$'); then
 				continue
 			fi
 			_process_patch $f
