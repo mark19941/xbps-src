@@ -178,6 +178,7 @@ Options:
  -H  Path to XBPS_HOSTDIR, overrinding the setting in xbps-src.conf.
  -h  Usage output.
  -K  Do not remove automatic package dependencies.
+ -L  Disable ASCII colors.
  -m  Master directory to install packages and build binary packages,
      overwritting the value set in configuration file xbps-src.conf.
 _EOF
@@ -248,7 +249,7 @@ check_config_vars() {
 #
 # main()
 #
-while getopts "Cc:D:hH:Km:V" opt; do
+while getopts "Cc:D:hH:KLm:V" opt; do
 	case $opt in
 	C) export KEEP_WRKSRC=1;;
 	c) XBPS_CONFIG_FILE="$OPTARG";;
@@ -256,6 +257,7 @@ while getopts "Cc:D:hH:Km:V" opt; do
 	H) _HOSTDIR="$OPTARG";;
 	h) usage && exit 0;;
 	K) export KEEP_AUTODEPS=1;;
+	L) export NOCOLORS=1;;
 	m)
 		_MASTERDIR_FLAG=1
 		_MASTERDIR="$OPTARG"
@@ -347,6 +349,8 @@ fi
 if [ -f $XBPS_MASTERDIR/.xbps_perms_done ]; then
 	CHROOT_READY=1
 fi
+
+export NOCOLORS=$NOCOLORS
 
 #
 # Main switch.

@@ -277,6 +277,7 @@ chroot_handler() {
 	else
 		[ -n "$KEEP_WRKSRC" ] && arg="$arg -C"
 		[ -n "$KEEP_AUTODEPS" ] && arg="$arg -K"
+		[ -n "$NOCOLORS" ] && arg="$arg -L"
 
 		action="$arg $action"
 		env in_chroot=1 IN_CHROOT=1 LANG=C \

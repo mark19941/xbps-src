@@ -97,13 +97,13 @@ run_func() {
 
 msg_red() {
 	# error messages in bold/red
-	printf >&2 "\033[1m\033[31m"
+	[ -n "$NOCOLORS" ] || printf >&2 "\033[1m\033[31m"
 	if [ -n "$IN_CHROOT" ]; then
 		printf >&2 "[chroot] => ERROR: $@"
 	else
 		printf >&2 "=> ERROR: $@"
 	fi
-	printf >&2 "\033[m"
+	[ -n "$NOCOLORS" ] || printf >&2 "\033[m"
 }
 
 msg_error() {
@@ -112,36 +112,42 @@ msg_error() {
 }
 
 msg_error_nochroot() {
-	printf >&2 "\033[1m\033[31m>= ERROR: $@\033[m"
+	[ -n "$NOCOLORS" ] || printf >&2 "\033[1m\033[31m"
+	printf >&2 "=> ERROR: $@"
+	[ -n "$NOCOLORS" ] || printf >&2 "\033[m"
 	exit 1
 }
 
 msg_warn() {
 	# warn messages in bold/yellow
-	printf >&2 "\033[1m\033[33m"
+	[ -n "$NOCOLORS" ] || printf >&2 "\033[1m\033[33m"
 	if [ -n "$IN_CHROOT" ]; then
 		printf >&2 "[chroot] => WARNING: $@"
 	else
 		printf >&2 "=> WARNING: $@"
 	fi
-	printf >&2  "\033[m"
+	[ -n "$NOCOLORS" ] || printf >&2  "\033[m"
 }
 
 msg_warn_nochroot() {
-	printf >&2 "\033[1m\033[33m=> WARNING: $@\033[m"
+	[ -n "$NOCOLORS" ] || printf >&2 "\033[1m\033[33m"
+	printf >&2 "=> WARNING: $@"
+	[ -n "$NOCOLORS" ] || printf >&2 "\033[m"
 }
 
 msg_normal() {
 	# normal messages in bold
-	printf "\033[1m"
+	[ -n "$NOCOLORS" ] || printf "\033[1m"
 	if [ -n "$IN_CHROOT" ]; then
 		printf "[chroot] => $@"
 	else
 		printf "=> $@"
 	fi
-	printf "\033[m"
+	[ -n "$NOCOLORS" ] || printf "\033[m"
 }
 
 msg_normal_append() {
-	printf "\033[1m$@\033[m"
+	[ -n "$NOCOLORS" ] || printf "\033[1m"
+	printf "$@"
+	[ -n "$NOCOLORS" ] || printf "\033[m"
 }

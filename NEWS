@@ -1,4 +1,5 @@
 v29:
+ * Added -L flag to disable ASCII colors in msg_* funcs.
  * Removed support for xbps<0.16. 0.16 is required to use xbps-src.
  * Added -D flag to override XBPS_DISTDIR setting from xbps-src.conf.
  * Make the 'build/configure/install-destdir/build-pkg' target work
