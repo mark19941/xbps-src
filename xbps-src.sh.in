@@ -140,10 +140,6 @@ Targets: (only one may be specified)
    master directory <masterdir>. By default set to <masterdir/host/binpkgs.
    To specify another repo, use -p <dir>.
 
- repo-checkvers
-   Compares available version from local repository against version in
-   srcpkgs and tells you when a binary package is outdated.
-
  setcaps
    Sets required capabilities in xbps-src utilities to be able to build
    binary packages in a chroot with a regular user (not root).
@@ -451,9 +447,6 @@ list)
 	;;
 make-repoidx)
 	make_repoidx
-	;;
-repo-checkvers)
-	check_repository_packages
 	;;
 setcaps)
 	if [ -z "$IN_CHROOT" ]; then
