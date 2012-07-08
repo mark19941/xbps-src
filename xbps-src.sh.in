@@ -184,25 +184,6 @@ basename_cwd() {
 	echo $(basename $(pwd))
 }
 
-check_path() {
-	eval local orig="$1"
-
-	case "$orig" in
-		/) ;;
-		/*) orig="${orig%/}" ;;
-		*) orig="$(pwd)/${orig%/}" ;;
-	esac
-
-	path_fixed="$orig"
-}
-
-run_file() {
-	local file="$1"
-
-	check_path "$file"
-	. $path_fixed
-}
-
 check_config_vars() {
 	local val= cffound= f= cfpaths= cf="xbps-src.conf"
 
@@ -221,13 +202,14 @@ check_config_vars() {
 		fi
 	fi
 
-	run_file ${XBPS_CONFIG_FILE}
-	export XBPS_CONFIG_FILE=$path_fixed
+	export XBPS_CONFIG_FILE="$(realpath $XBPS_CONFIG_FILE)"
 
 	if [ ! -f "$XBPS_CONFIG_FILE" ]; then
 		echo "cannot find configuration file: $XBPS_CONFIG_FILE"
 		exit 1
 	fi
+
+	. $XBPS_CONFIG_FILE
 
 	for f in XBPS_DISTDIR XBPS_MASTERDIR; do
 		eval val="\$${f}"
@@ -283,13 +265,13 @@ check_reqhost_utils
 #
 check_config_vars
 if [ -n "${_MASTERDIR}" ]; then
-	export XBPS_MASTERDIR="${_MASTERDIR}"
+	export XBPS_MASTERDIR="$(realpath ${_MASTERDIR})"
 fi
 if [ -n "${_DISTDIR}" ]; then
-	export XBPS_DISTDIR="${_DISTDIR}"
+	export XBPS_DISTDIR="$(realpath ${_DISTDIR})"
 fi
 if [ -n "${_HOSTDIR}" ]; then
-	export XBPS_HOSTDIR="${_HOSTDIR}"
+	export XBPS_HOSTDIR="$(realpath ${_HOSTDIR})"
 fi
 . ${XBPS_SHAREDIR}/shutils/init_funcs.sh
 set_defvars
