@@ -1,4 +1,8 @@
 v29:
+ * The "build_date" object added onto pkg's metadata has been modified
+   and now this reports the current timezone where the pkg was built on:
+	* LANG=C date "+%x %X %Z"
+ * The options -C, -D, -D and -m can be now relative to cwd.
  * Removed 'repo-checkvers' target; functionality has been implemented in the
    'xbps-src-utils' package and rewritten in C for performance by dave.
  * Added -L flag to disable ASCII colors in msg_* funcs.
