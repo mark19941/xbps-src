@@ -1,4 +1,5 @@
 v29:
+ * Added support for 'index-{add,clean}' targets from XBPS>=0.16.6.
  * The "build_date" object added onto pkg's metadata has been modified
    and now this reports the current timezone where the pkg was built on:
 	* LANG=C date "+%F %R %Z"

@@ -26,26 +26,6 @@
 #
 # Installs a pkg by reading its build template file.
 #
-make_repoidx() {
-	local f=
-
-	for f in $XBPS_PACKAGESDIR $XBPS_PACKAGESDIR/nonfree; do
-		msg_normal "Updating repository index at:\n"
-		msg_normal " $f\n"
-		$XBPS_REPO_CMD genindex $f 2>/dev/null
-	done
-}
-
-_build_pkg_and_update_repos() {
-	local rval= f=
-
-	# Build binary package and update local repo index if -B is set.
-	make_binpkg
-	rval=$?
-	[ $rval -ne 0 -a $rval -ne 6 ] && return $rval
-	make_repoidx
-}
-
 install_pkg() {
 	local target="$1"
 
@@ -115,13 +95,17 @@ install_pkg() {
 	if [ -n "$CHROOT_READY" ]; then
 		# base-chroot already installed: build binpkg,
 		# remove pkg from destdir.
-		_build_pkg_and_update_repos
+		make_binpkg
+		rval=$?
+		[ $rval -ne 0 -a $rval -ne 6 ] && return $rval
 		remove_pkg || return $?
 	else
 		# base-chroot not installed: stow pkg
 		# and update local repo.
 		stow_pkg_handler stow || return $?
-		_build_pkg_and_update_repos
+		make_binpkg
+		rval=$?
+		[ $rval -ne 0 -a $rval -ne 6 ] && return $rval
 	fi
 
 	# Remove $wrksrc if -C not specified.

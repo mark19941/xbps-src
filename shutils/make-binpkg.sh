@@ -24,21 +24,39 @@
 #-
 
 make_binpkg() {
-	local subpkg=
+	local subpkg= new_index= rval=
 
 	[ -z "$pkgname" ] && return 1
+
+	case "$XBPS_VERSION" in
+		# XBPS >= 0.16.6
+		0.[1-9][6-9].[6-9]*|0.[1.9][7-9]*) new_index=1;;
+	esac
 
 	for subpkg in ${subpackages}; do
 		unset noarch nonfree
 		. $XBPS_SRCPKGDIR/$pkgname/$subpkg.template
 		pkgname=${subpkg}
 		set_tmpl_common_vars
-		make_binpkg_real
+		make_binpkg_real $new_index
+		rval=$?
+		[ $rval -ne 0 -a $rval -ne 6 ] && return $rval
 		setup_tmpl ${sourcepkg}
 	done
 
 	[ -n "${subpackages}" ] && set_tmpl_common_vars
-	make_binpkg_real
+	make_binpkg_real $new_index
+	rval=$?
+	[ $rval -ne 0 -a $rval -ne 6 ] && return $rval
+	if [ -n "$new_index" ]; then
+		if [ -n "$nonfree" ]; then
+			$XBPS_REPO_CMD index-clean $XBPS_PACKAGESDIR/nonfree
+		else
+			$XBPS_REPO_CMD index-clean $XBPS_PACKAGESDIR
+		fi
+	else
+		make_repoidx
+	fi
 	return $?
 }
 
@@ -47,8 +65,23 @@ binpkg_cleanup() {
 
 	[ -z "$pkgdir" -o -z "$binpkg" ] && return 1
 	msg_red "$pkgver: Interrupted! removing $binpkg file!\n"
+	if [ -n "$nonfree" ]; then
+		rm -f $XBPS_PACKAGESDIR/nonfree/$binpkg
+	else
+		rm -f $XBPS_PACKAGESDIR/$binpkg
+	fi
 	rm -f $pkgdir/$binpkg
 	exit 1
+}
+
+make_repoidx() {
+	local f=
+
+	for f in $XBPS_PACKAGESDIR $XBPS_PACKAGESDIR/nonfree; do
+		msg_normal "Updating repository index at:\n"
+		msg_normal " $f\n"
+		$XBPS_REPO_CMD genindex $f 2>/dev/null
+	done
 }
 
 #
@@ -116,7 +149,23 @@ make_binpkg_real() {
 
 	if [ $rval -eq 0 ]; then
 		msg_normal_append "done.\n"
+		if [ -n "$nonfree" ]; then
+			ln -sfr $pkgdir/$binpkg $XBPS_PACKAGESDIR/nonfree/$binpkg
+			if [ -n "$1" ]; then
+				$XBPS_REPO_CMD index-add $XBPS_PACKAGESDIR/nonfree/$binpkg
+			fi
+		else
+			ln -sfr $pkgdir/$binpkg $XBPS_PACKAGESDIR/$binpkg
+			if [ -n "$1" ]; then
+				$XBPS_REPO_CMD index-add $XBPS_PACKAGESDIR/$binpkg
+			fi
+		fi
 	else
+		if [ -n "$nonfree" ]; then
+			rm -f $XBPS_PACKAGESDIR/nonfree/$binpkg
+		else
+			rm -f $XBPS_PACKAGESDIR/$binpkg
+		fi
 		rm -f $pkgdir/$binpkg
 		msg_normal_append "failed!\n"
 	fi
