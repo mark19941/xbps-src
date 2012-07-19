@@ -222,7 +222,7 @@ install_xbps_utils() {
 	local needed= _cmd=
 	local xbps_prefix=$XBPS_MASTERDIR/usr/local
 
-	if [ ! -f ${XBPS_MASTERDIR}/.xbps_utils_done ]; then
+	if [ ! -f ${XBPS_MASTERDIR}/.xbps_shared_utils_done ]; then
 		msg_normal "Installing XBPS utils into masterdir...\n"
 		mkdir -p $xbps_prefix/lib $xbps_prefix/sbin
 		for f in bin repo uhelper; do
@@ -247,7 +247,7 @@ install_xbps_utils() {
 			echo "exit \$?" >> $xbps_prefix/sbin/${_xcmd}
 			chmod 755 $xbps_prefix/sbin/${_xcmd}
 		done
-		touch ${XBPS_MASTERDIR}/.xbps_utils_done
+		touch ${XBPS_MASTERDIR}/.xbps_shared_utils_done
 	fi
 }
 
