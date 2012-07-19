@@ -52,7 +52,7 @@ XBPS_MACHINE=$(uname -m)
 REQHOST_UTILS_BOOTSTRAP="awk bash bison sed gcc msgfmt patch makeinfo \
 	perl fakeroot tar xz gzip bzip2"
 # Required utilities in host system for chroot ops.
-REQHOST_UTILS="xbps-bin.static xbps-repo.static xbps-uhelper.static"
+REQHOST_UTILS="xbps-bin xbps-repo xbps-uhelper"
 
 check_reqhost_utils() {
 	local broken
@@ -337,11 +337,10 @@ case "$target" in
 binary-bootstrap)
 	# binary bootstrap
 	msg_normal "Installing bootstrap from binary package repositories...\n"
-	xbps-repo.static -r $XBPS_MASTERDIR sync && \
-		xbps-bin.static -r $XBPS_MASTERDIR \
-			-c $XBPS_MASTERDIR/host/repocache \
-			-y install base-chroot && \
-			msg_normal "Installed bootstrap successfully!\n"
+	xbps-repo -r $XBPS_MASTERDIR sync && xbps-bin -r $XBPS_MASTERDIR \
+		-c $XBPS_MASTERDIR/host/repocache \
+		-y install base-chroot && \
+		msg_normal "Installed bootstrap successfully!\n"
 	;;
 bootstrap)
 	# bootstrap from sources

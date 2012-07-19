@@ -1,4 +1,6 @@
 v29:
+ * Don't require the xbps static binaries anymore. Rather, a shell wrapper
+   is created for xbps-{bin,repo,uhelper} cmd at masterdir/usr/local/sbin.
  * Added support for 'index-{add,clean}' targets from XBPS>=0.16.6.
  * The "build_date" object added onto pkg's metadata has been modified
    and now this reports the current timezone where the pkg was built on:

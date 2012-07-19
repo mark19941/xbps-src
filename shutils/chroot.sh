@@ -69,7 +69,6 @@ XBPS_MASTERDIR=/
 XBPS_CFLAGS="$XBPS_CFLAGS"
 XBPS_CXXFLAGS="$XBPS_CFLAGS"
 XBPS_LDFLAGS="$XBPS_LDFLAGS"
-XBPS_FETCH_CMD="xbps-uhelper.static fetch"
 XBPS_COMPRESS_CMD="$XBPS_COMPRESS_CMD"
 _EOF
 	if [ -n "$XBPS_MAKEJOBS" ]; then
@@ -216,8 +215,7 @@ prepare_binpkg_repos() {
 		done
 	fi
 	msg_normal "Synchronizing index for remote repositories...\n"
-	${CHROOT_CMD} ${XBPS_MASTERDIR} sh -c \
-		'fakeroot -- xbps-repo.static -C /usr/local/etc/xbps/xbps.conf sync'
+	${CHROOT_CMD} ${XBPS_MASTERDIR} sh -c "fakeroot -- $XBPS_REPO_CMD sync"
 }
 
 install_xbps_utils() {
@@ -225,14 +223,29 @@ install_xbps_utils() {
 	local xbps_prefix=$XBPS_MASTERDIR/usr/local
 
 	if [ ! -f ${XBPS_MASTERDIR}/.xbps_utils_done ]; then
-		msg_normal "Installing static XBPS utils into masterdir...\n"
+		msg_normal "Installing XBPS utils into masterdir...\n"
+		mkdir -p $xbps_prefix/lib $xbps_prefix/sbin
 		for f in bin repo uhelper; do
-			_cmd=$(which xbps-${f}.static 2>/dev/null)
+			_cmd=$(which xbps-${f} 2>/dev/null)
+			_xcmd=$(basename ${_cmd})
 			if [ -z "${_cmd}" ]; then
 				msg_error "Unexistent ${_cmd} file!"
 				exit 1
 			fi
-			cp -f ${_cmd} $xbps_prefix/sbin
+			install -Dm755 ${_cmd} $xbps_prefix/sbin/${_xcmd}.real
+			# copy required shlibs
+			for j in $(ldd ${_cmd}|awk '{print $3}'); do
+				install -m755 $j $xbps_prefix/lib
+			done
+			# Create wrapper for cmd
+			echo "#!/bin/sh" > $xbps_prefix/sbin/${_xcmd}
+			echo "export PATH=/usr/local/sbin:\$PATH" >> \
+				$xbps_prefix/sbin/${_xcmd}
+			echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/usr/local/lib" >> \
+				$xbps_prefix/sbin/${_xcmd}
+			echo "${_xcmd}.real \"\$@\"" >> $xbps_prefix/sbin/${_xcmd}
+			echo "exit \$?" >> $xbps_prefix/sbin/${_xcmd}
+			chmod 755 $xbps_prefix/sbin/${_xcmd}
 		done
 		touch ${XBPS_MASTERDIR}/.xbps_utils_done
 	fi

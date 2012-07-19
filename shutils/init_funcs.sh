@@ -74,14 +74,14 @@ set_defvars() {
 	if [ -n "$IN_CHROOT" ]; then
 		xbps_conf="-C /usr/local/etc/xbps/xbps.conf"
 	fi
-	XBPS_VERSION=$(xbps-bin.static -V|awk '{print $2}')
-	XBPS_APIVER=$(xbps-bin.static -V|awk '{print $4}')
-	XBPS_PKGDB_CMD="xbps-uhelper.static -r $XBPS_MASTERDIR"
-	XBPS_BIN_CMD="xbps-bin.static $xbps_conf -r $XBPS_MASTERDIR"
-	XBPS_REPO_CMD="xbps-repo.static $xbps_conf -r $XBPS_MASTERDIR"
-	XBPS_DIGEST_CMD="xbps-uhelper.static digest"
-	XBPS_CMPVER_CMD="xbps-uhelper.static cmpver"
-	XBPS_FETCH_CMD="xbps-uhelper.static fetch"
+	XBPS_VERSION=$(xbps-bin -V|awk '{print $2}')
+	XBPS_APIVER=$(xbps-bin -V|awk '{print $4}')
+	XBPS_PKGDB_CMD="xbps-uhelper -r $XBPS_MASTERDIR"
+	XBPS_BIN_CMD="xbps-bin $xbps_conf -r $XBPS_MASTERDIR"
+	XBPS_REPO_CMD="xbps-repo $xbps_conf -r $XBPS_MASTERDIR"
+	XBPS_DIGEST_CMD="xbps-uhelper digest"
+	XBPS_CMPVER_CMD="xbps-uhelper cmpver"
+	XBPS_FETCH_CMD="xbps-uhelper fetch"
 
 	$XBPS_PKGDB_CMD cmpver "$XBPS_VERSION" "$XBPS_UTILS_REQVER"
 	if [ $? -eq 255 ]; then
