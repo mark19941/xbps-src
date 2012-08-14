@@ -32,10 +32,12 @@ install_pkg() {
 	[ -z "$pkgname" ] && return 1
 
 	# Install dependencies required by this package.
-	install_pkg_deps || return 1
-	if [ -n "$ORIGIN_PKGDEPS_DONE" ]; then
-		unset ORIGIN_PKGDEPS_DONE
-		setup_tmpl ${_ORIGINPKG}
+	if [ ! -f "$XBPS_INSTALL_DONE" ]; then
+		install_pkg_deps || return 1
+		if [ -n "$ORIGIN_PKGDEPS_DONE" ]; then
+			unset ORIGIN_PKGDEPS_DONE
+			setup_tmpl ${_ORIGINPKG}
+		fi
 	fi
 
 	# Fetch distfiles after installing required dependencies,
@@ -63,21 +65,23 @@ install_pkg() {
 	fi
 
 	# Install pkg into destdir.
-	env XBPS_MACHINE=${XBPS_MACHINE} wrksrc=${wrksrc}	\
-		MASTERDIR="${XBPS_MASTERDIR}"			\
-		CONFIG_FILE=${XBPS_CONFIG_FILE}			\
-		${FAKEROOT_CMD} ${XBPS_LIBEXECDIR}/doinst-helper.sh \
-		${sourcepkg} || return $?
+	if [ ! -f "$XBPS_INSTALL_DONE" ]; then
+		env XBPS_MACHINE=${XBPS_MACHINE} wrksrc=${wrksrc}	\
+			MASTERDIR="${XBPS_MASTERDIR}"			\
+			CONFIG_FILE=${XBPS_CONFIG_FILE}			\
+			${FAKEROOT_CMD} ${XBPS_LIBEXECDIR}/doinst-helper.sh \
+			${sourcepkg} || return $?
 
-	# Strip binaries/libraries.
-	strip_files
+		# Strip binaries/libraries.
+		strip_files
 
-	# Write metadata to package's destdir.
-	write_metadata
-	if [ $? -ne 0 ]; then
-		msg_red "$pkgver: failed to create package metadata!\n"
-		remove_pkgdestdir_sighandler $pkgname
-		return 1
+		# Write metadata to package's destdir.
+		write_metadata
+		if [ $? -ne 0 ]; then
+			msg_red "$pkgver: failed to create package metadata!\n"
+			remove_pkgdestdir_sighandler $pkgname
+			return 1
+		fi
 	fi
 
 	if [ -n "$BROKEN_RSHLIBS" ]; then
