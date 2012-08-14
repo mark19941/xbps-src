@@ -1,3 +1,12 @@
+v30:
+ * The 'build-pkg' target now can be run after 'install-destdir' safely.
+   The steps previously run before will be skipped.
+ * The default ccache dir behaviour has been changed as follows:
+	- If XBPS_HOSTDIR is set and <hostdir>/ccache dir exists, use it.
+	- If the above is not true, use <masterdir>/ccache instead.
+   This gives us flexibility to make the ccache dir shared between hosts
+   or private by the user.
+
 v29:
  * Don't require the xbps static binaries anymore. Rather, a shell wrapper
    is created for xbps-{bin,repo,uhelper} cmd at masterdir/usr/local/sbin.
