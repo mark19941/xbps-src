@@ -1,5 +1,5 @@
 #-
-# Copyright (c) 2008-2011 Juan Romero Pardines.
+# Copyright (c) 2008-2012 Juan Romero Pardines.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -103,6 +103,12 @@ msg_red() {
 	else
 		printf >&2 "=> ERROR: $@"
 	fi
+	[ -n "$NOCOLORS" ] || printf >&2 "\033[m"
+}
+
+msg_red_nochroot() {
+	[ -n "$NOCOLORS" ] || printf >&2 "\022[1m\033[31m"
+	printf >&2 "$@"
 	[ -n "$NOCOLORS" ] || printf >&2 "\033[m"
 }
 

@@ -112,7 +112,7 @@ verify_rundeps() {
 			# Ignore libs by current pkg
 			soname=$(find ${DESTDIR} -name "$f")
 			if [ -z "$soname" ]; then
-				echo "   SONAME: $f <-> UNKNOWN PKG PLEASE FIX!"
+				msg_red_nochroot "   SONAME: $f <-> UNKNOWN PKG PLEASE FIX!"
 				broken=1
 			else
 				echo "   SONAME: $f <-> $pkgname (ignored)"
@@ -142,7 +142,7 @@ verify_rundeps() {
 		_pkgname=$($XBPS_PKGDB_CMD getpkgname "${_rdep}" 2>/dev/null)
 		_rdepver=$($XBPS_PKGDB_CMD getpkgversion "${_rdep}" 2>/dev/null)
 		if [ -z "${_pkgname}" -o -z "${_rdepver}" ]; then
-			echo "   SONAME: $f <-> UNKNOWN PKG PLEASE FIX!"
+			msg_red_nochroot "   SONAME: $f <-> UNKNOWN PKG PLEASE FIX!"
 			broken=1
 			continue
 		fi
@@ -185,8 +185,7 @@ verify_rundeps() {
 		# check if soname is already in the rshlibs file.
 		for j in ${soname_list}; do
 			if ! grep -q "$j" $rsonamef; then
-				echo "   SONAME: $j (added)"
-				echo "$j" >> $rsonamef
+				msg_red_nochroot "   SONAME: $j (added)"
 				broken=1
 			fi
 		done
@@ -219,8 +218,7 @@ verify_rundeps() {
 			_soname_arch=$(grep "$f" $maplib|awk '{print $3}'|head -1)
 			if [ -z "${_soname_arch}" ] || \
 			   [ -n "${_soname_arch}" -a "${_soname_arch}" = "$XBPS_MACHINE" ]; then
-				echo "   SONAME: $f (removed, not required)"
-				sed -i "/^${_soname}$/d" $rsonamef
+				msg_red_nochroot "   SONAME: $f (removed, not required)"
 				broken=1
 			fi
 			unset _soname _soname_arch

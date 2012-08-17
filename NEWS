@@ -1,4 +1,6 @@
 v30:
+ * When checking rshlibs, do not modify the rshlibs but notify the user which
+   ones were added/removed.
  * Do not fail when a new .rshlibs file is created for a pkg, just continue.
  * The 'build-pkg' target now can be run after 'install-destdir' safely.
    The steps previously run before will be skipped.
