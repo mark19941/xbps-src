@@ -79,15 +79,25 @@ remove_pkg_autodeps() {
 # Installs all dependencies required by a package.
 #
 install_pkg_deps() {
-	local i= pkgn= iver= missing_deps= binpkg_deps= _props=
+	local i= pkgn= iver= missing_deps= binpkg_deps= _props= _subpkg=
 
 	[ -z "$pkgname" ] && return 2
 	[ -z "$build_depends" ] && return 0
 	[ -n "$ORIGIN_PKGDEPS_DONE" ] && return 0
 
-	if [ "$pkgname" != "${_ORIGINPKG}" ]; then
+	# Remove autodeps in case a dependency was built from source.
+	for i in ${subpackages}; do
+		if [ "${i}" = "${pkgname}" ]; then
+			_subpkg=1
+			break
+		fi
+	done
+
+	if [ "$pkgname" != "${_ORIGINPKG}" -a -z "${_subpkg}" ]; then
 		remove_pkg_autodeps || return $?
 	fi
+	unset _subpkg
+
 	msg_normal "$pkgver: required dependencies:\n"
 
 	if [ -n "$IN_CHROOT" ]; then
@@ -144,6 +154,7 @@ install_pkg_deps() {
 			setup_tmpl ${curpkgdepname}
 			install_pkg
 			setup_tmpl ${_ORIGINPKG}
+			cd ${XBPS_MASTERDIR}
 			install_pkg_deps
 		done
 		for i in ${binpkg_deps}; do
