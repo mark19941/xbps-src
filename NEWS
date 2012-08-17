@@ -1,4 +1,5 @@
 v30:
+ * Do not fail when a new .rshlibs file is created for a pkg, just continue.
  * The 'build-pkg' target now can be run after 'install-destdir' safely.
    The steps previously run before will be skipped.
  * The default ccache dir behaviour has been changed as follows:

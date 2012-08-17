@@ -181,7 +181,6 @@ verify_rundeps() {
 			echo "   SONAME: $j (added)"
 			echo "${j}" >> $rsonamef
 		done
-		[ -n "$soname_list" ] && broken=1
 	else
 		# check if soname is already in the rshlibs file.
 		for j in ${soname_list}; do
