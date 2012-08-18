@@ -107,7 +107,7 @@ msg_red() {
 }
 
 msg_red_nochroot() {
-	[ -n "$NOCOLORS" ] || printf >&2 "\022[1m\033[31m"
+	[ -n "$NOCOLORS" ] || printf >&2 "\033[1m\033[31m"
 	printf >&2 "$@"
 	[ -n "$NOCOLORS" ] || printf >&2 "\033[m"
 }

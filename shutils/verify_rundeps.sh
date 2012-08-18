@@ -142,7 +142,7 @@ verify_rundeps() {
 		_pkgname=$($XBPS_PKGDB_CMD getpkgname "${_rdep}" 2>/dev/null)
 		_rdepver=$($XBPS_PKGDB_CMD getpkgversion "${_rdep}" 2>/dev/null)
 		if [ -z "${_pkgname}" -o -z "${_rdepver}" ]; then
-			msg_red_nochroot "   SONAME: $f <-> UNKNOWN PKG PLEASE FIX!"
+			msg_red_nochroot "   SONAME: $f <-> UNKNOWN PKG PLEASE FIX!\n"
 			broken=1
 			continue
 		fi
@@ -185,7 +185,7 @@ verify_rundeps() {
 		# check if soname is already in the rshlibs file.
 		for j in ${soname_list}; do
 			if ! grep -q "$j" $rsonamef; then
-				msg_red_nochroot "   SONAME: $j (added)"
+				msg_red_nochroot "   SONAME: $j (added)\n"
 				broken=1
 			fi
 		done
@@ -218,7 +218,7 @@ verify_rundeps() {
 			_soname_arch=$(grep "$f" $maplib|awk '{print $3}'|head -1)
 			if [ -z "${_soname_arch}" ] || \
 			   [ -n "${_soname_arch}" -a "${_soname_arch}" = "$XBPS_MACHINE" ]; then
-				msg_red_nochroot "   SONAME: $f (removed, not required)"
+				msg_red_nochroot "   SONAME: $f (removed, not required)\n"
 				broken=1
 			fi
 			unset _soname _soname_arch
