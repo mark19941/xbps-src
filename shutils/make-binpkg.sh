@@ -50,9 +50,21 @@ make_binpkg() {
 	[ $rval -ne 0 -a $rval -ne 6 ] && return $rval
 	if [ -n "$new_index" ]; then
 		if [ -n "$nonfree" ]; then
+			while [ -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock ]; do
+				echo "The repo index is currently locked!"
+				sleep 1
+			done
+			touch -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
 			$XBPS_REPO_CMD index-clean $XBPS_PACKAGESDIR/nonfree
+			rm -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
 		else
+			while [ -f $XBPS_PACKAGESDIR/.xbps-src-index-lock ]; do
+				echo "The repo index is currently locked!"
+				sleep 1
+			done
+			touch -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
 			$XBPS_REPO_CMD index-clean $XBPS_PACKAGESDIR
+			rm -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
 		fi
 	else
 		make_repoidx
@@ -150,14 +162,26 @@ make_binpkg_real() {
 	if [ $rval -eq 0 ]; then
 		msg_normal_append "done.\n"
 		if [ -n "$nonfree" ]; then
+			while [ -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock ]; do
+				echo "The repo index is currently locked!"
+				sleep 1
+			done
 			ln -sfr $pkgdir/$binpkg $XBPS_PACKAGESDIR/nonfree/$binpkg
 			if [ -n "$1" ]; then
+				touch -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
 				$XBPS_REPO_CMD index-add $XBPS_PACKAGESDIR/nonfree/$binpkg
+				rm -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
 			fi
 		else
+			while [ -f $XBPS_PACKAGESDIR/.xbps-src-index-lock ]; do
+				echo "The repo index is currently locked!"
+				sleep 1
+			done
 			ln -sfr $pkgdir/$binpkg $XBPS_PACKAGESDIR/$binpkg
 			if [ -n "$1" ]; then
+				touch -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
 				$XBPS_REPO_CMD index-add $XBPS_PACKAGESDIR/$binpkg
+				rm -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
 			fi
 		fi
 	else
