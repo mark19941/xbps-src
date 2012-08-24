@@ -153,7 +153,7 @@ make_binpkg_real() {
 	# Remove binpkg if interrupted...
 	trap "binpkg_cleanup $pkgdir $binpkg" INT
 	msg_normal "Building $binpkg... "
-	${FAKEROOT_CMD} tar --exclude "var/db/xbps/metadata/*/flist" \
+	${FAKEROOT_CMD} tar --exclude "flist" \
 		-cpf - ${mfiles} ${dirs} |			\
 		$XBPS_COMPRESS_CMD ${clevel} -qf > $pkgdir/$binpkg
 	rval=$?

@@ -58,7 +58,6 @@ write_metadata() {
 # these will be used for binary packages.
 #
 write_metadata_real() {
-	local metadir=${DESTDIR}/var/db/xbps/metadata/$pkgname
 	local f= i= j= found= arch= dirat= lnkat= newlnk=
 	local lver= TMPFLIST= TMPFPLIST=
 	local fpattern="s|${DESTDIR}||g;s|^\./$||g;/^$/d"
@@ -389,18 +388,9 @@ _EOF
 	echo "</dict>" >> $TMPFPROPS
 	echo "</plist>" >> $TMPFPROPS
 
-	if [ ! -d $metadir ]; then
-		mkdir -m0755 -p $metadir >/dev/null 2>&1
-		if [ $? -ne 0 ]; then
-			msg_red "you don't have enough perms for this!\n"
-			rm -f $TMPFLIST $TMPFPROPS
-			exit 1
-		fi
-	fi
-
 	# Write metadata files and cleanup.
 	if [ -s $TMPFLIST ]; then
-		mv -f $TMPFLIST $metadir/flist
+		mv -f $TMPFLIST ${DESTDIR}/flist
 	else
 		rm -f $TMPFLIST
 	fi
@@ -413,7 +403,7 @@ _EOF
 		msg_error "$pkgver: failed to externalize props.plist!\n"
 
 	chmod 644 ${DESTDIR}/files.plist ${DESTDIR}/props.plist
-	[ -f $metadir/flist ] && chmod 644 $metadir/flist
+	[ -f ${DESTDIR}/flist ] && chmod 644 ${DESTDIR}/flist
 
 	#
 	# Create the INSTALL/REMOVE scripts if package uses them
