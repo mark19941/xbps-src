@@ -131,7 +131,8 @@ prepare_tmpl() {
 			found=1
 		fi
 		if [ -z "$found" ]; then
-			msg_error "$pkgname: this package cannot be built on $XBPS_MACHINE.\n"
+			msg_red "$pkgname: this package cannot be built on $XBPS_MACHINE.\n"
+			exit 0
 		fi
 	fi
 
