@@ -121,7 +121,7 @@ install_pkg_deps() {
 					$FAKEROOT_CMD $XBPS_BIN_CMD -yFf remove $pkgn >/dev/null 2>&1
 				fi
 			else
-				_props=$($XBPS_REPO_CMD -oversion,repository show $pkgn 2>/dev/null)
+				_props=$($XBPS_REPO_CMD -oversion,repository show "${i}" 2>/dev/null)
 				if [ -n "${_props}" ]; then
 					set -- ${_props}
 					$XBPS_PKGDB_CMD pkgmatch ${pkgn}-${1} "${i}"
