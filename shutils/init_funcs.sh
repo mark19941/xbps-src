@@ -86,16 +86,19 @@ set_defvars() {
 		XBPS_REPO=/usr/local/sbin/xbps-repo
 		XBPS_PKGDB=/usr/local/sbin/xbps-uhelper
 		XBPS_CREATE=/usr/local/sbin/xbps-create
+		XBPS_PKGDB_CMD="$XBPS_PKGDB"
+		XBPS_BIN_CMD="$XBPS_BIN $xbps_conf"
+		XBPS_REPO_CMD="$XBPS_REPO $xbps_conf"
 	else
 		: ${XBPS_BIN:=xbps-bin}
 		: ${XBPS_REPO:=xbps-repo}
 		: ${XBPS_PKGDB:=xbps-uhelper}
 		: ${XBPS_CREATE:=xbps-create}
+		XBPS_PKGDB_CMD="$XBPS_PKGDB -r $XBPS_MASTERDIR"
+		XBPS_BIN_CMD="$XBPS_BIN $xbps_conf -r $XBPS_MASTERDIR"
+		XBPS_REPO_CMD="$XBPS_REPO $xbps_conf -r $XBPS_MASTERDIR"
 	fi
 
-	: ${XBPS_PKGDB_CMD:="$XBPS_PKGDB -r $XBPS_MASTERDIR"}
-	: ${XBPS_BIN_CMD:="$XBPS_BIN $xbps_conf -r $XBPS_MASTERDIR"}
-	: ${XBPS_REPO_CMD:="$XBPS_REPO $xbps_conf -r $XBPS_MASTERDIR"}
 	: ${XBPS_DIGEST_CMD:="$XBPS_PKGDB digest"}
 	: ${XBPS_CMPVER_CMD:="$XBPS_PKGDB cmpver"}
 	: ${XBPS_FETCH_CMD:="$XBPS_PKGDB fetch"}
