@@ -27,7 +27,7 @@
 # Installs a pkg by reading its build template file.
 #
 install_pkg() {
-	local target="$1"
+	local target="$1" lrepo=
 
 	[ -z "$pkgname" ] && return 1
 
@@ -96,38 +96,44 @@ install_pkg() {
 			exit 0
 		fi
 	fi
-	if [ -n "$CHROOT_READY" ]; then
-		# base-chroot already installed: build binpkg,
-		# remove pkg from destdir.
-		make_binpkg
-		rval=$?
-		[ $rval -ne 0 -a $rval -ne 6 ] && return $rval
-		remove_pkg || return $?
-	else
-		# base-chroot not installed: stow pkg
-		# and update local repo.
-		stow_pkg_handler stow || return $?
-		make_binpkg
-		rval=$?
-		[ $rval -ne 0 -a $rval -ne 6 ] && return $rval
-	fi
+	# Build binpkg and remove files from destdir.
+	make_binpkg
+	rval=$?
+	[ $rval -ne 0 -a $rval -ne 6 ] && return $rval
+	remove_pkg || return $?
 
 	# Remove $wrksrc if -C not specified.
 	if [ -d "$wrksrc" -a -z "$KEEP_WRKSRC" ]; then
 		remove_tmpl_wrksrc $wrksrc
 	fi
 
+	# Remove autodeps if target pkg is the origin pkg.
 	if [ "$pkgname" = "${_ORIGINPKG}" ]; then
 		remove_pkg_autodeps $KEEP_AUTODEPS || return 1
-		exit 0
+		[ -n "$CHROOT_READY" ] && exit 0
+	fi
+
+	# If base-chroot not installed, install binpkg into masterdir
+	# from local repository.
+	if [ -z "$CHROOT_READY" ]; then
+		msg_normal "Installing $pkgver into masterdir...\n"
+		local _log=$(mktemp --tmpdir|| exit 1)
+		$FAKEROOT_CMD $XBPS_BIN_CMD -My install $pkgver >${_log} 2>&1
+		if [ $? -ne 0 ]; then
+			msg_red "Failed to install $pkgver into masterdir, see below for errors:\n"
+			cat ${_log}
+			rm -f ${_log}
+			msg_error "Cannot continue!"
+		fi
+		rm -f ${_log}
 	fi
 }
 
 #
-# Removes a currently installed package (unstow + removed from destdir).
+# Removes package files from destdir.
 #
 remove_pkg() {
-	local subpkg= found= pkg= target="$1"
+	local subpkg= pkg= target="$1"
 
 	[ -z $pkgname ] && msg_error "unexistent package, aborting.\n"
 
@@ -138,14 +144,12 @@ remove_pkg() {
 		if [ -d "$XBPS_DESTDIR/${pkg}" ]; then
 			msg_normal "${pkg}: removing files from destdir...\n"
 			rm -rf "$XBPS_DESTDIR/${pkg}"
-			found=1
 		else
 			msg_warn "${pkg}: not installed in destdir!\n"
 		fi
 		# Remove leftover files in $wrksrc.
 		if [ -f "${wrksrc}/.xbps_do_install_${subpkg}_done" ]; then
 			rm -f ${wrksrc}/.xbps_do_install_${subpkg}_done
-			found=1
 		fi
 	done
 
@@ -153,17 +157,9 @@ remove_pkg() {
 	if [ -d "$XBPS_DESTDIR/${pkg}" ]; then
 		msg_normal "${pkg}: removing files from destdir...\n"
 		rm -rf "$XBPS_DESTDIR/${pkg}"
-		found=1
 	fi
 
 	[ -f $XBPS_PRE_INSTALL_DONE ] && rm -f $XBPS_PRE_INSTALL_DONE
 	[ -f $XBPS_POST_INSTALL_DONE ] && rm -f $XBPS_POST_INSTALL_DONE
 	[ -f $XBPS_INSTALL_DONE ] && rm -f $XBPS_INSTALL_DONE
-
-	[ -n "$IN_CHROOT" -o "$target" = "remove-destdir" ] && return 0
-
-	stow_pkg_handler unstow || return $?
-	[ -n "$found" ] && return 0
-
-	return 1
 }

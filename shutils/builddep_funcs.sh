@@ -59,7 +59,7 @@ install_pkg_from_repos() {
 remove_pkg_autodeps() {
 	local rval= tmplogf=
 
-	[ -n "$1" ] && return 0
+	[ -n "$1" -o -z "$CHROOT_READY" ] && return 0
 
 	cd $XBPS_MASTERDIR || return 1
 	msg_normal "$pkgver: removing automatic pkgdeps, please wait...\n"
@@ -93,117 +93,76 @@ install_pkg_deps() {
 		fi
 	done
 
-	if [ "$pkgname" != "${_ORIGINPKG}" -a -z "${_subpkg}" ]; then
+	if [ "$pkgname" != "${_ORIGINPKG}" -a -z "${_subpkg}" -a -n "$CHROOT_READY" ]; then
 		remove_pkg_autodeps || return $?
 	fi
 	unset _subpkg
 
 	msg_normal "$pkgver: required dependencies:\n"
 
-	if [ -n "$IN_CHROOT" ]; then
-		#
-		# Packages built in masterdir.
-		#
-		for i in ${build_depends}; do
-			pkgn=$($XBPS_PKGDB_CMD getpkgdepname "${i}")
-			check_pkgdep_matched "${i}"
-			local rval=$?
-			if [ $rval -eq 0 ]; then
-				iver=$($XBPS_BIN_CMD show -oversion "${pkgn}")
-				if [ $? -eq 0 -a -n "$iver" ]; then
-					echo "   ${i}: found '$pkgn-$iver'."
-					continue
-				fi
-			elif [ $rval -eq 1 ]; then
-				iver=$($XBPS_BIN_CMD show -oversion "${pkgn}")
-				if [ $? -eq 0 -a -n "$iver" ]; then
-					echo "   ${i}: installed ${iver} (unresolved) removing..."
-					$FAKEROOT_CMD $XBPS_BIN_CMD -yFf remove $pkgn >/dev/null 2>&1
-				fi
-			else
-				_props=$($XBPS_REPO_CMD -oversion,repository show "${i}" 2>/dev/null)
-				if [ -n "${_props}" ]; then
-					set -- ${_props}
-					$XBPS_PKGDB_CMD pkgmatch ${pkgn}-${1} "${i}"
-					if [ $? -eq 1 ]; then
-						echo "   ${i}: found $1 in $2."
-						if [ -z "$binpkg_deps" ]; then
-							binpkg_deps="${pkgn}-${1}"
-						else
-							binpkg_deps="${binpkg_deps} ${pkgn}-${1}"
-						fi
-						shift 2
-						continue
+	#
+	# Packages built in masterdir.
+	#
+	for i in ${build_depends}; do
+		pkgn=$($XBPS_PKGDB_CMD getpkgdepname "${i}")
+		check_pkgdep_matched "${i}"
+		local rval=$?
+		if [ $rval -eq 0 ]; then
+			iver=$($XBPS_BIN_CMD show -oversion "${pkgn}")
+			if [ $? -eq 0 -a -n "$iver" ]; then
+				echo "   ${i}: found '$pkgn-$iver'."
+				continue
+			fi
+		elif [ $rval -eq 1 ]; then
+			iver=$($XBPS_BIN_CMD show -oversion "${pkgn}")
+			if [ $? -eq 0 -a -n "$iver" ]; then
+				echo "   ${i}: installed ${iver} (unresolved) removing..."
+				$FAKEROOT_CMD $XBPS_BIN_CMD -yFf remove $pkgn >/dev/null 2>&1
+			fi
+		else
+			_props=$($XBPS_REPO_CMD -oversion,repository show "${i}" 2>/dev/null)
+			if [ -n "${_props}" ]; then
+				set -- ${_props}
+				$XBPS_PKGDB_CMD pkgmatch ${pkgn}-${1} "${i}"
+				if [ $? -eq 1 ]; then
+					echo "   ${i}: found $1 in $2."
+					if [ -z "$binpkg_deps" ]; then
+						binpkg_deps="${pkgn}-${1}"
 					else
-						echo "   ${i}: not found."
+						binpkg_deps="${binpkg_deps} ${pkgn}-${1}"
 					fi
 					shift 2
+					continue
 				else
 					echo "   ${i}: not found."
 				fi
-			fi
-			if [ -z "$missing_deps" ]; then
-				missing_deps="${i}"
+				shift 2
 			else
-				missing_deps="${missing_deps} ${i}"
+				echo "   ${i}: not found."
 			fi
-		done
-		for i in ${missing_deps}; do
-			# packages not found in repos, install from source.
-			curpkgdepname=$($XBPS_PKGDB_CMD getpkgdepname "$i")
-			setup_tmpl ${curpkgdepname}
-			install_pkg
-			setup_tmpl ${_ORIGINPKG}
-			cd ${XBPS_MASTERDIR}
-			install_pkg_deps
-		done
-		for i in ${binpkg_deps}; do
-			msg_normal "$pkgver: installing '$i'...\n"
-			install_pkg_from_repos "${i}"
-		done
-		if [ "$pkgname" = "${_ORIGINPKG}" ]; then
-			ORIGIN_PKGDEPS_DONE=1
-			return 0
 		fi
-	else
-		#
-		# Packages built in host directories.
-		#
-		for i in ${build_depends}; do
-			pkgn=$($XBPS_PKGDB_CMD getpkgdepname "${i}")
-			iver=$($XBPS_PKGDB_CMD version "${pkgn}")
-			check_pkgdep_matched "${i}"
-			local rval=$?
-			if [ $rval -eq 0 ]; then
-				echo "   ${i}: found '$pkgn-$iver'."
-				continue
-			elif [ $rval -eq 1 ]; then
-				echo "   ${i}: installed ${iver} (unresolved) removing $iver..."
-				setup_tmpl $pkgn
-				remove_pkg
-				setup_tmpl ${_ORIGINPKG}
-				install_pkg_deps
-			else
-				echo "   ${i} not found."
-			fi
-			if [ -z "$missing_deps" ]; then
-				missing_deps="${i}"
-			else
-				missing_deps="${missing_deps} ${i}"
-			fi
-		done
-		# Install required dependencies from source.
-		for i in ${missing_deps}; do
-			curpkgdepname=$($XBPS_PKGDB_CMD getpkgdepname "$i")
-			setup_tmpl ${curpkgdepname}
-			install_pkg
-			setup_tmpl ${_ORIGINPKG}
-			install_pkg_deps
-		done
-		if [ "$pkgname" = "${_ORIGINPKG}" ]; then
-			ORIGIN_PKGDEPS_DONE=1
-			return 0
+		if [ -z "$missing_deps" ]; then
+			missing_deps="${i}"
+		else
+			missing_deps="${missing_deps} ${i}"
 		fi
+	done
+	for i in ${missing_deps}; do
+		# packages not found in repos, install from source.
+		curpkgdepname=$($XBPS_PKGDB_CMD getpkgdepname "$i")
+		setup_tmpl ${curpkgdepname}
+		install_pkg
+		setup_tmpl ${_ORIGINPKG}
+		cd ${XBPS_MASTERDIR}
+		install_pkg_deps
+	done
+	for i in ${binpkg_deps}; do
+		msg_normal "$pkgver: installing '$i'...\n"
+		install_pkg_from_repos "${i}"
+	done
+	if [ "$pkgname" = "${_ORIGINPKG}" ]; then
+		ORIGIN_PKGDEPS_DONE=1
+		return 0
 	fi
 }
 

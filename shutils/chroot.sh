@@ -69,13 +69,9 @@ XBPS_MASTERDIR=/
 XBPS_CFLAGS="$XBPS_CFLAGS"
 XBPS_CXXFLAGS="$XBPS_CFLAGS"
 XBPS_LDFLAGS="$XBPS_LDFLAGS"
-XBPS_COMPRESS_CMD="$XBPS_COMPRESS_CMD"
 _EOF
 	if [ -n "$XBPS_MAKEJOBS" ]; then
 		echo "XBPS_MAKEJOBS=$XBPS_MAKEJOBS" >> $XBPSSRC_CF
-	fi
-	if [ -n "$XBPS_COMPRESS_LEVEL" ]; then
-		echo "XBPS_COMPRESS_LEVEL=$XBPS_COMPRESS_LEVEL" >> $XBPSSRC_CF
 	fi
 	if [ -n "$XBPS_HOSTDIR" ]; then
 		echo "XBPS_HOSTDIR=/host" >> $XBPSSRC_CF
@@ -225,7 +221,7 @@ install_xbps_utils() {
 	if [ ! -f ${XBPS_MASTERDIR}/.xbps_shared_utils_done ]; then
 		msg_normal "Installing XBPS utils into masterdir...\n"
 		mkdir -p $xbps_prefix/lib $xbps_prefix/sbin
-		for f in bin repo uhelper; do
+		for f in bin repo uhelper create; do
 			_cmd=$(which xbps-${f} 2>/dev/null)
 			_xcmd=$(basename ${_cmd})
 			if [ -z "${_cmd}" ]; then

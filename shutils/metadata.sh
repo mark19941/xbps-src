@@ -42,13 +42,10 @@ write_metadata() {
 		. $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template
 		pkgname=${subpkg}
 		set_tmpl_common_vars
-		verify_rundeps ${DESTDIR} || return $?
 		write_metadata_real || return $?
 	done
 
 	setup_tmpl ${sourcepkg}
-	# Verify pkg deps.
-	verify_rundeps ${DESTDIR} || return $?
 	write_metadata_real || return $?
 	return $?
 }
@@ -77,7 +74,7 @@ write_metadata_real() {
 	#
 	# Always remove metadata files generated in a previous installation.
 	#
-	for f in INSTALL REMOVE files.plist props.plist; do
+	for f in INSTALL REMOVE files.plist props.plist flist rdeps; do
 		[ -f ${DESTDIR}/${f} ] && rm -f ${DESTDIR}/${f}
 	done
 
@@ -165,135 +162,17 @@ write_metadata_real() {
 		done
 	fi
 
-	# Write the files.plist file.
-	TMPFLIST=$(mktemp -t flist.XXXXXXXXXX) || exit 1
-	TMPFPLIST=$(mktemp -t fplist.XXXXXXXXXX) || exit 1
+	#
+	# Create package's flist for bootstrap packages.
+	#
+	find ${DESTDIR} -print > ${DESTDIR}/flist
+	sed -i -e "s|${DESTDIR}||g" ${DESTDIR}/flist
 
-	msg_normal "$pkgver: creating package metadata...\n"
+	#
+	# Create package's fdeps to know its run-time dependencies.
+	#
+	verify_rundeps ${DESTDIR}
 
-	cat > "$TMPFPLIST" <<_EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-_EOF
-	# Pass 1: add links.
-	echo "<key>links</key>" >> $TMPFPLIST
-	echo "<array>" >> $TMPFPLIST
-	find ${DESTDIR} -type l | while read f
-	do
-		j=$(echo "$f"|sed -e "$fpattern")
-		[ "$j" = "" ] && continue
-		echo "$j" >> $TMPFLIST
-		echo "<dict>" >> $TMPFPLIST
-		echo "<key>file</key>" >> $TMPFPLIST
-		echo "<string>$j</string>" >> $TMPFPLIST
-		echo "<key>target</key>" >> $TMPFPLIST
-		lnk=$(readlink -f "$f")
-		[ -z "$lnk" ] && lnk=$(readlink "$f")
-		lnk=$(echo "$lnk"|sed -e "s|${DESTDIR}||")
-		echo "<string>$lnk</string>" >> $TMPFPLIST
-		echo "</dict>" >> $TMPFPLIST
-	done
-	echo "</array>" >> $TMPFPLIST
-
-	# Pass 2: add regular files.
-	echo "<key>files</key>" >> $TMPFPLIST
-	echo "<array>" >> $TMPFPLIST
-	find ${DESTDIR} -type f | while read f
-	do
-		j=$(echo "$f"|sed -e "$fpattern")
-		[ "$j" = "" ] && continue
-		echo "$j" >> $TMPFLIST
-		# Skip configuration files.
-		for i in ${conf_files}; do
-			[ "$j" = "$i" ] && found=1 && break
-		done
-		[ -n "$found" ] && unset found && continue
-		echo "<dict>" >> $TMPFPLIST
-		echo "<key>file</key>" >> $TMPFPLIST
-		echo "<string>$j</string>" >> $TMPFPLIST
-		echo "<key>sha256</key>" >> $TMPFPLIST
-		echo "<string>$(${XBPS_DIGEST_CMD} "$f")</string>"  \
-			>> $TMPFPLIST
-		for i in ${mutable_files}; do
-			[ "$j" = "$i" ] && found=1 && break
-		done
-		if [ -n "$found" ]; then
-			echo "<key>mutable</key>" >>$TMPFPLIST
-			echo "<true/>" >>$TMPFPLIST
-			unset found
-		fi
-		echo "</dict>" >> $TMPFPLIST
-	done
-	echo "</array>" >> $TMPFPLIST
-
-	# Pass 3: add directories.
-	echo "<key>dirs</key>" >> $TMPFPLIST
-	echo "<array>" >> $TMPFPLIST
-	find ${DESTDIR} -type d|sort -ur | while read f
-	do
-		j=$(echo "$f"|sed -e "$fpattern")
-		[ "$j" = "" ] && continue
-		echo "$j" >> $TMPFLIST
-		echo "<dict>" >> $TMPFPLIST
-		echo "<key>file</key>" >> $TMPFPLIST
-		echo "<string>$j</string>" >> $TMPFPLIST
-		echo "</dict>" >> $TMPFPLIST
-	done
-	echo "</array>" >> $TMPFPLIST
-
-	# Add configuration files into its own array.
-	if [ -n "${conf_files}" ]; then
-		echo "<key>conf_files</key>" >> $TMPFPLIST
-		echo "<array>" >> $TMPFPLIST
-		for f in ${conf_files}; do
-			i=${DESTDIR}/"${f}"
-			[ ! -f "${i}" ] && continue
-			echo "<dict>" >> $TMPFPLIST
-			echo "<key>file</key>" >> $TMPFPLIST
-			echo "<string>$f</string>" >> $TMPFPLIST
-			echo "<key>sha256</key>" >> $TMPFPLIST
-			echo "<string>$(${XBPS_DIGEST_CMD} "${i}")</string>" \
-				>> $TMPFPLIST
-			echo "</dict>" >> $TMPFPLIST
-		done
-		echo "</array>" >> $TMPFPLIST
-	fi
-
-	echo "</dict>" >> $TMPFPLIST
-	echo "</plist>" >> $TMPFPLIST
-	sed -i -e /^$/d $TMPFLIST
-
-	# Write the props.plist file.
-	local TMPFPROPS=$(mktemp -t fprops.XXXXXXXXXX) || exit 1
-
-	local instsize=$(du -sk ${DESTDIR}|awk '{print $1}')
-
-	cat > $TMPFPROPS <<_EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-<key>pkgname</key>
-<string>$pkgname</string>
-<key>version</key>
-<string>$lver</string>
-<key>pkgver</key>
-<string>$pkgver</string>
-<key>architecture</key>
-<string>$arch</string>
-<key>installed_size</key>
-<integer>$(($instsize * 1024))</integer>
-<key>maintainer</key>
-<string>$(echo $maintainer|sed -e 's|<|\&lt;|g;s|>|\&gt;|g')</string>
-<key>short_desc</key>
-<string>$short_desc</string>
-<key>long_desc</key>
-<string>$long_desc</string>
-<key>packaged-with</key>
-<string>xbps-src-$XBPS_SRC_VERSION</string>
-_EOF
 	#
 	# If package sets $dkms_modules, add dkms rundep.
 	#
@@ -308,102 +187,7 @@ _EOF
 		run_depends="${run_depends} shadow>=0"
 	fi
 
-	# pkg needs to preserve its files after removal/upgrade?
-	if [ -n "$preserve" ]; then
-		echo "<key>preserve</key>" >> $TMPFPROPS
-		echo "<true/>" >> $TMPFPROPS
-	fi
-
-	# Dependencies
-	if [ -n "$run_depends" ]; then
-		echo "<key>run_depends</key>" >> $TMPFPROPS
-		echo "<array>" >> $TMPFPROPS
-		for f in ${run_depends}; do
-			echo "<string>$(echo $f|sed "s|<|\&lt;|g;s|>|\&gt;|g")</string>" >> $TMPFPROPS
-		done
-		echo "</array>" >> $TMPFPROPS
-	fi
-
-	# Configuration files
-	if [ -n "$conf_files" ]; then
-		echo "<key>conf_files</key>" >> $TMPFPROPS
-		echo "<array>" >> $TMPFPROPS
-		for f in ${conf_files}; do
-			echo "<string>$f</string>" >> $TMPFPROPS
-		done
-		echo "</array>" >> $TMPFPROPS
-	fi
-
-	# Replace package(s).
-	if [ -n "$replaces" ]; then
-		if [ -n "$softreplace" ]; then
-			echo "<key>softreplace</key>" >> $TMPFPROPS
-			echo "<true/>" >> $TMPFPROPS
-		fi
-		echo "<key>replaces</key>" >> $TMPFPROPS
-		echo "<array>" >> $TMPFPROPS
-		for f in ${replaces}; do
-			echo "<string>$(echo $f|sed "s|<|\&lt;|g;s|>|\&gt;|g")</string>" >> $TMPFPROPS
-		done
-		echo "</array>" >> $TMPFPROPS
-	fi
-
-	# Conflicting package(s).
-	if [ -n "$conflicts" ]; then
-		echo "<key>conflicts</key>" >> $TMPFPROPS
-		echo "<array>" >> $TMPFPROPS
-		for f in ${conflicts}; do
-			echo "<string>$(echo $f|sed "s|<|\&lt;|g;s|>|\&gt;|g")</string>" >> $TMPFPROPS
-		done
-		echo "</array>" >> $TMPFPROPS
-	fi
-
-	# Provides virtual package(s).
-	if [ -n "$provides" ]; then
-		echo "<key>provides</key>" >> $TMPFPROPS
-		echo "<array>" >> $TMPFPROPS
-		for f in ${provides}; do
-			echo "<string>$(echo $f|sed "s|<|\&lt;|g;s|>|\&gt;|g")</string>" >> $TMPFPROPS
-		done
-		echo "</array>" >> $TMPFPROPS
-	fi
-
-	# Build date.
-	echo "<key>build_date</key>" >> $TMPFPROPS
-	echo "<string>$(LANG=C date "+%F %R %Z")</string>" >> $TMPFPROPS
-
-	# Homepage
-	if [ -n "$homepage" ]; then
-		echo "<key>homepage</key>" >> $TMPFPROPS
-		echo "<string>$homepage</string>" >> $TMPFPROPS
-	fi
-
-	# License
-	if [ -n "$license" ]; then
-		echo "<key>license</key>" >> $TMPFPROPS
-		echo "<string>$license</string>" >> $TMPFPROPS
-	fi
-
-	# Terminate the property list file.
-	echo "</dict>" >> $TMPFPROPS
-	echo "</plist>" >> $TMPFPROPS
-
-	# Write metadata files and cleanup.
-	if [ -s $TMPFLIST ]; then
-		mv -f $TMPFLIST ${DESTDIR}/flist
-	else
-		rm -f $TMPFLIST
-	fi
-	mv -f $TMPFPLIST ${DESTDIR}/files.plist
-	mv -f $TMPFPROPS ${DESTDIR}/props.plist
-
-	$XBPS_PKGDB_CMD sanitize-plist ${DESTDIR}/files.plist || \
-		msg_error "$pkgver: failed to externalize files.plist!\n"
-	$XBPS_PKGDB_CMD sanitize-plist ${DESTDIR}/props.plist || \
-		msg_error "$pkgver: failed to externalize props.plist!\n"
-
-	chmod 644 ${DESTDIR}/files.plist ${DESTDIR}/props.plist
-	[ -f ${DESTDIR}/flist ] && chmod 644 ${DESTDIR}/flist
+	[ -n "$run_depends" ] && echo "${run_depends}" > ${DESTDIR}/rdeps
 
 	#
 	# Create the INSTALL/REMOVE scripts if package uses them

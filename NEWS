@@ -1,4 +1,14 @@
 v30:
+ * XBPS_COMPRESS_CMD and XBPS_COMPRESS_LEVEL have been removed from
+   xbps-src.conf. These aren't used any longer due to xbps-create(8).
+ * Some code has been removed in favour of xbps-create(8)
+   (provided in xbps-0.17). This removes a bit of shell code and makes
+   installing bootstrap binary packages like any other packages.
+ * Increase xbps version requirement to 0.17.
+ * Increase base-chroot version requirement to 0.29.
+ * Remove 'make-repoidx' target; not used any longer.
+ * Re-add 'show-files' target; package must be installed into destdir.
+ * Fixed compressing manpages and info files when those are hardlinks.
  * When checking rshlibs, do not modify the rshlibs but notify the user which
    ones were added/removed.
  * Do not fail when a new .rshlibs file is created for a pkg, just continue.

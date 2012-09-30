@@ -56,6 +56,7 @@ write_metadata_scripts() {
 # \$2 = PKGNAME
 # \$3 = VERSION
 # \$4 = UPDATE	[yes/no]
+# \$5 = CONF_FILE (path to xbps.conf)
 #
 # Note that paths must be relative to CWD, to avoid calling
 # host commands if /bin/sh (dash) is not installed and it's

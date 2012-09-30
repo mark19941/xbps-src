@@ -26,9 +26,9 @@
 umask 022
 
 readonly XBPS_SRC_VERSION=@@XBPS_SRC_VERSION@@
-readonly BASE_CHROOT_REQ="0.28_1"
-readonly XBPS_UTILS_REQVER="0.16"
-readonly XBPS_UTILS_REQAPIVER="20120605"
+readonly BASE_CHROOT_REQ="0.29_1"
+readonly XBPS_UTILS_REQVER="0.17"
+readonly XBPS_UTILS_REQAPIVER="20120714"
 
 if [ -n "$IN_CHROOT" ]; then
 	export XBPS_ETCDIR=/usr/local/etc/xbps
@@ -52,7 +52,7 @@ XBPS_MACHINE=$(uname -m)
 REQHOST_UTILS_BOOTSTRAP="awk bash bison sed gcc msgfmt patch makeinfo \
 	perl fakeroot tar xz gzip bzip2"
 # Required utilities in host system for chroot ops.
-REQHOST_UTILS="xbps-bin xbps-repo xbps-uhelper"
+REQHOST_UTILS="xbps-bin xbps-repo xbps-uhelper xbps-create"
 
 check_reqhost_utils() {
 	local broken
@@ -135,11 +135,6 @@ Targets: (only one may be specified)
    Remove target package from <destdir>. If <pkgname>-<version> is not matched
    from build template nothing is removed.
 
- make-repoidx
-   Build a package index for the local repository associated with the
-   master directory <masterdir>. By default set to <masterdir/host/binpkgs.
-   To specify another repo, use -p <dir>.
-
  setcaps
    Sets required capabilities in xbps-src utilities to be able to build
    binary packages in a chroot with a regular user (not root).
@@ -152,6 +147,9 @@ Targets: (only one may be specified)
  show-deps <pkgname> <build|run>
    Show required dependencies for <pkgname>. If <build> is set, only build time
    dependencies are shown, if <run> is set only run time dependencies are shown.
+
+ show-files <pkgname>
+   Show files installed by <pkgname>. Package must be installed into destdir.
 
  show-revdeps <pkgname>
    Show reverse dependencies for <pkgname>, i.e packages that are currently
@@ -171,7 +169,7 @@ Options:
  -c  Path to global configuration file:
      if not specified ${XBPS_ETCDIR}/xbps-src.conf is used.
  -D  Path to XBPS_DISTDIR, overriding the setting in xbps-src.conf.
- -H  Path to XBPS_HOSTDIR, overrinding the setting in xbps-src.conf.
+ -H  Path to XBPS_HOSTDIR, overriding the setting in xbps-src.conf.
  -h  Usage output.
  -K  Do not remove automatic package dependencies.
  -L  Disable ASCII colors.
@@ -425,9 +423,6 @@ remove-destdir)
 list)
 	$XBPS_BIN_CMD list
 	;;
-make-repoidx)
-	make_repoidx
-	;;
 setcaps)
 	if [ -z "$IN_CHROOT" ]; then
 		if [ "$(id -u)" -ne 0 ]; then
@@ -458,6 +453,14 @@ show)
 	fi
 	setup_subpkg_tmpl ${_pkgname}
 	show_tmpl
+	;;
+show-files)
+	if [ -z "${_pkgname}" ]; then
+		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
+		_pkgname=$(basename_cwd)
+	fi
+	setup_subpkg_tmpl ${_pkgname}
+	[ -f "$DESTDIR/flist" ] && cat ${DESTDIR}/flist
 	;;
 show-deps)
 	setup_subpkg_tmpl ${_pkgname}

@@ -73,15 +73,36 @@ set_defvars() {
 	done
 	if [ -n "$IN_CHROOT" ]; then
 		xbps_conf="-C /usr/local/etc/xbps/xbps.conf"
+	else
+		if [ -z "$CHROOT_READY" ]; then
+			# We need a non-existent configuration file for
+			# -B option to work.
+			xbps_conf="-C /empty.conf -B $XBPS_PACKAGESDIR"
+		fi
 	fi
-	XBPS_VERSION=$(xbps-bin -V|awk '{print $2}')
-	XBPS_APIVER=$(xbps-bin -V|awk '{print $4}')
-	XBPS_PKGDB_CMD="xbps-uhelper -r $XBPS_MASTERDIR"
-	XBPS_BIN_CMD="xbps-bin $xbps_conf -r $XBPS_MASTERDIR"
-	XBPS_REPO_CMD="xbps-repo $xbps_conf -r $XBPS_MASTERDIR"
-	XBPS_DIGEST_CMD="xbps-uhelper digest"
-	XBPS_CMPVER_CMD="xbps-uhelper cmpver"
-	XBPS_FETCH_CMD="xbps-uhelper fetch"
+
+	if [ -n "$IN_CHROOT" ]; then
+		XBPS_BIN=/usr/local/sbin/xbps-bin
+		XBPS_REPO=/usr/local/sbin/xbps-repo
+		XBPS_PKGDB=/usr/local/sbin/xbps-uhelper
+		XBPS_CREATE=/usr/local/sbin/xbps-create
+	else
+		: ${XBPS_BIN:=xbps-bin}
+		: ${XBPS_REPO:=xbps-repo}
+		: ${XBPS_PKGDB:=xbps-uhelper}
+		: ${XBPS_CREATE:=xbps-create}
+	fi
+
+	: ${XBPS_PKGDB_CMD:="$XBPS_PKGDB -r $XBPS_MASTERDIR"}
+	: ${XBPS_BIN_CMD:="$XBPS_BIN $xbps_conf -r $XBPS_MASTERDIR"}
+	: ${XBPS_REPO_CMD:="$XBPS_REPO $xbps_conf -r $XBPS_MASTERDIR"}
+	: ${XBPS_DIGEST_CMD:="$XBPS_PKGDB digest"}
+	: ${XBPS_CMPVER_CMD:="$XBPS_PKGDB cmpver"}
+	: ${XBPS_FETCH_CMD:="$XBPS_PKGDB fetch"}
+	: ${XBPS_CREATE_CMD:=$XBPS_CREATE}
+
+	XBPS_VERSION=$($XBPS_BIN -V|awk '{print $2}')
+	XBPS_APIVER=$($XBPS_BIN -V|awk '{print $4}')
 
 	$XBPS_PKGDB_CMD cmpver "$XBPS_VERSION" "$XBPS_UTILS_REQVER"
 	if [ $? -eq 255 ]; then

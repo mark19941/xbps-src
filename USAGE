@@ -63,9 +63,7 @@ To build binary packages with xbps-src the following software must be
 installed into the host system:
 
  - awk, bash, gcc c++, gettext, patch, texinfo, perl and fakeroot.
- - xbps static utilities, available from http://code.google.com/p/xbps.
-   (use the latest available stable version) or
-   'xbps-bin -y install xbps-static' if using Void GNU/Linux.
+ - xbps>=0.17 available from http://code.google.com/p/xbps.
 
 Starting up
 -----------
@@ -75,7 +73,7 @@ the build template files (source packages). To clone it with `git` use:
 	$ xbps-src fetch-srcpkgs
 
 It is assumed that `xbps-src` has been already installed and it is
-usable, i.e the configuration file `xbps-src.conf` has been propertly
+usable, i.e the configuration file `xbps-src.conf` has been properly
 changed to suit your needs.
 
 Building packages from source

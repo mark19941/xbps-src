@@ -24,51 +24,47 @@
 #-
 
 make_binpkg() {
-	local subpkg= new_index= rval=
+	local subpkg= rval=
 
 	[ -z "$pkgname" ] && return 1
 
-	case "$XBPS_VERSION" in
-		# XBPS >= 0.16.6
-		0.[1-9][6-9].[6-9]*|0.[1.9][7-9]*) new_index=1;;
-	esac
-
 	for subpkg in ${subpackages}; do
-		unset noarch nonfree
+		unset nonfree conf_files noarch triggers replaces softreplace \
+			system_accounts system_groups \
+			preserve xml_entries sgml_entries \
+			xml_catalogs sgml_catalogs gconf_entries gconf_schemas \
+			gtk_iconcache_dirs font_dirs dkms_modules provides \
+			kernel_hooks_version conflicts pycompile_dirs \
+			pycompile_module systemd_services make_dirs \
+			depends fulldepends run_depends mutable_files
 		. $XBPS_SRCPKGDIR/$pkgname/$subpkg.template
 		pkgname=${subpkg}
 		set_tmpl_common_vars
-		make_binpkg_real $new_index
-		rval=$?
-		[ $rval -ne 0 -a $rval -ne 6 ] && return $rval
+		make_binpkg_real
 		setup_tmpl ${sourcepkg}
 	done
 
 	[ -n "${subpackages}" ] && set_tmpl_common_vars
-	make_binpkg_real $new_index
-	rval=$?
-	[ $rval -ne 0 -a $rval -ne 6 ] && return $rval
-	if [ -n "$new_index" ]; then
-		if [ -n "$nonfree" ]; then
-			while [ -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock ]; do
-				echo "The repo index is currently locked!"
-				sleep 1
-			done
-			touch -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
-			$XBPS_REPO_CMD index-clean $XBPS_PACKAGESDIR/nonfree
-			rm -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
-		else
-			while [ -f $XBPS_PACKAGESDIR/.xbps-src-index-lock ]; do
-				echo "The repo index is currently locked!"
-				sleep 1
-			done
-			touch -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
-			$XBPS_REPO_CMD index-clean $XBPS_PACKAGESDIR
-			rm -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
-		fi
+	make_binpkg_real
+
+	if [ -n "$nonfree" ]; then
+		while [ -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock ]; do
+			echo "The repo index is currently locked!"
+			sleep 1
+		done
+		touch -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
+		$XBPS_REPO_CMD index-clean $XBPS_PACKAGESDIR/nonfree
+		rm -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
 	else
-		make_repoidx
+		while [ -f $XBPS_PACKAGESDIR/.xbps-src-index-lock ]; do
+			echo "The repo index is currently locked!"
+			sleep 1
+		done
+		touch -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
+		$XBPS_REPO_CMD index-clean $XBPS_PACKAGESDIR
+		rm -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
 	fi
+
 	return $?
 }
 
@@ -86,28 +82,17 @@ binpkg_cleanup() {
 	exit 1
 }
 
-make_repoidx() {
-	local f=
-
-	for f in $XBPS_PACKAGESDIR $XBPS_PACKAGESDIR/nonfree; do
-		msg_normal "Updating repository index at:\n"
-		msg_normal " $f\n"
-		$XBPS_REPO_CMD genindex $f 2>/dev/null
-	done
-}
-
 #
 # This function builds a binary package from an installed xbps
 # package in destdir.
 #
 make_binpkg_real() {
-	local mfiles= binpkg= pkgdir= arch= dirs= _dirs= d= clevel=
+	local binpkg= pkgdir= arch= _deps=
 
 	if [ ! -d "${DESTDIR}" ]; then
 		msg_warn "$pkgver: cannot find destdir... skipping!\n"
 		return 0
 	fi
-	cd ${DESTDIR}
 
 	if [ -n "$noarch" ]; then
 		arch=noarch
@@ -129,60 +114,59 @@ make_binpkg_real() {
 	fi
 
 	#
-	# Make sure that INSTALL is the first file on the archive,
-	# this is to ensure that it's run before any other file is
-	# unpacked.
+	# Start building the binary package...
 	#
-	if [ -x ./INSTALL -a -x ./REMOVE ]; then
-		mfiles="./INSTALL ./REMOVE"
-	elif [ -x ./INSTALL ]; then
-		mfiles="./INSTALL"
-	elif [ -x ./REMOVE ]; then
-		mfiles="./REMOVE"
-	fi
-	mfiles="$mfiles ./files.plist ./props.plist"
-	_dirs=$(find . -maxdepth 1 -type d -o -type l)
-	for d in ${_dirs}; do
-		[ "$d" = "." ] && continue
-		dirs="$d $dirs"
-	done
-
-	[ -n "$XBPS_COMPRESS_LEVEL" ] && clevel="-$XBPS_COMPRESS_LEVEL"
-	[ ! -d $pkgdir ] && mkdir -p $pkgdir
-
-	# Remove binpkg if interrupted...
 	trap "binpkg_cleanup $pkgdir $binpkg" INT
-	msg_normal "Building $binpkg... "
-	${FAKEROOT_CMD} tar --exclude "flist" \
-		-cpf - ${mfiles} ${dirs} |			\
-		$XBPS_COMPRESS_CMD ${clevel} -qf > $pkgdir/$binpkg
+	msg_normal "Building $binpkg...\n"
+	if [ ! -d $pkgdir ]; then
+		mkdir -p $pkgdir
+	fi
+	cd $pkgdir
+
+	[ -n "${preserve}" ] && _preserve="-p"
+	[ -s ${DESTDIR}/rdeps ] && _deps="$(cat ${DESTDIR}/rdeps)"
+
+	#
+	# Create the XBPS binary package.
+	#
+	${FAKEROOT_CMD} ${XBPS_CREATE_CMD} \
+		--destdir ${DESTDIR} \
+		--architecture ${arch} \
+		--provides "${provides}" \
+		--conflicts "${conflicts}" \
+		--replaces "${replaces}" \
+		--mutable-files "${mutable_files}" \
+		--dependencies "${_deps}" \
+		--config-files "${config_files}" \
+		--homepage "${homepage}" \
+		--license "${license}" \
+		--maintainer "${maintainer}" \
+		--long-desc "${long_desc}" --desc "${short_desc}" \
+		--built-with "xbps-src-${XBPS_SRC_VERSION}" \
+		--pkgver "${pkgver}" --quiet ${_preserve}
 	rval=$?
 	trap - INT
 
 	if [ $rval -eq 0 ]; then
-		msg_normal_append "done.\n"
+		msg_normal "Built $binpkg successfully.\n"
 		if [ -n "$nonfree" ]; then
 			while [ -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock ]; do
 				echo "The repo index is currently locked!"
 				sleep 1
 			done
 			ln -sfr $pkgdir/$binpkg $XBPS_PACKAGESDIR/nonfree/$binpkg
-			if [ -n "$1" ]; then
-				touch -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
-				$XBPS_REPO_CMD index-add $XBPS_PACKAGESDIR/nonfree/$binpkg
-				rm -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
-			fi
+			touch -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
+			$XBPS_REPO_CMD index-add $XBPS_PACKAGESDIR/nonfree/$binpkg
+			rm -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
 		else
 			while [ -f $XBPS_PACKAGESDIR/.xbps-src-index-lock ]; do
 				echo "The repo index is currently locked!"
 				sleep 1
 			done
 			ln -sfr $pkgdir/$binpkg $XBPS_PACKAGESDIR/$binpkg
-			if [ -n "$1" ]; then
-				touch -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
-				$XBPS_REPO_CMD index-add $XBPS_PACKAGESDIR/$binpkg
-				rm -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
-			fi
+			touch -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
+			$XBPS_REPO_CMD index-add $XBPS_PACKAGESDIR/$binpkg
+			rm -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
 		fi
 	else
 		if [ -n "$nonfree" ]; then
@@ -191,8 +175,6 @@ make_binpkg_real() {
 			rm -f $XBPS_PACKAGESDIR/$binpkg
 		fi
 		rm -f $pkgdir/$binpkg
-		msg_normal_append "failed!\n"
+		msg_error "Failed to build binary package: $binpkg!\n"
 	fi
-
-	return $rval
 }
