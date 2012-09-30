@@ -142,10 +142,10 @@ remove_pkg() {
 		set_tmpl_common_vars
 		pkg="${subpkg}-${version}"
 		if [ -d "$XBPS_DESTDIR/${pkg}" ]; then
-			msg_normal "${pkg}: removing files from destdir...\n"
+			msg_normal "${pkgver}: removing files from destdir...\n"
 			rm -rf "$XBPS_DESTDIR/${pkg}"
 		else
-			msg_warn "${pkg}: not installed in destdir!\n"
+			msg_warn "${pkgver}: not installed in destdir!\n"
 		fi
 		# Remove leftover files in $wrksrc.
 		if [ -f "${wrksrc}/.xbps_do_install_${subpkg}_done" ]; then
@@ -155,7 +155,7 @@ remove_pkg() {
 
 	pkg="${pkgname}-${version}"
 	if [ -d "$XBPS_DESTDIR/${pkg}" ]; then
-		msg_normal "${pkg}: removing files from destdir...\n"
+		msg_normal "${pkgver}: removing files from destdir...\n"
 		rm -rf "$XBPS_DESTDIR/${pkg}"
 	fi
 
