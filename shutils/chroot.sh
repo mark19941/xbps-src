@@ -211,7 +211,8 @@ prepare_binpkg_repos() {
 		done
 	fi
 	msg_normal "Synchronizing index for remote repositories...\n"
-	${CHROOT_CMD} ${XBPS_MASTERDIR} sh -c "fakeroot -- $XBPS_REPO_CMD sync"
+	${CHROOT_CMD} ${XBPS_MASTERDIR} sh -c \
+		"fakeroot -- $XBPS_REPO -C /usr/local/etc/xbps/xbps.conf sync"
 }
 
 install_xbps_utils() {
