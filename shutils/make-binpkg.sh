@@ -136,7 +136,7 @@ make_binpkg_real() {
 		--replaces "${replaces}" \
 		--mutable-files "${mutable_files}" \
 		--dependencies "${_deps}" \
-		--config-files "${config_files}" \
+		--config-files "${conf_files}" \
 		--homepage "${homepage}" \
 		--license "${license}" \
 		--maintainer "${maintainer}" \
