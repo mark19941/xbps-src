@@ -30,20 +30,27 @@
 # libraries and reports if any of them was not added.
 #
 
-find_rundep() {
-	local dep="$1" i= rpkgdep= _depname=
+add_rundep() {
+	local dep="$1" i= rpkgdep= _depname= _rdeps= found=
 
 	_depname="$($XBPS_PKGDB_CMD getpkgdepname ${dep})"
 
 	for i in ${run_depends}; do
 		rpkgdep="$($XBPS_PKGDB_CMD getpkgdepname $i)"
-		[ "${rpkgdep}" != "${_depname}" ] && continue
-		$XBPS_PKGDB_CMD cmpver "$i" "$dep"
-		if [ $? -eq 255 ]; then
-			run_depends=$(echo ${run_depends}|sed -e "s|${i}||g")
+		if [ "${rpkgdep}" != "${_depname}" ]; then
+			continue
 		fi
-		return 1
+		$XBPS_PKGDB_CMD cmpver "$i" "$dep"
+		rval=$?
+		if [ $rval -eq 255 ]; then
+			_rdeps=$(echo ${run_depends}|sed -e "s|${i}||g")
+			run_depends="${_rdeps}"
+		fi
+		found=1
 	done
+	if [ -z "$found" ]; then
+		run_depends="${run_depends} ${dep}"
+	fi
 }
 
 verify_rundeps() {
@@ -159,9 +166,7 @@ verify_rundeps() {
 		else
 			soname_list="${soname_list} ${f}"
 		fi
-		if find_rundep "${_pkgname}>=${_rdepver}"; then
-			run_depends="${run_depends} ${_pkgname}>=${_rdepver}"
-		fi
+		add_rundep "${_pkgname}>=${_rdepver}"
 	done
 	#
 	# If pkg uses any SONAME not known, error out.
