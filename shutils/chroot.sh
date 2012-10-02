@@ -238,7 +238,7 @@ install_xbps_utils() {
 			echo "#!/bin/sh" > $xbps_prefix/sbin/${_xcmd}
 			echo "export PATH=/usr/local/sbin:\$PATH" >> \
 				$xbps_prefix/sbin/${_xcmd}
-			echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/usr/local/lib" >> \
+			echo "export LD_LIBRARY_PATH=/usr/local/lib" >> \
 				$xbps_prefix/sbin/${_xcmd}
 			echo "${_xcmd}.real \"\$@\"" >> $xbps_prefix/sbin/${_xcmd}
 			echo "exit \$?" >> $xbps_prefix/sbin/${_xcmd}
