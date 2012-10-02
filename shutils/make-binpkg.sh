@@ -44,7 +44,9 @@ make_binpkg() {
 		setup_tmpl ${sourcepkg}
 	done
 
-	[ -n "${subpackages}" ] && set_tmpl_common_vars
+	if [ -n "${subpackages}" ]; then
+		setup_tmpl ${sourcepkg}
+	fi
 	make_binpkg_real
 
 	if [ -n "$nonfree" ]; then
