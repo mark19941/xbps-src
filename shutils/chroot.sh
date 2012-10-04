@@ -290,7 +290,7 @@ chroot_handler() {
 		[ -n "$NOCOLORS" ] && arg="$arg -L"
 
 		action="$arg $action"
-		env in_chroot=1 IN_CHROOT=1 LANG=C \
+		env IN_CHROOT=1 LANG=C \
 			${CHROOT_CMD} $XBPS_MASTERDIR sh -c \
 			"xbps-src $action $pkg" || rv=$?
 	fi
