@@ -125,20 +125,44 @@ make_binpkg_real() {
 	fi
 	cd $pkgdir
 
-	[ -n "${preserve}" ] && _preserve="-p"
+	[ -n "$preserve" ] && _preserve="-p"
 	[ -s ${DESTDIR}/rdeps ] && _deps="$(cat ${DESTDIR}/rdeps)"
-
+	if [ -n "$provides" ]; then
+		for f in ${provides}; do
+			local _provides="${_provides} ${f}"
+		done
+	fi
+	if [ -n "$conflicts" ]; then
+		for f in ${conflicts}; do
+			local _conflicts="${_conflicts} ${f}"
+		done
+	fi
+	if [ -n "$replaces" ]; then
+		for f in ${replaces}; do
+			local _replaces="${_replaces} ${f}"
+		done
+	fi
+	if [ -n "$mutable_files" ]; then
+		for f in ${mutable_files}; do
+			local _mutable_files="${_mutable_files} ${f}"
+		done
+	fi
+	if [ -n "$conf_files" ]; then
+		for f in ${conf_files}; do
+			local _conf_files="${_conf_files} ${f}"
+		done
+	fi
 	#
 	# Create the XBPS binary package.
 	#
 	${FAKEROOT_CMD} ${XBPS_CREATE_CMD} \
 		--architecture ${arch} \
-		--provides "${provides}" \
-		--conflicts "${conflicts}" \
-		--replaces "${replaces}" \
-		--mutable-files "${mutable_files}" \
+		--provides "${_provides}" \
+		--conflicts "${_conflicts}" \
+		--replaces "${_replaces}" \
+		--mutable-files "${_mutable_files}" \
 		--dependencies "${_deps}" \
-		--config-files "${conf_files}" \
+		--config-files "${_conf_files}" \
 		--homepage "${homepage}" \
 		--license "${license}" \
 		--maintainer "${maintainer}" \
