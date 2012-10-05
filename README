@@ -12,10 +12,10 @@ One of its advantages over other build systems is that you can build the
 XBPS binary packages from any other Linux distribution matching the
 target architecture, i.e Fedora x86_64 for Void GNU/Linux x86_64.
 
-Another advantage is its support for Linux Capabilities (POSIX.1e draft standard).
-With that in place `xbps-src` is able to build binary packages in chroots
-without the need to use elevated permissions (superuser). This feature is
-enabled by default and can be disabled by using the "root" user.
+xbps-src uses "linux-user-chroot" to bind mount required mounpoints in a
+specific directory and be able to chroot as normal user. This allow to use
+some Linux features for containers: PID namespaces, IPC namespaces and
+private mounts.
 
 The last highlight from xbps-src is its NRWO feature (New Rshlibs World Order)
 where the run time required shared libraries (SONAMEs) by packages are guessed
@@ -25,10 +25,6 @@ know *exactly* in advance which packages use the affected shared library.
 
 INSTALLATION
 ============
-
-To build xbps-src the libcap-devel pkg (or whatever is called in your distribution)
-must be installed. Additionally the setcap(8) command is also required to set
-the correct capabilities in some helpers.
 
 Simply use the `make && make install clean` sequence to build and install it
 into /usr/local by default. Some variables can be overriden thru make(1)
@@ -40,12 +36,6 @@ variables:
 	- SHAREDIR: PREFIX/share by default
 	- LIBEXECDIR: PREFIX/libexec by default
 	- ETCDIR: PREFIX/etc/xbps by default
-
-Once you installed it with your desired settings you must set the proper
-capabilities to the helpers as root (after that you don't need to be root
-anymore):
-
-	$ sudo xbps-src setcaps
 
 See the USAGE file to know more in how to use xbps-src.
 

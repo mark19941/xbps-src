@@ -1,4 +1,7 @@
 v30:
+ * xbps-src now depends on "linux-user-chroot" for bind mounts and chroot
+   with normal users. This removes large chunks in code and makes
+   mounts private to the masterdir they are mounted on.
  * XBPS_COMPRESS_CMD and XBPS_COMPRESS_LEVEL have been removed from
    xbps-src.conf. These aren't used any longer due to xbps-create(8).
  * Some code has been removed in favour of xbps-create(8)
