@@ -34,8 +34,8 @@ write_metadata() {
 		unset conf_files noarch triggers replaces softreplace \
 			system_accounts system_groups \
 			preserve xml_entries sgml_entries \
-			xml_catalogs sgml_catalogs gconf_entries gconf_schemas \
-			gtk_iconcache_dirs font_dirs dkms_modules provides \
+			xml_catalogs sgml_catalogs \
+			font_dirs dkms_modules provides \
 			kernel_hooks_version conflicts pycompile_dirs \
 			pycompile_module systemd_services make_dirs \
 			depends fulldepends run_depends mutable_files

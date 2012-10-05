@@ -1,4 +1,8 @@
 v30:
+ * Automatically detect when a package needs some triggers such as
+   "systemd-service", "gtk-icon-cache" and "gconf-schemas". That means
+   source packages no longer need to set "gtk_iconcache_dirs" and
+   "gconf_schemas".
  * xbps-src now depends on "linux-user-chroot" for bind mounts and chroot
    with normal users. This removes large chunks in code and makes
    mounts private to the masterdir they are mounted on.

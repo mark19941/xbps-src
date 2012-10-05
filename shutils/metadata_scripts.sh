@@ -37,8 +37,8 @@ write_metadata_scripts() {
 	local action_file="$2"
 	local tmpf=$(mktemp -t xbps-install.XXXXXXXXXX) || exit 1
 	local fpattern="s|${DESTDIR}||g;s|^\./$||g;/^$/d"
-	local targets= f= info_files= home= shell= descr= groups=
-	local found= triggers_found=
+	local targets= f= _f= info_files= home= shell= descr= groups=
+	local found= triggers_found= _icondirs= _schemas= _mods= _tmpfiles=
 
 	case "$action" in
 		install) ;;
@@ -137,6 +137,20 @@ _EOF
 		_add_trigger systemd-service
 		echo "export systemd_services=\"${systemd_services}\"" >> $tmpf
 	fi
+	if [ -d ${DESTDIR}/usr/lib/tmpfiles.d ]; then
+		for f in ${DESTDIR}/usr/lib/tmpfiles.d/*; do
+			_tmpfiles="${_tmpfiles} $(basename $f)"
+		done
+		_add_trigger systemd-service
+		echo "export systemd_tmpfiles=\"${_tmpfiles}\"" >> $tmpf
+	fi
+	if [ -d ${DESTDIR}/usr/lib/modules-load.d ]; then
+		for f in ${DESTDIR}/usr/lib/modules-load.d/*; do
+			_mods="${_mods} $(basename $f)"
+		done
+		_add_trigger systemd-service
+		echo "export systemd_modules=\"${_mods}\"" >> $tmpf
+	fi
 	#
 	# Handle virtual packages modifying xbps.conf.
 	#
@@ -203,61 +217,50 @@ _EOF
 	#
 	# Handle GTK+ Icon cache directories.
 	#
-	if [ -n "${gtk_iconcache_dirs}" ]; then
+	if [ -d ${DESTDIR}/usr/share/icons ]; then
 		_add_trigger gtk-icon-cache
-		echo "export gtk_iconcache_dirs=\"${gtk_iconcache_dirs}\"" \
-			>> $tmpf
+		for f in ${DESTDIR}/usr/share/icons/*; do
+			_f=$(echo "$f"|sed -e "$fpattern")
+			[ "${_f}" = "/usr/share/icons" ] && continue
+			_icondirs="${_icondirs} ${_f}"
+		done
+		echo "export gtk_iconcache_dirs=\"${_icondirs}\"" >> $tmpf
 	fi
         #
 	# Handle .desktop files in /usr/share/applications with
 	# desktop-file-utils.
 	#
 	if [ -d ${DESTDIR}/usr/share/applications ]; then
-		if find . -type f -name \*.desktop 2>&1 >/dev/null; then
-			_add_trigger update-desktopdb
-		fi
+		_add_trigger update-desktopdb
 	fi
 	#
 	# Handle GConf schemas/entries files with gconf-schemas.
 	#
-	if [ -n "${gconf_entries}" -o -n "${gconf_schemas}" ]; then
-		if find . -type f -name \*.schemas \
-			-o -name \*.entries 2>&1 >/dev/null; then
-			_add_trigger gconf-schemas
-		fi
-		if [ -n "${gconf_entries}" ]; then
-			echo "export gconf_entries=\"${gconf_entries}\"" \
-				>> $tmpf
-		fi
-		if [ -n "${gconf_schemas}" ]; then
-			echo "export gconf_schemas=\"${gconf_schemas}\"" \
-				>> $tmpf
-		fi
+	if [ -d ${DESTDIR}/usr/share/gconf/schemas ]; then
+		_add_trigger gconf-schemas
+		for f in ${DESTDIR}/usr/share/gconf/schemas/*.schemas; do
+			_schemas="${_schemas} $(basename $f)"
+		done
+		echo "export gconf_schemas=\"${_schemas}\"" >> $tmpf
 	fi
 	#
 	# Handle gio-modules trigger.
 	#
 	if [ -d ${DESTDIR}/usr/lib/gio/modules ]; then
-		if find ${DESTDIR}/usr/lib/gio/modules -type f -name \*.so 2>&1 >/dev/null; then
-			_add_trigger gio-modules
-		fi
+		_add_trigger gio-modules
 	fi
 	#
 	# Handle gsettings schemas in /usr/share/glib-2.0/schemas with
 	# gsettings-schemas.
 	#
 	if [ -d ${DESTDIR}/usr/share/glib-2.0/schemas ]; then
-		if find ${DESTDIR}/usr/share/glib-2.0/schemas -type f -name \*.xml 2>&1 >/dev/null; then
-			_add_trigger gsettings-schemas
-		fi
+		_add_trigger gsettings-schemas
 	fi
 	#
 	# Handle mime database in /usr/share/mime with update-mime-database.
 	#
 	if [ -d ${DESTDIR}/usr/share/mime ]; then
-		if find ${DESTDIR}/usr/share/mime -type f -name \*.xml 2>&1 >/dev/null; then
-			_add_trigger mimedb
-		fi
+		_add_trigger mimedb
 	fi
 	#
 	# Handle python bytecode archives with pycompile trigger.

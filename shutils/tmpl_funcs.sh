@@ -37,17 +37,16 @@ reset_tmpl_vars() {
 			sgml_catalogs xml_catalogs xml_entries sgml_entries \
 			disable_parallel_build font_dirs preserve \
 			only_for_archs conf_files keep_libtool_archives \
-			noarch subpackages sourcepkg gtk_iconcache_dirs \
+			noarch subpackages sourcepkg \
 			abi_depends api_depends triggers make_dirs \
 			replaces system_accounts system_groups provides \
 			build_wrksrc create_wrksrc broken_as_needed pkgver \
 			ignore_vdeps_dir noverifyrdeps conflicts dkms_modules \
-			gconf_entries gconf_schemas create_srcdir \
 			pycompile_dirs pycompile_module systemd_services  \
 			homepage license kernel_hooks_version makejobs \
 			mutable_files nostrip_files skip_extraction \
 			softreplace run_depends build_depends \
-			depends makedepends fulldepends \
+			depends makedepends fulldepends create_srcdir \
 			SUBPKG XBPS_EXTRACT_DONE XBPS_CONFIGURE_DONE \
 			XBPS_BUILD_DONE XBPS_INSTALL_DONE FILESDIR DESTDIR \
 			SRCPKGDESTDIR PATCHESDIR CFLAGS CXXFLAGS CPPFLAGS \
