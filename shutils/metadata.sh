@@ -166,7 +166,7 @@ write_metadata_real() {
 	# Create package's flist for bootstrap packages.
 	#
 	find ${DESTDIR} -print > ${DESTDIR}/flist
-	sed -i -e "s|${DESTDIR}||g" ${DESTDIR}/flist
+	sed -i -e "s|${DESTDIR}||g;s|/flist||g;/^$/d" ${DESTDIR}/flist
 
 	#
 	# Create package's fdeps to know its run-time dependencies.
