@@ -79,7 +79,7 @@ remove_pkg_autodeps() {
 # Installs all dependencies required by a package.
 #
 install_pkg_deps() {
-	local i= pkgn= iver= missing_deps= binpkg_deps= _props= _subpkg=
+	local i= pkgn= iver= missing_deps= binpkg_deps= _props= _subpkg= _exact=
 
 	[ -z "$pkgname" ] && return 2
 	[ -z "$build_depends" ] && return 0
@@ -105,6 +105,10 @@ install_pkg_deps() {
 	#
 	for i in ${build_depends}; do
 		pkgn=$($XBPS_PKGDB_CMD getpkgdepname "${i}")
+		if [ -z "$pkgn" ]; then
+			_exact=1
+			pkgn=$($XBPS_PKGDB_CMD getpkgname "${i}")
+		fi
 		check_pkgdep_matched "${i}"
 		local rval=$?
 		if [ $rval -eq 0 ]; then
@@ -120,7 +124,12 @@ install_pkg_deps() {
 				$FAKEROOT_CMD $XBPS_BIN_CMD -yFf remove $pkgn >/dev/null 2>&1
 			fi
 		else
-			_props=$($XBPS_REPO_CMD -oversion,repository show "${i}" 2>/dev/null)
+			if [ -n "${_exact}" ]; then
+				unset _exact
+				_props=$($XBPS_REPO_CMD -oversion,repository show "${pkgn}" 2>/dev/null)
+			else
+				_props=$($XBPS_REPO_CMD -oversion,repository show "${i}" 2>/dev/null)
+			fi
 			if [ -n "${_props}" ]; then
 				set -- ${_props}
 				$XBPS_PKGDB_CMD pkgmatch ${pkgn}-${1} "${i}"
@@ -176,6 +185,9 @@ check_pkgdep_matched() {
 	[ -z "$pkg" ] && return 255
 
 	pkgn="$($XBPS_PKGDB_CMD getpkgdepname ${pkg})"
+	if [ -z "$pkgn" ]; then
+		pkgn="$($XBPS_PKGDB_CMD getpkgname ${pkg})"
+	fi
 	[ -z "$pkgn" ] && return 255
 
 	iver="$($XBPS_BIN_CMD show -oversion $pkgn)"
