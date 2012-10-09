@@ -1,4 +1,8 @@
 v30:
+ * For pkgs using 'gnu-configure' build_style force --as-needed
+   in configure to avoid overlinking in shared libraries built by
+   libtool. Idea from Mageia. Only applied if package doesn't set
+   "broken_as_needed" which is the default.
  * The greatest dependency version is now used when a pkg provides multiple
    SONAMEs with different minimal versions.
  * Added support to set exact dependencies in "makedepends" and "depends",

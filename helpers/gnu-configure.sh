@@ -6,7 +6,15 @@
 # to GNU configure scripts.
 #
 do_configure() {
-	[ -z "$configure_script" ] && configure_script="./configure"
+	if [ -z "$configure_script" ]; then
+		configure_script="./configure"
+	fi
+	# Make sure that shared libraries are built with --as-needed.
+	#
+	# http://lists.gnu.org/archive/html/libtool-patches/2004-06/msg00002.html
+	if [ -z "$broken_as_needed" ]; then
+		sed -i "s/^\([ \t]*tmp_sharedflag\)='-shared'/\1='-shared -Wl,--as-needed'/" ${configure_script}
+	fi
 	${configure_script} ${CONFIGURE_SHARED_ARGS} ${configure_args}
 }
 
