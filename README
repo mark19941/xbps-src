@@ -13,9 +13,9 @@ XBPS binary packages from any other Linux distribution matching the
 target architecture, i.e Fedora x86_64 for Void GNU/Linux x86_64.
 
 xbps-src uses "linux-user-chroot" to bind mount required mounpoints in a
-specific directory and be able to chroot as normal user. This allow to use
-some Linux features for containers: PID namespaces, IPC namespaces and
-private mounts.
+specific directory and be able to chroot as normal user. This allows us to
+use some Linux features for containers: PID/IPC namespaces and
+private mounts (bind mounts are only seen by the same process).
 
 The last highlight from xbps-src is its NRWO feature (New Rshlibs World Order)
 where the run time required shared libraries (SONAMEs) by packages are guessed
@@ -39,4 +39,28 @@ variables:
 
 See the USAGE file to know more in how to use xbps-src.
 
-	-- Juan RP <xtraeme@gmail.com>
+DEPENDENCIES
+============
+
+	* XBPS utilities (>= 0.17 API >= 20120930)
+	* linux-user-chroot
+	* fakeroot
+
+The following packages are required to build a full bootstrap from scratch:
+
+	* A POSIX compatible shell
+	* GNU Awk
+	* GNU Binutils
+	* GNU Bison
+	* GNU CC
+	* GNU Gettext (msgfmt)
+	* GNU patch
+	* GNU Tar
+	* gzip
+	* bzip2
+	* xz
+	* perl
+
+--------------------------------------------------------------------------
+
+	Juan RP <xtraeme@gmail.com>
