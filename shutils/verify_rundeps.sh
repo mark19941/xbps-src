@@ -43,7 +43,7 @@ add_rundep() {
 		$XBPS_PKGDB_CMD cmpver "$i" "$dep"
 		rval=$?
 		if [ $rval -eq 255 ]; then
-			_rdeps=$(echo ${run_depends}|sed -e "s|${i}||g")
+			_rdeps="$(echo ${run_depends}|sed -e "s|${i}|${dep}|g")"
 			run_depends="${_rdeps}"
 		fi
 		found=1
@@ -56,7 +56,7 @@ add_rundep() {
 verify_rundeps() {
 	local j= f= nlib= verify_deps= maplib= found_dup= igndir= soname_arch=
 	local broken= rdep= found= rsonamef= soname_list= tmplf=
-	local _pkgname= _rdepver=
+	local _pkgname= _rdepver= _subpkg= _sdep=
 
 	maplib=$XBPS_COMMONDIR/shlibs
 
@@ -153,8 +153,18 @@ verify_rundeps() {
 			broken=1
 			continue
 		fi
+		# Check if pkg is a subpkg of sourcepkg; if true, ignore version
+		# in common/shlibs.
+		_sdep="${_pkgname}>=${_rdepver}"
+		for _subpkg in ${subpackages}; do
+			if [ "${_subpkg}" = "${_pkgname}" ]; then
+				_sdep="${_pkgname}-${version}_${revision}"
+				break
+			fi
+		done
+
 		if [ "${_pkgname}" != "${pkgname}" ]; then
-			echo "   SONAME: $f <-> ${_pkgname}>=${_rdepver}"
+			echo "   SONAME: $f <-> ${_sdep}"
 		else
 			# Ignore libs by current pkg
 			echo "   SONAME: $f <-> ${_rdep} (ignored)"
@@ -166,7 +176,7 @@ verify_rundeps() {
 		else
 			soname_list="${soname_list} ${f}"
 		fi
-		add_rundep "${_pkgname}>=${_rdepver}"
+		add_rundep "${_sdep}"
 	done
 	#
 	# If pkg uses any SONAME not known, error out.
