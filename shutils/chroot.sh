@@ -72,6 +72,8 @@ _EOF
 	cat > $XBPS_MASTERDIR/bin/xbps-shell <<_EOF
 #!/bin/sh
 
+XBPS_SRC_VERSION=$XBPS_SRC_VERSION
+
 . /usr/local/etc/xbps/xbps-src.conf
 . /usr/local/share/xbps-src/shutils/init_funcs.sh
 
