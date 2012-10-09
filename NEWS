@@ -1,4 +1,8 @@
 v30:
+ * The greatest dependency version is now used when a pkg provides multiple
+   SONAMEs with different minimal versions.
+ * Added support to set exact dependencies in "makedepends" and "depends",
+   i.e 'foo-1.0_1'.
  * Automatically detect when a package needs some triggers such as
    "systemd-service", "gtk-icon-cache" and "gconf-schemas". That means
    source packages no longer need to set "gtk_iconcache_dirs" and
