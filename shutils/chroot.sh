@@ -30,7 +30,7 @@ chroot_init() {
 		fi
 	fi
 
-	check_installed_pkg base-chroot-$BASE_CHROOT_REQ
+	check_installed_pkg base-chroot-${BASE_CHROOT_REQ%_*}_1
 	if [ $? -ne 0 ]; then
 		msg_red "${XBPS_MASTERDIR} has not been prepared for chroot operations.\n"
 		msg_error "Please install 'base-chroot>=$BASE_CHROOT_REQ' and try again.\n"

@@ -1,4 +1,6 @@
 v30:
+ * Use "common/global-defs.sh" from the "xbps-packages" repo to know
+   what package versions are required to build packages.
  * For pkgs using 'gnu-configure' build_style force --as-needed
    in configure to avoid overlinking in shared libraries built by
    libtool. Idea from Mageia. Only applied if package doesn't set

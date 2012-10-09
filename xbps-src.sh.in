@@ -26,9 +26,6 @@
 umask 022
 
 readonly XBPS_SRC_VERSION=@@XBPS_SRC_VERSION@@
-readonly BASE_CHROOT_REQ="0.29_1"
-readonly XBPS_UTILS_REQVER="0.17"
-readonly XBPS_UTILS_REQAPIVER="20120714"
 
 if [ -n "$IN_CHROOT" ]; then
 	export XBPS_ETCDIR=/usr/local/etc/xbps

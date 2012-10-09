@@ -107,14 +107,24 @@ set_defvars() {
 	XBPS_VERSION=$($XBPS_BIN -V|awk '{print $2}')
 	XBPS_APIVER=$($XBPS_BIN -V|awk '{print $4}')
 
-	$XBPS_PKGDB_CMD cmpver "$XBPS_VERSION" "$XBPS_UTILS_REQVER"
-	if [ $? -eq 255 ]; then
-		echo "ERROR: requires xbps-$XBPS_UTILS_REQVER API: $XBPS_UTILS_REQAPIVER"
+	if [ -z "$XBPS_SRC_REQ" -o -z "$XBPS_UTILS_REQ" -o \
+	     -z "$XBPS_UTILS_API_REQ" -o -z "$BASE_CHROOT_REQ" ]; then
+		echo "ERROR: missing defs from global-defs.sh!"
 		exit 1
 	fi
-	$XBPS_PKGDB_CMD cmpver "$XBPS_APIVER" "$XBPS_UTILS_REQAPIVER"
+	$XBPS_PKGDB_CMD cmpver "$XBPS_SRC_VERSION" "$XBPS_SRC_REQ"
 	if [ $? -eq 255 ]; then
-		echo "ERROR: requires xbps-$XBPS_UTILS_REQVER API: $XBPS_UTILS_REQAPIVER"
+		echo "ERROR: this xbps-src version is outdated! (>=$XBPS_SRC_REQ is required)"
+		exit 1
+	fi
+	$XBPS_PKGDB_CMD cmpver "$XBPS_VERSION" "$XBPS_UTILS_REQ"
+	if [ $? -eq 255 ]; then
+		echo "ERROR: requires xbps-$XBPS_UTILS_REQ API: $XBPS_UTILS_API_REQ"
+		exit 1
+	fi
+	$XBPS_PKGDB_CMD cmpver "$XBPS_APIVER" "$XBPS_UTILS_API_REQ"
+	if [ $? -eq 255 ]; then
+		echo "ERROR: requires xbps-$XBPS_UTILS_REQ API: $XBPS_UTILS_API_REQ"
 		exit 1
 	fi
 
