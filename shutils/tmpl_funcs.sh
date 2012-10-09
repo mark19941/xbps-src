@@ -176,6 +176,7 @@ remove_tmpl_wrksrc() {
 
 set_tmpl_common_vars() {
 	local cflags= cxxflags= cppflags= ldflags= j= _pkgdep= _pkgdepname= _deps=
+	local _pkgdepver=
 
 	[ -z "$pkgname" ] && return 1
 
@@ -198,7 +199,8 @@ set_tmpl_common_vars() {
 	fi
 	for j in ${_deps}; do
 		_pkgdepname="$($XBPS_PKGDB_CMD getpkgdepname ${j} 2>/dev/null)"
-		if [ -z "${_pkgdepname}" ]; then
+		_pkgdepver="$($XBPS_PKGDB_CMD getpkgversion ${j} 2>/dev/null)"
+		if [ -z "${_pkgdepname}" -a -z "${_pkgdepver}" ]; then
 			_pkgdep="$j>=0"
 		else
 			_pkgdep="$j"
@@ -207,7 +209,8 @@ set_tmpl_common_vars() {
 	done
 	for j in ${makedepends} ${fulldepends}; do
 		_pkgdepname="$($XBPS_PKGDB_CMD getpkgdepname ${j} 2>/dev/null)"
-		if [ -z "${_pkgdepname}" ]; then
+		_pkgdepver="$($XBPS_PKGDB_CMD getpkgversion ${j} 2>/dev/null)"
+		if [ -z "${_pkgdepname}" -a -z "${_pkgdepver}" ]; then
 			_pkgdep="$j>=0"
 		else
 			_pkgdep="$j"
