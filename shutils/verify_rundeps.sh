@@ -113,13 +113,13 @@ verify_rundeps() {
 	#
 	for f in ${verify_deps}; do
 		unset j rdep _rdep rdepcnt soname _pkgname _rdepver found
-		rdep="$(grep "^${f}.*$" $maplib|awk '{print $2}')"
-		rdepcnt="$(grep "^${f}.*$" $maplib|awk '{print $2}'|wc -l)"
+		rdep="$(grep -E "^${f}[[:blank:]]+.*$" $maplib|awk '{print $2}')"
+		rdepcnt="$(grep -E "^${f}[[:blank:]]+.*$" $maplib|awk '{print $2}'|wc -l)"
 		if [ -z "$rdep" ]; then
 			# Ignore libs by current pkg
 			soname=$(find ${DESTDIR} -name "$f")
 			if [ -z "$soname" ]; then
-				msg_red_nochroot "   SONAME: $f <-> UNKNOWN PKG PLEASE FIX!"
+				msg_red_nochroot "   SONAME: $f <-> UNKNOWN PKG PLEASE FIX!\n"
 				broken=1
 			else
 				echo "   SONAME: $f <-> $pkgname (ignored)"
