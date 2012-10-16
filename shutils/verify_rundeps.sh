@@ -112,9 +112,10 @@ verify_rundeps() {
 	# above, the mapping is done thru the mapping_shlib_binpkg.txt file.
 	#
 	for f in ${verify_deps}; do
-		unset j rdep _rdep rdepcnt soname _pkgname _rdepver found
-		rdep="$(grep -E "^${f}[[:blank:]]+.*$" $maplib|awk '{print $2}')"
-		rdepcnt="$(grep -E "^${f}[[:blank:]]+.*$" $maplib|awk '{print $2}'|wc -l)"
+		unset _f j rdep _rdep rdepcnt soname _pkgname _rdepver found
+		local _f=$(echo "$f"|sed 's|\+|\\+|g')
+		rdep="$(grep -E "^${_f}[[:blank:]]+.*$" $maplib|awk '{print $2}')"
+		rdepcnt="$(grep -E "^${_f}[[:blank:]]+.*$" $maplib|awk '{print $2}'|wc -l)"
 		if [ -z "$rdep" ]; then
 			# Ignore libs by current pkg
 			soname=$(find ${DESTDIR} -name "$f")
