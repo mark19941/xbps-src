@@ -88,7 +88,7 @@ binpkg_cleanup() {
 # package in destdir.
 #
 make_binpkg_real() {
-	local binpkg= pkgdir= arch= _deps=
+	local binpkg= pkgdir= arch= _deps= f=
 
 	if [ ! -d "${DESTDIR}" ]; then
 		msg_warn "$pkgver: cannot find destdir... skipping!\n"
@@ -127,28 +127,33 @@ make_binpkg_real() {
 	[ -n "$preserve" ] && _preserve="-p"
 	[ -s ${DESTDIR}/rdeps ] && _deps="$(cat ${DESTDIR}/rdeps)"
 	if [ -n "$provides" ]; then
+		local _provides=
 		for f in ${provides}; do
-			local _provides="${_provides} ${f}"
+			_provides="${_provides} ${f}"
 		done
 	fi
 	if [ -n "$conflicts" ]; then
+		local _conflicts=
 		for f in ${conflicts}; do
-			local _conflicts="${_conflicts} ${f}"
+			_conflicts="${_conflicts} ${f}"
 		done
 	fi
 	if [ -n "$replaces" ]; then
+		local _replaces=
 		for f in ${replaces}; do
-			local _replaces="${_replaces} ${f}"
+			_replaces="${_replaces} ${f}"
 		done
 	fi
 	if [ -n "$mutable_files" ]; then
+		local _mutable_files=
 		for f in ${mutable_files}; do
-			local _mutable_files="${_mutable_files} ${f}"
+			_mutable_files="${_mutable_files} ${f}"
 		done
 	fi
 	if [ -n "$conf_files" ]; then
+		local _conf_files=
 		for f in ${conf_files}; do
-			local _conf_files="${_conf_files} ${f}"
+			_conf_files="${_conf_files} ${f}"
 		done
 	fi
 	#
