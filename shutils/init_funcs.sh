@@ -24,7 +24,7 @@
 #-
 
 set_defvars() {
-	local DDIRS= i= xbps_conf=
+	local DDIRS= i=
 
 	XBPS_HELPERSDIR=$XBPS_SHAREDIR/helpers
 	XBPS_SHUTILSDIR=$XBPS_SHAREDIR/shutils
@@ -71,32 +71,35 @@ set_defvars() {
 	for f in $XBPS_SHUTILSDIR/*.sh $XBPS_COMMONDIR/*.sh; do
 		[ -r "$f" ] && . $f
 	done
-	if [ -n "$IN_CHROOT" ]; then
-		xbps_conf="-C /usr/local/etc/xbps/xbps.conf"
-	else
-		if [ -z "$CHROOT_READY" ]; then
-			# We need a non-existent configuration file for
-			# -B option to work.
-			xbps_conf="-C /empty.conf -B $XBPS_PACKAGESDIR"
-		fi
-	fi
 
 	if [ -n "$IN_CHROOT" ]; then
-		XBPS_BIN=/usr/local/sbin/xbps-bin
-		XBPS_REPO=/usr/local/sbin/xbps-repo
+		XBPS_INSTALL=/usr/local/sbin/xbps-install
+		XBPS_QUERY=/usr/local/sbin/xbps-query
+		XBPS_RINDEX=/usr/local/sbin/xbps-rindex
 		XBPS_PKGDB=/usr/local/sbin/xbps-uhelper
 		XBPS_CREATE=/usr/local/sbin/xbps-create
+		XBPS_RECONFIGURE=/usr/local/sbin/xbps-reconfigure
+		XBPS_REMOVE=/usr/local/sbin/xbps-remove
 		XBPS_PKGDB_CMD="$XBPS_PKGDB"
-		XBPS_BIN_CMD="$XBPS_BIN $xbps_conf"
-		XBPS_REPO_CMD="$XBPS_REPO $xbps_conf"
+		XBPS_INSTALL_CMD="$XBPS_INSTALL -C /usr/local/etc/xbps/xbps.conf"
+		XBPS_QUERY_CMD="$XBPS_QUERY -C /usr/local/etc/xbps/xbps.conf"
+		XBPS_RINDEX_CMD="$XBPS_RINDEX"
+		XBPS_RECONFIGURE_CMD="$XBPS_RECONFIGURE -C /usr/local/etc/xbps/xbps.conf"
+		XBPS_REMOVE_CMD="$XBPS_REMOVE -C /usr/local/etc/xbps/xbps.conf"
 	else
-		: ${XBPS_BIN:=xbps-bin}
-		: ${XBPS_REPO:=xbps-repo}
+		: ${XBPS_INSTALL:=xbps-install}
+		: ${XBPS_QUERY:=xbps-query}
+		: ${XBPS_RINDEX:=xbps-rindex}
 		: ${XBPS_PKGDB:=xbps-uhelper}
 		: ${XBPS_CREATE:=xbps-create}
+		: ${XBPS_RECONFIGURE:=xbps-reconfigure}
+		: ${XBPS_REMOVE:=xbps-remove}
 		XBPS_PKGDB_CMD="$XBPS_PKGDB -r $XBPS_MASTERDIR"
-		XBPS_BIN_CMD="$XBPS_BIN $xbps_conf -r $XBPS_MASTERDIR"
-		XBPS_REPO_CMD="$XBPS_REPO $xbps_conf -r $XBPS_MASTERDIR"
+		XBPS_INSTALL_CMD="$XBPS_INSTALL -C /empty.conf -R $XBPS_PACKAGESDIR -r $XBPS_MASTERDIR"
+		XBPS_QUERY_CMD="$XBPS_QUERY -C /empty.conf -D $XBPS_PACKAGESDIR -r $XBPS_MASTERDIR"
+		XBPS_RINDEX_CMD="$XBPS_RINDEX"
+		XBPS_RECONFIGURE_CMD="$XBPS_RECONFIGURE -r $XBPS_MASTERDIR"
+		XBPS_REMOVE_CMD="$XBPS_REMOVE -r $XBPS_MASTERDIR"
 	fi
 
 	: ${XBPS_DIGEST_CMD:="$XBPS_PKGDB digest"}
@@ -104,8 +107,8 @@ set_defvars() {
 	: ${XBPS_FETCH_CMD:="$XBPS_PKGDB fetch"}
 	: ${XBPS_CREATE_CMD:=$XBPS_CREATE}
 
-	XBPS_VERSION=$($XBPS_BIN -V|awk '{print $2}')
-	XBPS_APIVER=$($XBPS_BIN -V|awk '{print $4}')
+	XBPS_VERSION=$($XBPS_PKGDB -V|awk '{print $2}')
+	XBPS_APIVER=$($XBPS_PKGDB -V|awk '{print $4}')
 
 	if [ -z "$XBPS_SRC_REQ" -o -z "$XBPS_UTILS_REQ" -o \
 	     -z "$XBPS_UTILS_API_REQ" -o -z "$BASE_CHROOT_REQ" ]; then
@@ -128,6 +131,7 @@ set_defvars() {
 		exit 1
 	fi
 
-	export XBPS_VERSION XBPS_APIVER XBPS_PKGDB_CMD XBPS_BIN_CMD
-	export XBPS_REPO_CMD XBPS_DIGEST_CMD XBPS_CMPVER_CMD XBPS_FETCH_CMD
+	export XBPS_VERSION XBPS_APIVER XBPS_PKGDB_CMD XBPS_INSTALL_CMD
+	export XBPS_REMOVE_CMD XBPS_RECONFIGURE_CMD XBPS_QUERY_CMD XBPS_RINDEX_CMD
+	export XBPS_DIGEST_CMD XBPS_CMPVER_CMD XBPS_FETCH_CMD
 }

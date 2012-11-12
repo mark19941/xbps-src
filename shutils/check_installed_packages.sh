@@ -29,7 +29,7 @@
 check_installed_packages() {
 	local f= lpkgn= lpkgver= rv= srcpkgver= srcver=
 
-	for f in $(${XBPS_BIN_CMD} list|awk '{print $1}'); do
+	for f in $(${XBPS_QUERY_CMD} -l|awk '{print $1}'); do
 		lpkgn=$(${XBPS_PKGDB_CMD} getpkgname ${f})
 		lpkgver=$(${XBPS_PKGDB_CMD} getpkgversion ${f})
 

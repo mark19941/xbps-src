@@ -49,7 +49,8 @@ XBPS_MACHINE=$(uname -m)
 REQHOST_UTILS_BOOTSTRAP="awk bash bison sed gcc msgfmt patch makeinfo \
 	perl fakeroot tar xz gzip bzip2"
 # Required utilities in host system for chroot ops.
-REQHOST_UTILS="xbps-bin xbps-repo xbps-uhelper xbps-create linux-user-chroot"
+REQHOST_UTILS="xbps-install xbps-query xbps-rindex xbps-uhelper \
+	xbps-reconfigure xbps-remove xbps-create linux-user-chroot"
 
 check_reqhost_utils() {
 	local broken
@@ -319,9 +320,9 @@ case "$target" in
 binary-bootstrap)
 	# binary bootstrap
 	msg_normal "Installing bootstrap from binary package repositories...\n"
-	xbps-repo -r $XBPS_MASTERDIR sync && xbps-bin -r $XBPS_MASTERDIR \
+	xbps-install -r $XBPS_MASTERDIR \
 		-c $XBPS_MASTERDIR/host/repocache \
-		-y install base-chroot && \
+		-y base-chroot && \
 		msg_normal "Installed bootstrap successfully!\n"
 	;;
 bootstrap)
@@ -337,7 +338,7 @@ bootstrap-update)
 	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
 		chroot_handler ${target} dummy
 	else
-		${FAKEROOT_CMD} ${XBPS_BIN_CMD} -y autoupdate
+		${FAKEROOT_CMD} ${XBPS_INSTALL_CMD} -yu
 	fi
 	;;
 checkvers)
@@ -406,7 +407,7 @@ remove-destdir)
 	remove_pkg $target
 	;;
 list)
-	$XBPS_BIN_CMD list
+	$XBPS_QUERY_CMD -l
 	;;
 show)
 	if [ -z "${_pkgname}" ]; then

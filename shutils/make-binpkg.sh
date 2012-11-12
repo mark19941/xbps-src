@@ -54,7 +54,7 @@ make_binpkg() {
 			sleep 1
 		done
 		touch -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
-		$XBPS_REPO_CMD index-clean $XBPS_PACKAGESDIR/nonfree
+		$XBPS_RINDEX_CMD -c $XBPS_PACKAGESDIR/nonfree
 		rm -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
 	else
 		while [ -f $XBPS_PACKAGESDIR/.xbps-src-index-lock ]; do
@@ -62,7 +62,7 @@ make_binpkg() {
 			sleep 1
 		done
 		touch -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
-		$XBPS_REPO_CMD index-clean $XBPS_PACKAGESDIR
+		$XBPS_RINDEX_CMD -c $XBPS_PACKAGESDIR
 		rm -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
 	fi
 
@@ -186,7 +186,7 @@ make_binpkg_real() {
 			done
 			ln -sfr $pkgdir/$binpkg $XBPS_PACKAGESDIR/nonfree/$binpkg
 			touch -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
-			$XBPS_REPO_CMD index-add $XBPS_PACKAGESDIR/nonfree/$binpkg
+			$XBPS_RINDEX_CMD -a $XBPS_PACKAGESDIR/nonfree/$binpkg
 			rm -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
 		else
 			while [ -f $XBPS_PACKAGESDIR/.xbps-src-index-lock ]; do
@@ -195,7 +195,7 @@ make_binpkg_real() {
 			done
 			ln -sfr $pkgdir/$binpkg $XBPS_PACKAGESDIR/$binpkg
 			touch -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
-			$XBPS_REPO_CMD index-add $XBPS_PACKAGESDIR/$binpkg
+			$XBPS_RINDEX_CMD -a $XBPS_PACKAGESDIR/$binpkg
 			rm -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
 		fi
 	else

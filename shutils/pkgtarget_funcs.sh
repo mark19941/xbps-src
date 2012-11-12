@@ -119,7 +119,7 @@ install_pkg() {
 	if [ -z "$CHROOT_READY" ]; then
 		msg_normal "Installing $pkgver into masterdir...\n"
 		local _log=$(mktemp --tmpdir|| exit 1)
-		$FAKEROOT_CMD $XBPS_BIN_CMD -My install $pkgver >${_log} 2>&1
+		$FAKEROOT_CMD $XBPS_INSTALL_CMD -y $pkgver >${_log} 2>&1
 		if [ $? -ne 0 ]; then
 			msg_red "Failed to install $pkgver into masterdir, see below for errors:\n"
 			cat ${_log}

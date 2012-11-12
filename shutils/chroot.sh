@@ -87,7 +87,10 @@ PATH=/usr/local/sbin:/usr/lib/perl5/core_perl/bin:/usr/bin:/usr/sbin
 
 exec env -i PATH="\$PATH" XBPS_ETCDIR="\$XBPS_ETCDIR" \
 	XBPS_SHAREDIR="\$XBPS_SHAREDIR" XBPS_LIBEXECDIR="\$XBPS_LIBEXECDIR" \
-	XBPS_BIN_CMD="\$XBPS_BIN_CMD" XBPS_REPO_CMD="\$XBPS_BIN_CMD" \
+	XBPS_INSTALL_CMD="\$XBPS_INSTALL_CMD" \
+	XBPS_RECONFIGURE_CMD="\$XBPS_RECONFIGURE_CMD" \
+	XBPS_REMOVE_CMD="\$XBPS_REMOVE_CMD" \
+	XBPS_QUERY_CMD="\$XBPS_QUERY_CMD" \
 	XBPS_PKGDB_CMD="\$XBPS_PKGDB_CMD" XBPS_FETCH_CMD="\$XBPS_FETCH_CMD" \
 	XBPS_CMPVER_CMD="\$XBPS_CMPVER_CMD" XBPS_DIGEST_CMD="\$XBPS_DIGEST_CMD" \
 	IN_CHROOT=1 LANG=C PS1="[\u@$XBPS_MASTERDIR \W]$ " /bin/bash +h
@@ -196,9 +199,6 @@ prepare_binpkg_repos() {
 				>> $XBPS_MASTERDIR/usr/local/etc/xbps/xbps.conf
 		done
 	fi
-	msg_normal "Synchronizing index for remote repositories...\n"
-	${CHROOT_CMD} ${XBPS_MASTERDIR} sh -c \
-		"fakeroot -- $XBPS_REPO -C /usr/local/etc/xbps/xbps.conf sync"
 }
 
 install_xbps_utils() {
@@ -208,7 +208,8 @@ install_xbps_utils() {
 	if [ ! -f ${XBPS_MASTERDIR}/.xbps_shared_utils_done ]; then
 		msg_normal "Installing XBPS utils into masterdir...\n"
 		mkdir -p $xbps_prefix/lib $xbps_prefix/sbin
-		for f in bin repo uhelper create; do
+		for f in install rindex reconfigure remove \
+			query uhelper create; do
 			_cmd=$(which xbps-${f} 2>/dev/null)
 			_xcmd=$(basename ${_cmd})
 			if [ -z "${_cmd}" ]; then
