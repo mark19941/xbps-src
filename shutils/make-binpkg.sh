@@ -47,25 +47,6 @@ make_binpkg() {
 		setup_tmpl ${sourcepkg}
 	fi
 	make_binpkg_real
-
-	if [ -n "$nonfree" ]; then
-		while [ -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock ]; do
-			echo "The repo index is currently locked!"
-			sleep 1
-		done
-		touch -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
-		$XBPS_RINDEX_CMD -c $XBPS_PACKAGESDIR/nonfree
-		rm -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
-	else
-		while [ -f $XBPS_PACKAGESDIR/.xbps-src-index-lock ]; do
-			echo "The repo index is currently locked!"
-			sleep 1
-		done
-		touch -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
-		$XBPS_RINDEX_CMD -c $XBPS_PACKAGESDIR
-		rm -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
-	fi
-
 	return $?
 }
 
