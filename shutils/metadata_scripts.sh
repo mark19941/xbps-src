@@ -152,13 +152,6 @@ _EOF
 		echo "export systemd_modules=\"${_mods}\"" >> $tmpf
 	fi
 	#
-	# Handle virtual packages modifying xbps.conf.
-	#
-	if [ -d ${DESTDIR}/etc/xbps/virtualpkg.d ]; then
-		_add_trigger virtualpkg
-	fi
-
-	#
 	# Handle GNU Info files.
 	#
 	if [ -d "${DESTDIR}/usr/share/info" ]; then
