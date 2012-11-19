@@ -194,10 +194,6 @@ prepare_binpkg_repos() {
 	if [ ! -f ${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf ]; then
 		install -Dm644 ${XBPS_SHAREDIR}/chroot/xbps.conf \
 			${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf
-		for f in $XBPS_MASTERDIR/etc/xbps/virtualpkg.d/*.conf; do
-			echo "include(/etc/xbps/virtualpkg.d/$(basename $f))" \
-				>> $XBPS_MASTERDIR/usr/local/etc/xbps/xbps.conf
-		done
 	fi
 }
 
