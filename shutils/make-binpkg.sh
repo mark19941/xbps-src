@@ -178,10 +178,6 @@ make_binpkg_real() {
 		done
 	fi
 
-
-	if [ -f "$SRCPKG_GITREVS_FILE" ]; then
-		local _args="--source-revision '$(cat $SRCPKG_GITREVS_FILE)'"
-	fi
 	#
 	# Create the XBPS binary package.
 	#
@@ -199,8 +195,8 @@ make_binpkg_real() {
 		--long-desc "${long_desc}" --desc "${short_desc}" \
 		--built-with "xbps-src-${XBPS_SRC_VERSION}" \
 		--pkgver "${pkgver}" \
-		${_args} --quiet ${_preserve} \
-		${DESTDIR}
+		--source-revisions "$(cat $SRCPKG_GITREVS_FILE 2>/dev/null)" \
+		--quiet ${_preserve} ${DESTDIR}
 	rval=$?
 	trap - INT
 
