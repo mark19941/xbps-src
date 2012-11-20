@@ -197,13 +197,15 @@ prepare_binpkg_repos() {
 	fi
 }
 
-install_xbps_utils() {
+install_host_utils() {
 	local needed= _cmd=
-	local xbps_prefix=$XBPS_MASTERDIR/usr/local
+	local prefix=$XBPS_MASTERDIR/usr/local
 
 	if [ ! -f ${XBPS_MASTERDIR}/.xbps_shared_utils_done ]; then
-		msg_normal "Installing XBPS utils into masterdir...\n"
-		mkdir -p $xbps_prefix/lib $xbps_prefix/sbin
+		msg_normal "Installing required host utils on masterdir...\n"
+
+		# Add required xbps utils.
+		mkdir -p $prefix/lib $prefix/sbin
 		for f in install rindex reconfigure remove \
 			query uhelper create; do
 			_cmd=$(which xbps-${f} 2>/dev/null)
@@ -212,21 +214,50 @@ install_xbps_utils() {
 				msg_error "Unexistent ${_cmd} file!"
 				exit 1
 			fi
-			install -Dm755 ${_cmd} $xbps_prefix/sbin/${_xcmd}.real
+			install -Dm755 ${_cmd} $prefix/sbin/${_xcmd}.real
 			# copy required shlibs
 			for j in $(ldd ${_cmd}|awk '{print $3}'); do
-				install -m755 $j $xbps_prefix/lib
+				install -m755 $j $prefix/lib
 			done
 			# Create wrapper for cmd
-			echo "#!/bin/sh" > $xbps_prefix/sbin/${_xcmd}
+			echo "#!/bin/sh" > $prefix/sbin/${_xcmd}
 			echo "export PATH=/usr/local/sbin:\$PATH" >> \
-				$xbps_prefix/sbin/${_xcmd}
+				$prefix/sbin/${_xcmd}
 			echo "export LD_LIBRARY_PATH=/usr/local/lib" >> \
-				$xbps_prefix/sbin/${_xcmd}
-			echo "${_xcmd}.real \"\$@\"" >> $xbps_prefix/sbin/${_xcmd}
-			echo "exit \$?" >> $xbps_prefix/sbin/${_xcmd}
-			chmod 755 $xbps_prefix/sbin/${_xcmd}
+				$prefix/sbin/${_xcmd}
+			echo "${_xcmd}.real \"\$@\"" >> $prefix/sbin/${_xcmd}
+			echo "exit \$?" >> $prefix/sbin/${_xcmd}
+			chmod 755 $prefix/sbin/${_xcmd}
 		done
+
+		# Add required git utils.
+		for f in git git-ls-files git-rev-list git-branch; do
+			if [ -f /usr/libexec/git-core/$f ]; then
+				_cmd=/usr/libexec/git-core/$f
+			elif [ -f /usr/lib/git-core/$f ]; then
+				_cmd=/usr/lib/git-core/$f
+			elif [ -f /usr/bin/$f ]; then
+				_cmd=/usr/bin/$f
+			else
+				msg_error "cannot find git-$f binary!\n"
+			fi
+			_xcmd=$(basename ${_cmd})
+			install -Dm755 ${_cmd} $prefix/sbin/${_xcmd}.real
+			# copy required shlibs
+			for j in $(ldd ${_cmd}|awk '{print $3}'); do
+				install -m755 $j $prefix/lib
+			done
+			# Create wrapper for cmd
+			echo "#!/bin/sh" > $prefix/sbin/${_xcmd}
+			echo "export PATH=/usr/local/sbin:\$PATH" >> \
+				$prefix/sbin/${_xcmd}
+			echo "export LD_LIBRARY_PATH=/usr/local/lib" >> \
+				$prefix/sbin/${_xcmd}
+			echo "${_xcmd}.real \"\$@\"" >> $prefix/sbin/${_xcmd}
+			echo "exit \$?" >> $prefix/sbin/${_xcmd}
+			chmod 755 $prefix/sbin/${_xcmd}
+		done
+
 		touch ${XBPS_MASTERDIR}/.xbps_shared_utils_done
 	fi
 }
@@ -265,7 +296,7 @@ chroot_handler() {
 
 	chroot_init || return $?
 	create_binsh_symlink || return $?
-	install_xbps_utils || return $?
+	install_host_utils || return $?
 	install_xbps_src || return $?
 	prepare_binpkg_repos || return $?
 

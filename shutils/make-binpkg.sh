@@ -23,10 +23,39 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #-
 
+git_revs() {
+	local _revs= _branch= _out= f=
+
+	# Get the git revisions from this source pkg.
+	cd $XBPS_SRCPKGDIR
+	for f in $(git ls-files $1); do
+		_branch=$(git branch|awk '{print $2}')
+		_out="${_branch} ${f} $(git rev-list ${_branch} $f | tail -n 1)"
+		if [ -z "${_revs}" ]; then
+			_revs="${_out}"
+		else
+			_revs="${_revs} ${_out}"
+		fi
+	done
+
+	SRCPKG_GITREVS_FILE=$(mktemp --tmpdir || msg_error "$pkgver: failed to create tmpfile.\n")
+	echo "$pkgver git source revisions:"
+	set -- ${_revs}
+	while [ $# -gt 0 ]; do
+		local _branch=$1; _file=$2; local _rev=$3
+		echo "[${_branch}] ${_file}: ${_rev}"
+		echo "[${_branch}] ${_file}: ${_rev}" >> ${SRCPKG_GITREVS_FILE}
+		shift 3
+	done
+}
+
 make_binpkg() {
 	local subpkg= rval=
 
 	[ -z "$pkgname" ] && return 1
+
+	msg_normal "$pkgver: fetching source git revisions, please wait...\n"
+	git_revs $pkgname
 
 	for subpkg in ${subpackages}; do
 		unset nonfree conf_files noarch triggers replaces softreplace \
@@ -47,7 +76,12 @@ make_binpkg() {
 		setup_tmpl ${sourcepkg}
 	fi
 	make_binpkg_real
-	return $?
+	rval=$?
+
+	rm -f ${SRCPKG_GITREVS_FILE}
+	unset SRCPKG_GITREVS_FILE
+
+	return $rval
 }
 
 binpkg_cleanup() {
@@ -137,6 +171,8 @@ make_binpkg_real() {
 			_conf_files="${_conf_files} ${f}"
 		done
 	fi
+
+
 	#
 	# Create the XBPS binary package.
 	#
@@ -153,6 +189,7 @@ make_binpkg_real() {
 		--maintainer "${maintainer}" \
 		--long-desc "${long_desc}" --desc "${short_desc}" \
 		--built-with "xbps-src-${XBPS_SRC_VERSION}" \
+		--source-revisions "$(cat $SRCPKG_GITREVS_FILE)" \
 		--pkgver "${pkgver}" --quiet ${_preserve} \
 		${DESTDIR}
 	rval=$?
