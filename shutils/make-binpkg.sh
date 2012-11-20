@@ -24,13 +24,19 @@
 #-
 
 git_revs() {
-	local _revs= _branch= _out= f=
+	local _revs= _branch= _out= f= _filerev= _files=
 
 	# Get the git revisions from this source pkg.
 	cd $XBPS_SRCPKGDIR
-	for f in $(git ls-files $1); do
+	_files=$(git ls-files $1)
+	[ -z "${_files}" ] && return
+
+	for f in ${_files}; do
 		_branch=$(git branch|awk '{print $2}')
-		_out="${_branch} ${f} $(git rev-list origin/${_branch} $f | head -n1)"
+		[ -z "${_branch}" ] && continue
+		_filerev=$(git rev-list origin/${_branch} $f | head -n1)
+		[ -z "${_filerev}" ] && continue
+		_out="${_branch} ${f} ${_filerev}"
 		if [ -z "${_revs}" ]; then
 			_revs="${_out}"
 		else
@@ -173,6 +179,11 @@ make_binpkg_real() {
 	fi
 
 
+	if [ -f "$SRCPKG_GITREVS_FILE" ]; then
+		local _args="--source-revision '$(cat $SRCPKG_GITREVS_FILE)'"
+		cat $SRCPKG_GITREVS_FILE
+		return 0
+	fi
 	#
 	# Create the XBPS binary package.
 	#
@@ -189,8 +200,8 @@ make_binpkg_real() {
 		--maintainer "${maintainer}" \
 		--long-desc "${long_desc}" --desc "${short_desc}" \
 		--built-with "xbps-src-${XBPS_SRC_VERSION}" \
-		--source-revisions "$(cat $SRCPKG_GITREVS_FILE)" \
-		--pkgver "${pkgver}" --quiet ${_preserve} \
+		--pkgver "${pkgver}" \
+		${_args} --quiet ${_preserve} \
 		${DESTDIR}
 	rval=$?
 	trap - INT
