@@ -30,7 +30,7 @@ git_revs() {
 	cd $XBPS_SRCPKGDIR
 	for f in $(git ls-files $1); do
 		_branch=$(git branch|awk '{print $2}')
-		_out="${_branch} ${f} $(git rev-list ${_branch} $f | tail -n 1)"
+		_out="${_branch} ${f} $(git rev-list ${_branch} $f | head -n1)"
 		if [ -z "${_revs}" ]; then
 			_revs="${_out}"
 		else
