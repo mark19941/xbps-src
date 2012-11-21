@@ -69,7 +69,7 @@ install_pkg() {
 		env XBPS_MACHINE=${XBPS_MACHINE} wrksrc=${wrksrc}	\
 			MASTERDIR="${XBPS_MASTERDIR}"			\
 			CONFIG_FILE=${XBPS_CONFIG_FILE}			\
-			XBPS_SRC_VERSION=${XBPS_SRC_VERSION}		\
+			XBPS_SRC_VERSION="${XBPS_SRC_VERSION}"		\
 			${FAKEROOT_CMD} ${XBPS_LIBEXECDIR}/xbps-src-doinst-helper \
 			${sourcepkg} || return $?
 
