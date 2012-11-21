@@ -63,7 +63,7 @@ To build binary packages with xbps-src the following software must be
 installed into the host system:
 
  - awk, bash, gcc c++, gettext, patch, texinfo and perl.
- - xbps>=0.17 available from http://code.google.com/p/xbps.
+ - xbps>=0.18 available from http://code.google.com/p/xbps.
 
 To build package with normal users the following packages are also required:
 
