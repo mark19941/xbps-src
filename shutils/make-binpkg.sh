@@ -24,7 +24,7 @@
 #-
 
 git_revs() {
-	local _revs= _branch= _out= f= _filerev= _files=
+	local _revs= _out= f= _filerev= _files=
 
 	# Get the git revisions from this source pkg.
 	cd $XBPS_SRCPKGDIR
@@ -32,11 +32,9 @@ git_revs() {
 	[ -z "${_files}" ] && return
 
 	for f in ${_files}; do
-		_branch=$(git branch|awk '{print $2}')
-		[ -z "${_branch}" ] && continue
-		_filerev=$(git rev-list origin/${_branch} $f | head -n1)
+		_filerev=$(git rev-list HEAD $f | head -n1)
 		[ -z "${_filerev}" ] && continue
-		_out="${_branch} ${f} ${_filerev}"
+		_out="${f} ${_filerev}"
 		if [ -z "${_revs}" ]; then
 			_revs="${_out}"
 		else
@@ -49,8 +47,8 @@ git_revs() {
 	set -- ${_revs}
 	while [ $# -gt 0 ]; do
 		local _branch=$1; _file=$2; local _rev=$3
-		echo "[${_branch}] ${_file}: ${_rev}"
-		echo "[${_branch}] ${_file}: ${_rev}" >> ${SRCPKG_GITREVS_FILE}
+		echo "${_file}: ${_rev}"
+		echo "${_file}: ${_rev}" >> ${SRCPKG_GITREVS_FILE}
 		shift 3
 	done
 }
