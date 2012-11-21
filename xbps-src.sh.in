@@ -25,7 +25,7 @@
 #-
 umask 022
 
-readonly XBPS_SRC_VERSION=@@XBPS_SRC_VERSION@@
+readonly XBPS_SRC_VERSION="@@XBPS_SRC_VERSION@@"
 
 if [ -n "$IN_CHROOT" ]; then
 	export XBPS_ETCDIR=/usr/local/etc/xbps
