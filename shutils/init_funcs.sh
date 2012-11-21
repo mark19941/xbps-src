@@ -115,7 +115,7 @@ set_defvars() {
 		echo "ERROR: missing defs from global-defs.sh!"
 		exit 1
 	fi
-	$XBPS_PKGDB_CMD cmpver "$XBPS_SRC_VERSION" "$XBPS_SRC_REQ"
+	$XBPS_PKGDB_CMD cmpver $(echo "$XBPS_SRC_VERSION"|awk '{print $1}') "$XBPS_SRC_REQ"
 	if [ $? -eq 255 ]; then
 		echo "ERROR: this xbps-src version is outdated! (>=$XBPS_SRC_REQ is required)"
 		exit 1
