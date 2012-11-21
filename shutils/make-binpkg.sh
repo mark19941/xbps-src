@@ -46,10 +46,10 @@ git_revs() {
 	echo "$pkgver git source revisions:"
 	set -- ${_revs}
 	while [ $# -gt 0 ]; do
-		local _branch=$1; _file=$2; local _rev=$3
+		local _file=$1; local _rev=$2
 		echo "${_file}: ${_rev}"
 		echo "${_file}: ${_rev}" >> ${SRCPKG_GITREVS_FILE}
-		shift 3
+		shift 2
 	done
 }
 
