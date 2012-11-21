@@ -1,10 +1,6 @@
 syntax: glob
 
 masterdir/
-etc/xbps-src.conf
-libexec/capchroot
-libexec/capmount
-libexec/capumount
 xbps-src
 
 *.bak

@@ -23,12 +23,8 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #-
 #
-# Finds all required libraries for a package, by looking at its executables
-# and shared libraries and skipping duplicated matches.
-#
-# Once the list is known it finds the binary package names mapped to those
-# libraries and reports if any of them was not added.
-#
+# Finds all required shlibs for a package, by looking at its
+# executables/shlibs and skipping duplicated matches.
 
 add_rundep() {
 	local dep="$1" i= rpkgdep= _depname= _rdeps= found=
@@ -54,8 +50,8 @@ add_rundep() {
 }
 
 verify_rundeps() {
-	local j= f= nlib= verify_deps= maplib= found_dup= igndir= soname_arch=
-	local broken= rdep= found= rsonamef= soname_list= tmplf=
+	local j= f= nlib= verify_deps= maplib= found_dup= igndir=
+	local broken= rdep= found= tmplf=
 	local _pkgname= _rdepver= _subpkg= _sdep=
 
 	maplib=$XBPS_COMMONDIR/shlibs
@@ -171,89 +167,12 @@ verify_rundeps() {
 			echo "   SONAME: $f <-> ${_rdep} (ignored)"
 			continue
 		fi
-		# Add required shlib to rundeps.
-		if [ -z "$soname_list" ]; then
-			soname_list="${f}"
-		else
-			soname_list="${soname_list} ${f}"
-		fi
 		add_rundep "${_sdep}"
 	done
 	#
-	# If pkg uses any SONAME not known, error out.
+	# If pkg uses any unknown SONAME error out.
 	#
-	[ -n "$broken" ] && \
+	if [ -n "$broken" ]; then
 		msg_error "$pkgver: cannot guess required shlibs, aborting!\n"
-
-	#
-	# Update package's rshlibs file.
-	#
-	unset broken f
-	msg_normal "$pkgver: updating rshlibs file...\n"
-	rsonamef=${XBPS_SRCPKGDIR}/${pkgname}/${pkgname}.rshlibs
-	if [ ! -f $rsonamef ]; then
-		# file not found, add soname.
-		for j in ${soname_list}; do
-			echo "   SONAME: $j (added)"
-			echo "${j}" >> $rsonamef
-		done
-	else
-		# check if soname is already in the rshlibs file.
-		for j in ${soname_list}; do
-			if ! grep -q "$j" $rsonamef; then
-				msg_red_nochroot "   SONAME: $j (added)\n"
-				broken=1
-			fi
-		done
-		unset f
-		exec 3<&0 # save stdin
-		exec < $rsonamef
-		# now check if any soname in the rshlibs file is unnecessary.
-		while read f; do
-			local _soname=$(echo "$f"|awk '{print $1}')
-			local _soname_arch=$(echo "$f"|awk '{print $2}')
-
-			for j in ${soname_list}; do
-				if [ "${_soname}" = "$j" ]; then
-					found=1
-					continue
-				fi
-			done
-			if [ -n "$found" ]; then
-				unset found
-				continue
-			fi
-			# Sometimes a required SONAME is arch dependent, so
-			# ignore it in such case.
-			if [ -n "${_soname_arch}" -a "${_soname_arch}" != "$XBPS_MACHINE" ]; then
-				continue
-			fi
-
-			# If SONAME is arch specific, only remove it if
-			# matching on the target arch.
-			_soname_arch=$(grep "$f" $maplib|awk '{print $3}'|head -1)
-			if [ -z "${_soname_arch}" ] || \
-			   [ -n "${_soname_arch}" -a "${_soname_arch}" = "$XBPS_MACHINE" ]; then
-				msg_red_nochroot "   SONAME: $f (removed, not required)\n"
-				broken=1
-			fi
-			unset _soname _soname_arch
-		done
-		exec 0<&3 # restore stdin
 	fi
-
-	[ -z "$broken" ] && return 0
-
-	# ERROR shlibs unmatched.
-	msg_red "$pkgver: required run-time shared libraries do not match!\n"
-	msg_red "  Please check why required shared libraries were modified and bump\n"
-	msg_red "  revision number if necessary in package's template file.\n"
-	msg_red "  Possible reasons:\n"
-	msg_red "   - A package was detected in configure that added new features.\n"
-	msg_red "   - A package wasn't detected in configure that removed some features.\n"
-	msg_red "   - A required package that was used in previous build is not being used.\n"
-	msg_red "   - A required package bumped the major version of any of its SONAMEs.\n"
-	msg_red "  If you don't know what to do please contact the package maintainer.\n"
-
-	export BROKEN_RSHLIBS=1
 }

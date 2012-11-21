@@ -4,7 +4,7 @@ xbps-src - the XBPS binary package build system.
 
 xbps-src uses ideas from other current package build systems and or
 utilities such as in NetBSD/pkgsrc, Debian dpkg/deb, GNU stow, etc.
-Its target OS is Linux, meant to be used in Void GNU/Linux but could be
+Its target OS is Linux, meant to be used in Void Linux but could be
 adapted to other systems with relatively few changes (don't blame me if it
 doesn't work in a random OS).
 
@@ -16,12 +16,6 @@ xbps-src uses "linux-user-chroot" to bind mount required mounpoints in a
 specific directory and be able to chroot as normal user. This allows us to
 use some Linux features for containers: PID/IPC namespaces and
 private mounts (bind mounts are only seen by the same process).
-
-The last highlight from xbps-src is its NRWO feature (New Rshlibs World Order)
-where the run time required shared libraries (SONAMEs) by packages are guessed
-automatically, thus reducing the risk for missing required run time dependencies.
-This also help us to minimize the impact in SONAME major bumps, because we can
-know *exactly* in advance which packages use the affected shared library.
 
 INSTALLATION
 ============
@@ -42,7 +36,7 @@ See the USAGE file to know more in how to use xbps-src.
 DEPENDENCIES
 ============
 
-	* XBPS utilities (>= 0.17 API >= 20120930)
+	* XBPS utilities
 	* linux-user-chroot
 	* fakeroot
 

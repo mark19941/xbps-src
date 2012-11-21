@@ -136,16 +136,15 @@ Targets: (only one may be specified)
  show [pkgname]
    Show information for the specified package.
 
- show-deps <pkgname> <build|run>
-   Show required dependencies for <pkgname>. If <build> is set, only build time
-   dependencies are shown, if <run> is set only run time dependencies are shown.
+ show-deps <pkgname>
+   Show required run-time dependencies for <pkgname>. Package must be
+   installed into destdir.
+
+ show-build-deps <pkgname>
+   Show required build dependencies for <pkgname>.
 
  show-files <pkgname>
    Show files installed by <pkgname>. Package must be installed into destdir.
-
- show-revdeps <pkgname>
-   Show reverse dependencies for <pkgname>, i.e packages that are currently
-   depending on <pkgname>.
 
 On targets that accept [pkgname], a package name can be specified and xbps-src
 will execute the task on any CWD (Current Working Directory). If the argument
@@ -243,7 +242,6 @@ shift $(($OPTIND - 1))
 
 target="$1"
 _pkgname="$2"
-_optarget="$3"
 
 #
 # Check for required utilities in host system.
@@ -427,13 +425,11 @@ show-files)
 	;;
 show-deps)
 	setup_subpkg_tmpl ${_pkgname}
-	if [ -z "${_optarget}" ]; then
-		msg_error "missing dependency type: build or run.\n"
-	fi
-	show_tmpl_deps ${_optarget}
+	show_tmpl_deps
 	;;
-show-revdeps)
-	show_pkg_revdeps ${_pkgname}
+show-build-deps)
+	setup_subpkg_tmpl ${_pkgname}
+	show_tmpl_build_deps
 	;;
 *)
 	msg_red "xbps-src: invalid target $target.\n"

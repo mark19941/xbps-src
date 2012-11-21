@@ -85,11 +85,6 @@ install_pkg() {
 		fi
 	fi
 
-	if [ -n "$BROKEN_RSHLIBS" ]; then
-		unset BROKEN_RSHLIBS
-		msg_error "$pkgver: can't continue because required shlibs do not match.\n"
-	fi
-
 	cd $XBPS_MASTERDIR
 	# If install-destdir specified, we are done.
 	if [ "$target" = "install-destdir" ]; then
