@@ -125,19 +125,13 @@ make_binpkg_real() {
 	else
 		pkgdir=$XBPS_PACKAGESDIR/$arch
 	fi
-	#
+
 	# Don't overwrite existing binpkgs by default, skip them.
-	#
 	if [ -f $pkgdir/$binpkg ]; then
 		msg_normal "$pkgver: skipping existing $binpkg pkg...\n"
 		return 6 # EEXIST
 	fi
 
-	#
-	# Start building the binary package...
-	#
-	trap "binpkg_cleanup $pkgdir $binpkg" INT
-	msg_normal "Building $binpkg...\n"
 	if [ ! -d $pkgdir ]; then
 		mkdir -p $pkgdir
 	fi
@@ -196,7 +190,6 @@ make_binpkg_real() {
 		--source-revisions "$(cat $SRCPKG_GITREVS_FILE 2>/dev/null)" \
 		--quiet ${_preserve} ${DESTDIR}
 	rval=$?
-	trap - INT
 
 	if [ $rval -eq 0 ]; then
 		msg_normal "Built $binpkg successfully.\n"
@@ -205,18 +198,22 @@ make_binpkg_real() {
 				echo "The repo index is currently locked!"
 				sleep 1
 			done
-			ln -sfr $pkgdir/$binpkg $XBPS_PACKAGESDIR/nonfree/$binpkg
 			touch -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
 			$XBPS_RINDEX_CMD -a $XBPS_PACKAGESDIR/nonfree/$binpkg
+			if [ $? -eq 0 ]; then
+				ln -sfr $pkgdir/$binpkg $XBPS_PACKAGESDIR/nonfree/$binpkg
+			fi
 			rm -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
 		else
 			while [ -f $XBPS_PACKAGESDIR/.xbps-src-index-lock ]; do
 				echo "The repo index is currently locked!"
 				sleep 1
 			done
-			ln -sfr $pkgdir/$binpkg $XBPS_PACKAGESDIR/$binpkg
 			touch -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
 			$XBPS_RINDEX_CMD -a $XBPS_PACKAGESDIR/$binpkg
+			if [ $? -eq 0 ]; then
+				ln -sfr $pkgdir/$binpkg $XBPS_PACKAGESDIR/$binpkg
+			fi
 			rm -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
 		fi
 	else
