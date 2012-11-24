@@ -199,7 +199,7 @@ make_binpkg_real() {
 				sleep 1
 			done
 			touch -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
-			$XBPS_RINDEX_CMD -a $XBPS_PACKAGESDIR/nonfree/$binpkg
+			$XBPS_RINDEX_CMD -a $pkgdir/$binpkg
 			if [ $? -eq 0 ]; then
 				ln -sfr $pkgdir/$binpkg $XBPS_PACKAGESDIR/nonfree/$binpkg
 			fi
@@ -210,7 +210,7 @@ make_binpkg_real() {
 				sleep 1
 			done
 			touch -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
-			$XBPS_RINDEX_CMD -a $XBPS_PACKAGESDIR/$binpkg
+			$XBPS_RINDEX_CMD -a $pkgdir/$binpkg
 			if [ $? -eq 0 ]; then
 				ln -sfr $pkgdir/$binpkg $XBPS_PACKAGESDIR/$binpkg
 			fi
