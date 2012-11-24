@@ -88,20 +88,6 @@ make_binpkg() {
 	return $rval
 }
 
-binpkg_cleanup() {
-	local pkgdir="$1" binpkg="$2"
-
-	[ -z "$pkgdir" -o -z "$binpkg" ] && return 1
-	msg_red "$pkgver: Interrupted! removing $binpkg file!\n"
-	if [ -n "$nonfree" ]; then
-		rm -f $XBPS_PACKAGESDIR/nonfree/$binpkg
-	else
-		rm -f $XBPS_PACKAGESDIR/$binpkg
-	fi
-	rm -f $pkgdir/$binpkg
-	exit 1
-}
-
 #
 # This function builds a binary package from an installed xbps
 # package in destdir.
@@ -121,9 +107,9 @@ make_binpkg_real() {
 	fi
 	binpkg=$pkgver.$arch.xbps
 	if [ -n "$nonfree" ]; then
-		pkgdir=$XBPS_PACKAGESDIR/nonfree/$arch
+		pkgdir=$XBPS_PACKAGESDIR/nonfree
 	else
-		pkgdir=$XBPS_PACKAGESDIR/$arch
+		pkgdir=$XBPS_PACKAGESDIR
 	fi
 
 	# Don't overwrite existing binpkgs by default, skip them.
@@ -193,35 +179,14 @@ make_binpkg_real() {
 
 	if [ $rval -eq 0 ]; then
 		msg_normal "Built $binpkg successfully.\n"
-		if [ -n "$nonfree" ]; then
-			while [ -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock ]; do
-				echo "The repo index is currently locked!"
-				sleep 1
-			done
-			touch -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
-			$XBPS_RINDEX_CMD -a $pkgdir/$binpkg
-			if [ $? -eq 0 ]; then
-				ln -sfr $pkgdir/$binpkg $XBPS_PACKAGESDIR/nonfree/$binpkg
-			fi
-			rm -f $XBPS_PACKAGESDIR/nonfree/.xbps-src-index-lock
-		else
-			while [ -f $XBPS_PACKAGESDIR/.xbps-src-index-lock ]; do
-				echo "The repo index is currently locked!"
-				sleep 1
-			done
-			touch -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
-			$XBPS_RINDEX_CMD -a $pkgdir/$binpkg
-			if [ $? -eq 0 ]; then
-				ln -sfr $pkgdir/$binpkg $XBPS_PACKAGESDIR/$binpkg
-			fi
-			rm -f $XBPS_PACKAGESDIR/.xbps-src-index-lock
-		fi
+		while [ -f $pkgdir/.xbps-src-index-lock ]; do
+			echo "The repo index is currently locked!"
+			sleep 1
+		done
+		touch -f $pkgdir/.xbps-src-index-lock
+		$XBPS_RINDEX_CMD -a $pkgdir/$binpkg
+		rm -f $pkgdir/.xbps-src-index-lock
 	else
-		if [ -n "$nonfree" ]; then
-			rm -f $XBPS_PACKAGESDIR/nonfree/$binpkg
-		else
-			rm -f $XBPS_PACKAGESDIR/$binpkg
-		fi
 		rm -f $pkgdir/$binpkg
 		msg_error "Failed to build binary package: $binpkg!\n"
 	fi
