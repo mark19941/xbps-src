@@ -26,7 +26,7 @@
 #
 # Install a required package dependency, like:
 #
-#	xbps-bin -Ay install <pkgname>
+#	xbps-install -Ay <pkgname>
 #
 # Returns 0 if package already installed or installed successfully.
 # Any other error number otherwise.
