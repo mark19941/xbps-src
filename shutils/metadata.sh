@@ -131,7 +131,7 @@ write_metadata_real() {
 				continue
 			fi
 			echo "   Compressing info file: $j..."
-			gzip -fq9 ${DESTDIR}/"$j"
+			gzip -nfq9 ${DESTDIR}/"$j"
 		done
 	fi
 
@@ -158,7 +158,7 @@ write_metadata_real() {
 				continue
 			fi
 			echo "   Compressing manpage: $j..."
-			gzip -fq9 ${DESTDIR}/"$j"
+			gzip -nfq9 ${DESTDIR}/"$j"
 		done
 	fi
 
