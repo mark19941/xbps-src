@@ -211,13 +211,14 @@ _EOF
 	# Handle GTK+ Icon cache directories.
 	#
 	if [ -d ${DESTDIR}/usr/share/icons ]; then
-		_add_trigger gtk-icon-cache
 		for f in ${DESTDIR}/usr/share/icons/*; do
-			_f=$(echo "$f"|sed -e "$fpattern")
-			[ "${_f}" = "/usr/share/icons" ] && continue
-			_icondirs="${_icondirs} ${_f}"
+			[ ! -d "${f}" ] && continue
+			_icondirs="${_icondirs} ${f#${DESTDIR}}"
 		done
-		echo "export gtk_iconcache_dirs=\"${_icondirs}\"" >> $tmpf
+		if [ -n "${_icondirs}" ]; then
+			echo "export gtk_iconcache_dirs=\"${_icondirs}\"" >> $tmpf
+			_add_trigger gtk-icon-cache
+		fi
 	fi
         #
 	# Handle .desktop files in /usr/share/applications with
