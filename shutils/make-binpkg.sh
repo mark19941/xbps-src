@@ -53,6 +53,16 @@ git_revs() {
 	done
 }
 
+unset_pkg_vars() {
+	unset nonfree conf_files noarch triggers replaces softreplace \
+		system_accounts system_groups preserve \
+		xml_entries sgml_entries xml_catalogs sgml_catalogs \
+		font_dirs dkms_modules provides kernel_hooks_version \
+		conflicts pycompile_dirs pycompile_module \
+		systemd_services make_dirs \
+		depends fulldepends run_depends mutable_files
+}
+
 make_binpkg() {
 	local subpkg= rval=
 
@@ -62,17 +72,20 @@ make_binpkg() {
 	git_revs $pkgname
 
 	for subpkg in ${subpackages}; do
-		unset nonfree conf_files noarch triggers replaces softreplace \
-			system_accounts system_groups preserve \
-			xml_entries sgml_entries xml_catalogs sgml_catalogs \
-			font_dirs dkms_modules provides kernel_hooks_version \
-			conflicts pycompile_dirs pycompile_module \
-			systemd_services make_dirs \
-			depends fulldepends run_depends mutable_files
+		unset_pkg_vars
 		. $XBPS_SRCPKGDIR/$pkgname/$subpkg.template
 		pkgname=${subpkg}
 		set_tmpl_common_vars
 		make_binpkg_real
+		# Generate -dbg pkg automagically.
+		if [ -d "${XBPS_DESTDIR}/${subpkg}-dbg-${version}" ]; then
+			unset_pkg_vars
+			pkgname="${subpkg}-dbg"
+			pkgver="${pkgname}-${version}_${revision}"
+			short_desc="${short_desc} (debug files)"
+			DESTDIR="${XBPS_DESTDIR}/${pkgname}-${version}"
+			make_binpkg_real
+		fi
 		setup_tmpl ${sourcepkg}
 	done
 
@@ -81,6 +94,15 @@ make_binpkg() {
 	fi
 	make_binpkg_real
 	rval=$?
+	# Generate -dbg pkg automagically.
+	if [ -d "${XBPS_DESTDIR}/${pkgname}-dbg-${version}" ]; then
+		unset_pkg_vars
+		pkgname="${pkgname}-dbg"
+		pkgver="${pkgname}-${version}_${revision}"
+		short_desc="${short_desc} (debug files)"
+		DESTDIR="${XBPS_DESTDIR}/${pkgname}-${version}"
+		make_binpkg_real
+	fi
 
 	rm -f ${SRCPKG_GITREVS_FILE}
 	unset SRCPKG_GITREVS_FILE

@@ -218,6 +218,9 @@ set_tmpl_common_vars() {
 		build_depends="${build_depends} ${_pkgdep}"
 	done
 
+	# -g is required to build -dbg packages.
+	DEBUG_CFLAGS="-g"
+
 	[ -n "$XBPS_CFLAGS" ] && cflags="$XBPS_CFLAGS"
 	[ -n "$CFLAGS" ] && cflags="$cflags $CFLAGS"
 	[ -n "$XBPS_CXXFLAGS" ] && cxxflags="$XBPS_CXXFLAGS"
@@ -227,8 +230,8 @@ set_tmpl_common_vars() {
 	[ -n "$XBPS_LDFLAGS" ] && ldflags="$XBPS_LDFLAGS"
 	[ -n "$LDFLAGS" ] && ldflags="$ldflags $LDFLAGS"
 
-	[ -n "$cflags" ] && export CFLAGS="$cflags"
-	[ -n "$cxxflags" ] && export CXXFLAGS="$cxxflags"
+	[ -n "$cflags" ] && export CFLAGS="$cflags $DEBUG_CFLAGS"
+	[ -n "$cxxflags" ] && export CXXFLAGS="$cxxflags $DEBUG_CFLAGS"
 	[ -n "$cppflags" ] && export CPPFLAGS="$cppflags"
 	[ -n "$ldflags" ] && export LDFLAGS="$ldflags"
 

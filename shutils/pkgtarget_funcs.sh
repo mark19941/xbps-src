@@ -150,12 +150,22 @@ remove_pkg() {
 		if [ -f "${wrksrc}/.xbps_do_install_${subpkg}_done" ]; then
 			rm -f ${wrksrc}/.xbps_do_install_${subpkg}_done
 		fi
+		# Remove -dbg packages.
+		if [ -d "$XBPS_DESTDIR/${subpkg}-dbg-${version}" ]; then
+			msg_normal "${_pkg}: removing debug pkg...\n"
+			rm -rf $XBPS_DESTDIR/${subpkg}-dbg-${version}
+		fi
 	done
 
 	pkg="${pkgname}-${version}"
 	if [ -d "$XBPS_DESTDIR/${pkg}" ]; then
 		msg_normal "${pkgver}: removing files from destdir...\n"
 		rm -rf "$XBPS_DESTDIR/${pkg}"
+	fi
+	# Remove -dbg pkg.
+	if [ -d "$XBPS_DESTDIR/${pkgname}-dbg-${version}" ]; then
+		msg_normal "${pkgver}: removing debug pkg...\n"
+		rm -rf $XBPS_DESTDIR/${pkgname}-dbg-${version}
 	fi
 
 	[ -f $XBPS_PRE_INSTALL_DONE ] && rm -f $XBPS_PRE_INSTALL_DONE
