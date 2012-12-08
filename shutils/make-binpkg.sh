@@ -110,6 +110,21 @@ make_binpkg() {
 	return $rval
 }
 
+register_pkg() {
+	local rval= _pkgdir="$1" _binpkg="$2"
+
+	while [ -f ${_pkgdir}/.xbps-src-index-lock ]; do
+		echo "The repo index is currently locked!"
+		sleep 1
+	done
+	touch -f ${_pkgdir}/.xbps-src-index-lock
+	$XBPS_RINDEX_CMD -a ${_pkgdir}/${_binpkg}
+	rval=$?
+	rm -f ${_pkgdir}/.xbps-src-index-lock
+
+	return $rval
+}
+
 #
 # This function builds a binary package from an installed xbps
 # package in destdir.
@@ -137,7 +152,8 @@ make_binpkg_real() {
 	# Don't overwrite existing binpkgs by default, skip them.
 	if [ -f $pkgdir/$binpkg ]; then
 		msg_normal "$pkgver: skipping existing $binpkg pkg...\n"
-		return 6 # EEXIST
+		register_pkg "$pkgdir" "$binpkg"
+		return $?
 	fi
 
 	if [ ! -d $pkgdir ]; then
@@ -178,6 +194,8 @@ make_binpkg_real() {
 		done
 	fi
 
+	msg_normal "$pkgver: building $binpkg ...\n"
+
 	#
 	# Create the XBPS binary package.
 	#
@@ -198,18 +216,13 @@ make_binpkg_real() {
 		--source-revisions "$(cat $SRCPKG_GITREVS_FILE 2>/dev/null)" \
 		--quiet ${_preserve} ${DESTDIR}
 	rval=$?
-
 	if [ $rval -eq 0 ]; then
-		msg_normal "Built $binpkg successfully.\n"
-		while [ -f $pkgdir/.xbps-src-index-lock ]; do
-			echo "The repo index is currently locked!"
-			sleep 1
-		done
-		touch -f $pkgdir/.xbps-src-index-lock
-		$XBPS_RINDEX_CMD -a $pkgdir/$binpkg
-		rm -f $pkgdir/.xbps-src-index-lock
+		register_pkg "$pkgdir" "$binpkg"
+		rval=$?
 	else
 		rm -f $pkgdir/$binpkg
 		msg_error "Failed to build binary package: $binpkg!\n"
 	fi
+
+	return $rval
 }
