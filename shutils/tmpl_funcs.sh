@@ -32,7 +32,7 @@ reset_tmpl_vars() {
 			short_desc maintainer long_desc checksum wrksrc	\
 			make_cmd bootstrap register_shell \
 			make_build_target configure_script noextract nofetch \
-			nostrip nonfree build_requires \
+			nostrip nonfree build_requires disable_debug \
 			make_install_target version revision patch_args \
 			sgml_catalogs xml_catalogs xml_entries sgml_entries \
 			disable_parallel_build font_dirs preserve \
@@ -219,7 +219,9 @@ set_tmpl_common_vars() {
 	done
 
 	# -g is required to build -dbg packages.
-	DEBUG_CFLAGS="-g"
+	if [ -z "$disable_debug" ]; then
+		DEBUG_CFLAGS="-g"
+	fi
 
 	[ -n "$XBPS_CFLAGS" ] && cflags="$XBPS_CFLAGS"
 	[ -n "$CFLAGS" ] && cflags="$cflags $CFLAGS"

@@ -41,6 +41,8 @@ strip_files()
 make_debug() {
 	local dname= fname= dbgfile=
 
+	[ -n "$disable_debug" ] && return
+
 	dname=$(echo "$(dirname $1)"|sed -e "s|${DESTDIR}||g")
 	fname="$(basename $1)"
 	dbgfile="${dname}/${fname}"
@@ -57,6 +59,8 @@ make_debug() {
 attach_debug() {
 	local dname= fname= dbgfile=
 
+	[ -n "$disable_debug" ] && return
+
 	dname=$(echo "$(dirname $1)"|sed -e "s|${DESTDIR}||g")
 	fname="$(basename $1)"
 	dbgfile="${dname}/${fname}"
@@ -70,6 +74,7 @@ attach_debug() {
 create_debug_pkg() {
 	local _pkgname=
 
+	[ -n "$disable_debug" ] && return
 	[ ! -d "${DESTDIR}/usr/lib/debug" ] && return
 
 	_pkgname="${pkgname}-dbg"
