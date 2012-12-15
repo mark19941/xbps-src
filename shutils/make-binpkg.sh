@@ -102,6 +102,7 @@ make_binpkg() {
 		short_desc="${short_desc} (debug files)"
 		DESTDIR="${XBPS_DESTDIR}/${pkgname}-${version}"
 		make_binpkg_real
+		setup_tmpl ${sourcepkg}
 	fi
 
 	rm -f ${SRCPKG_GITREVS_FILE}
