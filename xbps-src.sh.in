@@ -25,6 +25,8 @@
 #-
 umask 022
 
+trap "echo 'Interrupted! exiting...'; exit" INT TERM
+
 readonly XBPS_SRC_VERSION="@@XBPS_SRC_VERSION@@"
 
 if [ -n "$IN_CHROOT" ]; then
