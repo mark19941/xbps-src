@@ -110,7 +110,7 @@ setup_subpkg_tmpl() {
 prepare_tmpl() {
 	local REQ_VARS= i= found=
 
-	REQ_VARS="pkgname version short_desc long_desc revision"
+	REQ_VARS="pkgname version short_desc revision homepage license"
 
 	if [ -n "$build_style" -a "$build_style" = "meta-template" ]; then
 		nofetch=yes
