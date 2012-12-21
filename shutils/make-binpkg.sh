@@ -195,10 +195,6 @@ make_binpkg_real() {
 		done
 	fi
 
-	if [ -e "$SRCPKG_GITREVS_FILE" ]; then
-		local _sourcerevs="--source-revisions '$(cat $SRCPKG_GITREVS_FILE)'"
-	fi
-
 	msg_normal "$pkgver: building $binpkg ...\n"
 
 	#
@@ -217,8 +213,9 @@ make_binpkg_real() {
 		--maintainer "${maintainer}" \
 		--long-desc "${long_desc}" --desc "${short_desc}" \
 		--built-with "xbps-src-${XBPS_SRC_VERSION}" \
-		--pkgver "${pkgver}" ${_sourcerevs} \
-		--quiet ${_preserve} ${DESTDIR}
+		--pkgver "${pkgver}" --quiet \
+		--source-revisions "$(cat ${SRCPKG_GITREVS_FILE:-/dev/null} 2>/dev/null)" \
+		${_preserve} ${_sourcerevs} ${DESTDIR}
 	rval=$?
 	if [ $rval -eq 0 ]; then
 		register_pkg "$pkgdir" "$binpkg"
