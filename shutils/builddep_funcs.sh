@@ -106,8 +106,11 @@ install_pkg_deps() {
 	for i in ${build_depends}; do
 		pkgn=$($XBPS_UHELPER_CMD getpkgdepname "${i}")
 		if [ -z "$pkgn" ]; then
-			_exact=1
 			pkgn=$($XBPS_UHELPER_CMD getpkgname "${i}")
+			if [ -z "$pkgn" ]; then
+				msg_error "$pkgver: invalid build dependency: $i\n"
+			fi
+			_exact=1
 		fi
 		check_pkgdep_matched "${i}"
 		local rval=$?
