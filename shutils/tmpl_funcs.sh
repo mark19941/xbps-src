@@ -198,8 +198,8 @@ set_tmpl_common_vars() {
 		_deps="${depends}"
 	fi
 	for j in ${_deps}; do
-		_pkgdepname="$($XBPS_PKGDB_CMD getpkgdepname ${j} 2>/dev/null)"
-		_pkgdepver="$($XBPS_PKGDB_CMD getpkgversion ${j} 2>/dev/null)"
+		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${j} 2>/dev/null)"
+		_pkgdepver="$($XBPS_UHELPER_CMD getpkgversion ${j} 2>/dev/null)"
 		if [ -z "${_pkgdepname}" -a -z "${_pkgdepver}" ]; then
 			_pkgdep="$j>=0"
 		else
@@ -208,8 +208,8 @@ set_tmpl_common_vars() {
 		run_depends="${run_depends} ${_pkgdep}"
 	done
 	for j in ${makedepends} ${fulldepends}; do
-		_pkgdepname="$($XBPS_PKGDB_CMD getpkgdepname ${j} 2>/dev/null)"
-		_pkgdepver="$($XBPS_PKGDB_CMD getpkgversion ${j} 2>/dev/null)"
+		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${j} 2>/dev/null)"
+		_pkgdepver="$($XBPS_UHELPER_CMD getpkgversion ${j} 2>/dev/null)"
 		if [ -z "${_pkgdepname}" -a -z "${_pkgdepver}" ]; then
 			_pkgdep="$j>=0"
 		else

@@ -30,8 +30,8 @@ check_installed_packages() {
 	local f= lpkgn= lpkgver= rv= srcpkgver= srcver=
 
 	for f in $(${XBPS_QUERY_CMD} -l|awk '{print $1}'); do
-		lpkgn=$(${XBPS_PKGDB_CMD} getpkgname ${f})
-		lpkgver=$(${XBPS_PKGDB_CMD} getpkgversion ${f})
+		lpkgn=$(${XBPS_UHELPER_CMD} getpkgname ${f})
+		lpkgver=$(${XBPS_UHELPER_CMD} getpkgversion ${f})
 
 		if [ -r ${XBPS_SRCPKGDIR}/${lpkgn}/${lpkgn}.template ]; then
 			. ${XBPS_SRCPKGDIR}/${lpkgn}/template

@@ -76,11 +76,11 @@ set_defvars() {
 		XBPS_INSTALL=/usr/local/sbin/xbps-install
 		XBPS_QUERY=/usr/local/sbin/xbps-query
 		XBPS_RINDEX=/usr/local/sbin/xbps-rindex
-		XBPS_PKGDB=/usr/local/sbin/xbps-uhelper
+		XBPS_UHELPER=/usr/local/sbin/xbps-uhelper
 		XBPS_CREATE=/usr/local/sbin/xbps-create
 		XBPS_RECONFIGURE=/usr/local/sbin/xbps-reconfigure
 		XBPS_REMOVE=/usr/local/sbin/xbps-remove
-		XBPS_PKGDB_CMD="$XBPS_PKGDB"
+		XBPS_UHELPER_CMD="$XBPS_UHELPER"
 		XBPS_INSTALL_CMD="$XBPS_INSTALL -C /usr/local/etc/xbps/xbps.conf"
 		XBPS_QUERY_CMD="$XBPS_QUERY -C /usr/local/etc/xbps/xbps.conf"
 		XBPS_RINDEX_CMD="$XBPS_RINDEX"
@@ -90,11 +90,11 @@ set_defvars() {
 		: ${XBPS_INSTALL:=xbps-install}
 		: ${XBPS_QUERY:=xbps-query}
 		: ${XBPS_RINDEX:=xbps-rindex}
-		: ${XBPS_PKGDB:=xbps-uhelper}
+		: ${XBPS_UHELPER:=xbps-uhelper}
 		: ${XBPS_CREATE:=xbps-create}
 		: ${XBPS_RECONFIGURE:=xbps-reconfigure}
 		: ${XBPS_REMOVE:=xbps-remove}
-		XBPS_PKGDB_CMD="$XBPS_PKGDB -r $XBPS_MASTERDIR"
+		XBPS_UHELPER_CMD="$XBPS_UHELPER -r $XBPS_MASTERDIR"
 		XBPS_INSTALL_CMD="$XBPS_INSTALL -C /empty.conf -R $XBPS_PACKAGESDIR -r $XBPS_MASTERDIR"
 		XBPS_QUERY_CMD="$XBPS_QUERY -C /empty.conf -D $XBPS_PACKAGESDIR -r $XBPS_MASTERDIR"
 		XBPS_RINDEX_CMD="$XBPS_RINDEX"
@@ -102,13 +102,13 @@ set_defvars() {
 		XBPS_REMOVE_CMD="$XBPS_REMOVE -r $XBPS_MASTERDIR"
 	fi
 
-	: ${XBPS_DIGEST_CMD:="$XBPS_PKGDB digest"}
-	: ${XBPS_CMPVER_CMD:="$XBPS_PKGDB cmpver"}
-	: ${XBPS_FETCH_CMD:="$XBPS_PKGDB fetch"}
+	: ${XBPS_DIGEST_CMD:="$XBPS_UHELPER digest"}
+	: ${XBPS_CMPVER_CMD:="$XBPS_UHELPER cmpver"}
+	: ${XBPS_FETCH_CMD:="$XBPS_UHELPER fetch"}
 	: ${XBPS_CREATE_CMD:=$XBPS_CREATE}
 
-	XBPS_VERSION=$($XBPS_PKGDB -V|awk '{print $2}')
-	XBPS_APIVER=$($XBPS_PKGDB -V|awk '{print $4}')
+	XBPS_VERSION=$($XBPS_UHELPER -V|awk '{print $2}')
+	XBPS_APIVER=$($XBPS_UHELPER -V|awk '{print $4}')
 
 	[ ! -d "$XBPS_DISTDIR" ] && return
 
@@ -117,23 +117,23 @@ set_defvars() {
 		echo "ERROR: missing defs from global-defs.sh!"
 		exit 1
 	fi
-	$XBPS_PKGDB_CMD cmpver $(echo "$XBPS_SRC_VERSION"|awk '{print $1}') "$XBPS_SRC_REQ"
+	$XBPS_UHELPER_CMD cmpver $(echo "$XBPS_SRC_VERSION"|awk '{print $1}') "$XBPS_SRC_REQ"
 	if [ $? -eq 255 ]; then
 		echo "ERROR: this xbps-src version is outdated! (>=$XBPS_SRC_REQ is required)"
 		exit 1
 	fi
-	$XBPS_PKGDB_CMD cmpver "$XBPS_VERSION" "$XBPS_UTILS_REQ"
+	$XBPS_UHELPER_CMD cmpver "$XBPS_VERSION" "$XBPS_UTILS_REQ"
 	if [ $? -eq 255 ]; then
 		echo "ERROR: requires xbps-$XBPS_UTILS_REQ API: $XBPS_UTILS_API_REQ"
 		exit 1
 	fi
-	$XBPS_PKGDB_CMD cmpver "$XBPS_APIVER" "$XBPS_UTILS_API_REQ"
+	$XBPS_UHELPER_CMD cmpver "$XBPS_APIVER" "$XBPS_UTILS_API_REQ"
 	if [ $? -eq 255 ]; then
 		echo "ERROR: requires xbps-$XBPS_UTILS_REQ API: $XBPS_UTILS_API_REQ"
 		exit 1
 	fi
 
-	export XBPS_VERSION XBPS_APIVER XBPS_PKGDB_CMD XBPS_INSTALL_CMD
+	export XBPS_VERSION XBPS_APIVER XBPS_UHELPER_CMD XBPS_INSTALL_CMD
 	export XBPS_REMOVE_CMD XBPS_RECONFIGURE_CMD XBPS_QUERY_CMD XBPS_RINDEX_CMD
 	export XBPS_DIGEST_CMD XBPS_CMPVER_CMD XBPS_FETCH_CMD
 }

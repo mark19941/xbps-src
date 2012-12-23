@@ -29,14 +29,14 @@
 add_rundep() {
 	local dep="$1" i= rpkgdep= _depname= _rdeps= found=
 
-	_depname="$($XBPS_PKGDB_CMD getpkgdepname ${dep})"
+	_depname="$($XBPS_UHELPER_CMD getpkgdepname ${dep})"
 
 	for i in ${run_depends}; do
-		rpkgdep="$($XBPS_PKGDB_CMD getpkgdepname $i)"
+		rpkgdep="$($XBPS_UHELPER_CMD getpkgdepname $i)"
 		if [ "${rpkgdep}" != "${_depname}" ]; then
 			continue
 		fi
-		$XBPS_PKGDB_CMD cmpver "$i" "$dep"
+		$XBPS_UHELPER_CMD cmpver "$i" "$dep"
 		rval=$?
 		if [ $rval -eq 255 ]; then
 			_rdeps="$(echo ${run_depends}|sed -e "s|${i}|${dep}|g")"
@@ -126,7 +126,7 @@ verify_rundeps() {
 			unset j found
 			# Check if shlib is provided by multiple pkgs.
 			for j in ${rdep}; do
-				_pkgname=$($XBPS_PKGDB_CMD getpkgname "$j")
+				_pkgname=$($XBPS_UHELPER_CMD getpkgname "$j")
 				# if there's a SONAME matching pkgname, use it.
 				[ "${pkgname}" != "${_pkgname}" ] && continue
 				found=1
@@ -143,8 +143,8 @@ verify_rundeps() {
 		else
 			_rdep=$rdep
 		fi
-		_pkgname=$($XBPS_PKGDB_CMD getpkgname "${_rdep}" 2>/dev/null)
-		_rdepver=$($XBPS_PKGDB_CMD getpkgversion "${_rdep}" 2>/dev/null)
+		_pkgname=$($XBPS_UHELPER_CMD getpkgname "${_rdep}" 2>/dev/null)
+		_rdepver=$($XBPS_UHELPER_CMD getpkgversion "${_rdep}" 2>/dev/null)
 		if [ -z "${_pkgname}" -o -z "${_rdepver}" ]; then
 			msg_red_nochroot "   SONAME: $f <-> UNKNOWN PKG PLEASE FIX!\n"
 			broken=1

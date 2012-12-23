@@ -104,21 +104,21 @@ install_pkg_deps() {
 	# Packages built in masterdir.
 	#
 	for i in ${build_depends}; do
-		pkgn=$($XBPS_PKGDB_CMD getpkgdepname "${i}")
+		pkgn=$($XBPS_UHELPER_CMD getpkgdepname "${i}")
 		if [ -z "$pkgn" ]; then
 			_exact=1
-			pkgn=$($XBPS_PKGDB_CMD getpkgname "${i}")
+			pkgn=$($XBPS_UHELPER_CMD getpkgname "${i}")
 		fi
 		check_pkgdep_matched "${i}"
 		local rval=$?
 		if [ $rval -eq 0 ]; then
-			iver=$($XBPS_PKGDB_CMD version "${pkgn}")
+			iver=$($XBPS_UHELPER_CMD version "${pkgn}")
 			if [ $? -eq 0 -a -n "$iver" ]; then
 				echo "   ${i}: found '$pkgn-$iver'."
 				continue
 			fi
 		elif [ $rval -eq 1 ]; then
-			iver=$($XBPS_PKGDB_CMD version "${pkgn}")
+			iver=$($XBPS_UHELPER_CMD version "${pkgn}")
 			if [ $? -eq 0 -a -n "$iver" ]; then
 				echo "   ${i}: installed ${iver} (unresolved) removing..."
 				$FAKEROOT_CMD $XBPS_REMOVE_CMD -iyf $pkgn >/dev/null 2>&1
@@ -132,7 +132,7 @@ install_pkg_deps() {
 			fi
 			if [ -n "${_props}" ]; then
 				set -- ${_props}
-				$XBPS_PKGDB_CMD pkgmatch ${pkgn}-${1} "${i}"
+				$XBPS_UHELPER_CMD pkgmatch ${pkgn}-${1} "${i}"
 				if [ $? -eq 1 ]; then
 					echo "   ${i}: found $1 in $2."
 					if [ -z "$binpkg_deps" ]; then
@@ -158,7 +158,7 @@ install_pkg_deps() {
 	done
 	for i in ${missing_deps}; do
 		# packages not found in repos, install from source.
-		curpkgdepname=$($XBPS_PKGDB_CMD getpkgdepname "$i")
+		curpkgdepname=$($XBPS_UHELPER_CMD getpkgdepname "$i")
 		setup_tmpl ${curpkgdepname}
 		install_pkg
 		setup_tmpl ${_ORIGINPKG}
@@ -184,15 +184,15 @@ check_pkgdep_matched() {
 
 	[ -z "$pkg" ] && return 255
 
-	pkgn="$($XBPS_PKGDB_CMD getpkgdepname ${pkg})"
+	pkgn="$($XBPS_UHELPER_CMD getpkgdepname ${pkg})"
 	if [ -z "$pkgn" ]; then
-		pkgn="$($XBPS_PKGDB_CMD getpkgname ${pkg})"
+		pkgn="$($XBPS_UHELPER_CMD getpkgname ${pkg})"
 	fi
 	[ -z "$pkgn" ] && return 255
 
-	iver="$($XBPS_PKGDB_CMD version $pkgn)"
+	iver="$($XBPS_UHELPER_CMD version $pkgn)"
 	if [ $? -eq 0 -a -n "$iver" ]; then
-		${XBPS_PKGDB_CMD} pkgmatch "${pkgn}-${iver}" "${pkg}"
+		${XBPS_UHELPER_CMD} pkgmatch "${pkgn}-${iver}" "${pkg}"
 		[ $? -eq 1 ] && return 0
 	else
 		return 2
@@ -210,10 +210,10 @@ check_installed_pkg() {
 
 	[ -z "$pkg" ] && return 2
 
-	pkgn="$($XBPS_PKGDB_CMD getpkgname ${pkg})"
+	pkgn="$($XBPS_UHELPER_CMD getpkgname ${pkg})"
 	[ -z "$pkgn" ] && return 2
 
-	iver="$($XBPS_PKGDB_CMD version $pkgn)"
+	iver="$($XBPS_UHELPER_CMD version $pkgn)"
 	if [ $? -eq 0 -a -n "$iver" ]; then
 		${XBPS_CMPVER_CMD} "${pkgn}-${iver}" "${pkg}"
 		[ $? -eq 0 -o $? -eq 1 ] && return 0
