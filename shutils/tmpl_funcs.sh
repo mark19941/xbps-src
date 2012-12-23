@@ -176,7 +176,6 @@ remove_tmpl_wrksrc() {
 
 set_tmpl_common_vars() {
 	local cflags= cxxflags= cppflags= ldflags= j= _pkgdep= _pkgdepname= _deps=
-	local _pkgdepver=
 
 	[ -z "$pkgname" ] && return 1
 
@@ -199,8 +198,11 @@ set_tmpl_common_vars() {
 	fi
 	for j in ${_deps}; do
 		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${j} 2>/dev/null)"
-		_pkgdepver="$($XBPS_UHELPER_CMD getpkgversion ${j} 2>/dev/null)"
-		if [ -z "${_pkgdepname}" -a -z "${_pkgdepver}" ]; then
+		if [ -z "${_pkgdepname}" ]; then
+			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${j} 2>/dev/null)"
+		fi
+
+		if [ -z "${_pkgdepname}" ]; then
 			_pkgdep="$j>=0"
 		else
 			_pkgdep="$j"
@@ -209,8 +211,10 @@ set_tmpl_common_vars() {
 	done
 	for j in ${makedepends} ${fulldepends}; do
 		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${j} 2>/dev/null)"
-		_pkgdepver="$($XBPS_UHELPER_CMD getpkgversion ${j} 2>/dev/null)"
-		if [ -z "${_pkgdepname}" -a -z "${_pkgdepver}" ]; then
+		if [ -z "${_pkgdepname}" ]; then
+			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${j} 2>/dev/null)"
+		fi
+		if [ -z "${_pkgdepname}" ]; then
 			_pkgdep="$j>=0"
 		else
 			_pkgdep="$j"

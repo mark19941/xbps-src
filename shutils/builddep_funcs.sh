@@ -163,6 +163,13 @@ install_pkg_deps() {
 		# packages not found in repos, install from source.
 		curpkgdepname=$($XBPS_UHELPER_CMD getpkgdepname "$i")
 		setup_tmpl ${curpkgdepname}
+		# Check if version in srcpkg satisfied required dependency,
+		# and bail out if doesn't.
+		${XBPS_UHELPER_CMD} pkgmatch "$pkgver" "$i"
+		if [ $? -eq 0 ]; then
+			setup_tmpl ${_ORIGINPKG}
+			msg_error_nochroot "$pkgver: required dependency '$i' cannot be resolved!\n"
+		fi
 		install_pkg
 		setup_tmpl ${_ORIGINPKG}
 		cd ${XBPS_MASTERDIR}
