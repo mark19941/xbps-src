@@ -110,6 +110,8 @@ set_defvars() {
 	XBPS_VERSION=$($XBPS_PKGDB -V|awk '{print $2}')
 	XBPS_APIVER=$($XBPS_PKGDB -V|awk '{print $4}')
 
+	[ ! -d "$XBPS_DISTDIR" ] && return
+
 	if [ -z "$XBPS_SRC_REQ" -o -z "$XBPS_UTILS_REQ" -o \
 	     -z "$XBPS_UTILS_API_REQ" -o -z "$BASE_CHROOT_REQ" ]; then
 		echo "ERROR: missing defs from global-defs.sh!"
