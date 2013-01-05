@@ -371,12 +371,15 @@ extract|fetch)
 		_pkgname=$(basename_cwd)
 	fi
 	setup_tmpl ${_pkgname}
-	if [ "$target" = "info" ]; then
-		info_tmpl
-		exit $?
+	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
+		chroot_handler $target ${_ORIGINPKG} || exit $?
+	else
+		if [ "$target" = "fetch" ]; then
+			fetch_distfiles $update_checksum
+		elif
+			extract_distfiles
+		fi
 	fi
-	fetch_distfiles $update_checksum
-	[ "$target" = "extract" ] && extract_distfiles
 	;;
 fetch-srcpkgs)
 	if ! command -v git 2>&1 >/dev/null; then
