@@ -376,7 +376,7 @@ extract|fetch)
 	else
 		if [ "$target" = "fetch" ]; then
 			fetch_distfiles $update_checksum
-		elif
+		else
 			extract_distfiles
 		fi
 	fi
