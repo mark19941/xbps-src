@@ -37,8 +37,7 @@ reset_tmpl_vars() {
 			sgml_catalogs xml_catalogs xml_entries sgml_entries \
 			disable_parallel_build font_dirs preserve \
 			only_for_archs conf_files keep_libtool_archives \
-			noarch subpackages sourcepkg \
-			abi_depends api_depends triggers make_dirs \
+			noarch subpackages sourcepkg triggers make_dirs \
 			replaces system_accounts system_groups provides \
 			build_wrksrc create_wrksrc broken_as_needed pkgver \
 			ignore_vdeps_dir noverifyrdeps conflicts dkms_modules \
@@ -53,9 +52,8 @@ reset_tmpl_vars() {
 			CC CXX LDFLAGS LD_LIBRARY_PATH"
 
 	local TMPL_FUNCS="pre_configure pre_build pre_install do_build \
-			  do_install do_configure post_configure post_build \
-			  post_install do_fetch pre_remove post_remove \
-			  post_extract"
+			  do_install do_configure do_fetch post_configure
+			  post_build post_install post_extract"
 
 	eval unset -v "$TMPL_VARS"
 	eval unset -f "$TMPL_FUNCS"
