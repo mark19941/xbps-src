@@ -28,7 +28,7 @@ reset_tmpl_vars() {
 			CC CXX LDFLAGS LD_LIBRARY_PATH"
 
 	local TMPL_FUNCS="pre_configure pre_build pre_install do_build \
-			  do_install do_configure do_fetch post_configure
+			  do_install do_configure do_fetch post_configure \
 			  post_build post_install post_extract"
 
 	eval unset -v "$TMPL_VARS"
