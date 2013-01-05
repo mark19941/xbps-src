@@ -372,7 +372,7 @@ extract|fetch)
 	fi
 	setup_tmpl ${_pkgname}
 	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
-		chroot_handler $target ${_ORIGINPKG} || exit $?
+		chroot_handler $target ${_pkgname} || exit $?
 	else
 		if [ "$target" = "fetch" ]; then
 			fetch_distfiles $update_checksum
