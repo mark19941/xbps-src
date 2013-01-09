@@ -6,7 +6,7 @@ SHAREDIR ?= $(PREFIX)/share/xbps-src
 LIBEXECDIR ?= $(PREFIX)/libexec
 ETCDIR  ?= $(PREFIX)/etc/xbps
 
-VERSION	= 33
+VERSION	= 34
 GITVER	:= $(shell git rev-parse HEAD)
 CONF_FILE = xbps-src.conf
 

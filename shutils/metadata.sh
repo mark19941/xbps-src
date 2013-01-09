@@ -33,7 +33,7 @@ write_metadata() {
 #
 write_metadata_real() {
 	local f= i= j= found= arch= dirat= lnkat= newlnk=
-	local lver= TMPFLIST= TMPFPLIST=
+	local lver= TMPFLIST= TMPFPLIST= found= _depname=
 	local fpattern="s|${DESTDIR}||g;s|^\./$||g;/^$/d"
 
 	if [ ! -d "${DESTDIR}" ]; then
@@ -146,23 +146,47 @@ write_metadata_real() {
 	sed -i -e "s|${DESTDIR}||g;s|/flist||g;/^$/d" ${DESTDIR}/flist
 
 	#
-	# Create package's fdeps to know its run-time dependencies.
-	#
-	verify_rundeps ${DESTDIR}
-
-	#
 	# If package sets $dkms_modules, add dkms rundep.
 	#
-	if [ -n "$dkms_modules" ]; then
+	unset found
+	for f in ${run_depends}; do
+		_depname="$($XBPS_UHELPER_CMD getpkgdepname $f 2>/dev/null)"
+		if [ -z "${_depname}" ]; then
+			_depname="$($XBPS_UHELPER_CMD getpkgname $f 2>/dev/null)"
+		fi
+		[ -z "${_depname}" ] && continue
+		if [ "${_depname}" = "dkms" ]; then
+			found=1
+			break
+		fi
+	done
+	if [ -z "$found" -a -n "$dkms_modules" ]; then
 		run_depends="${run_depends} dkms>=0"
 	fi
 
 	#
 	# If package sets $system_accounts or $system_groups, add shadow rundep.
 	#
-	if [ -n "$system_accounts" -o -n "$system_groups" ]; then
+	unset found
+	for f in ${run_depends}; do
+		_depname="$($XBPS_UHELPER_CMD getpkgdepname $f 2>/dev/null)"
+		if [ -z "${_depname}" ]; then
+			_depname="$($XBPS_UHELPER_CMD getpkgname $f 2>/dev/null)"
+		fi
+		[ -z "${_depname}" ] && continue
+		if [ "${_depname}" = "shadow" ]; then
+			found=1
+			break
+		fi
+	done
+	if [ -z "$found" -a -n "$system_accounts" -o -n "$system_groups" ]; then
 		run_depends="${run_depends} shadow>=0"
 	fi
+
+	#
+	# Create package's fdeps to know its run-time dependencies.
+	#
+	verify_rundeps ${DESTDIR}
 
 	[ -n "$run_depends" ] && echo "${run_depends}" > ${DESTDIR}/rdeps
 

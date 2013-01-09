@@ -6,10 +6,16 @@
 add_rundep() {
 	local dep="$1" i= rpkgdep= _depname= _rdeps= found=
 
-	_depname="$($XBPS_UHELPER_CMD getpkgdepname ${dep})"
+	_depname="$($XBPS_UHELPER_CMD getpkgdepname ${dep} 2>/dev/null)"
+	if [ -z "${_depname}" ]; then
+		_depname="$($XBPS_UHELPER_CMD getpkgname ${dep} 2>/dev/null)"
+	fi
 
 	for i in ${run_depends}; do
-		rpkgdep="$($XBPS_UHELPER_CMD getpkgdepname $i)"
+		rpkgdep="$($XBPS_UHELPER_CMD getpkgdepname $i 2>/dev/null)"
+		if [ -z "$rpkgdep" ]; then
+			rpkgdep="$($XBPS_UHELPER_CMD getpkgname $i 2>/dev/null)"
+		fi
 		if [ "${rpkgdep}" != "${_depname}" ]; then
 			continue
 		fi
