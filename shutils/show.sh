@@ -35,7 +35,7 @@ show_tmpl() {
 	for i in ${conflicts}; do
 		[ -n "$i" ] && echo "conflicts:	$i"
 	done
-	echo "long_desc: $long_desc"
+	[ -n "$long_desc" ] && echo "long_desc: $long_desc"
 }
 
 show_tmpl_deps() {
