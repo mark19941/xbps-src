@@ -58,7 +58,7 @@ create_debug_pkg() {
 	mkdir -p "${XBPS_DESTDIR}/${_pkgname}-${version}/usr/lib"
 	mv ${DESTDIR}/usr/lib/debug  \
 		${XBPS_DESTDIR}/${_pkgname}-${version}/usr/lib
-	rmdir "${DESTDIR}/usr/lib"
+	rmdir "${DESTDIR}/usr/lib" 2>/dev/null
 }
 
 strip_files_real()
