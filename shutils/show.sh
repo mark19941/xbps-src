@@ -32,6 +32,9 @@ show_tmpl() {
 	for i in ${replaces}; do
 		[ -n "$i" ] && echo "replaces:	$i"
 	done
+	for i in ${provides}; do
+		[ -n "$i" ] && echo "provides:	$i"
+	done
 	for i in ${conflicts}; do
 		[ -n "$i" ] && echo "conflicts:	$i"
 	done
