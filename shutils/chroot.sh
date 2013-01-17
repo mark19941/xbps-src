@@ -150,19 +150,7 @@ _EOF
 }
 
 create_binsh_symlink() {
-	if [ ! -h $XBPS_MASTERDIR/bin/sh ]; then
-		cd $XBPS_MASTERDIR/bin
-		if [ -x bash ]; then
-			ln -sf bash sh
-		elif [ -x dash ]; then
-			ln -sf dash sh
-		elif [ -x busybox ]; then
-			ln -sf busybox sh
-		else
-			msg_error "cannot find a suitable shell for chroot!\n"
-		fi
-
-	fi
+	ln -sfr ${XBPS_MASTERDIR}/bin/bash ${XBPS_MASTERDIR}/bin/sh
 }
 
 prepare_binpkg_repos() {
