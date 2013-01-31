@@ -242,6 +242,9 @@ fi
 . ${XBPS_SHAREDIR}/shutils/init_funcs.sh
 set_defvars
 
+# Check if stdout is a tty; if false disable colors.
+test -t 1 || export NOCOLORS=1
+
 if [ "$(id -u)" -eq 0 ]; then
 	# disable fakeroot if uid==0
 	unset FAKEROOT_CMD
