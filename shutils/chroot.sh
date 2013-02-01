@@ -38,6 +38,11 @@ _EOF
 	if [ -n "$XBPS_CCACHE" ]; then
 		echo "XBPS_CCACHE=$XBPS_CCACHE" >> $XBPSSRC_CF
 	fi
+	if [ -n "$XBPS_DISTCC" ]; then
+		echo "XBPS_DISTCC=$XBPS_DISTCC" >> $XBPSSRC_CF
+		echo "XBPS_DISTCC_HOSTS=\"${XBPS_DISTCC_HOSTS}\"" >> $XBPSSRC_CF
+	fi
+
 	echo "# End of configuration file." >> $XBPSSRC_CF
 
 	if [ -d $XBPS_MASTERDIR/tmp ]; then
@@ -70,6 +75,7 @@ exec env -i PATH="\$PATH" XBPS_ETCDIR="\$XBPS_ETCDIR" \
 	XBPS_QUERY_CMD="\$XBPS_QUERY_CMD" \
 	XBPS_UHELPER_CMD="\$XBPS_UHELPER_CMD" XBPS_FETCH_CMD="\$XBPS_FETCH_CMD" \
 	XBPS_CMPVER_CMD="\$XBPS_CMPVER_CMD" XBPS_DIGEST_CMD="\$XBPS_DIGEST_CMD" \
+	DISTCC_HOSTS="\$XBPS_DISTCC_HOSTS" DISTCC_DIR="/distcc" CCACHE_DIR="/ccache" \
 	IN_CHROOT=1 LANG=C PS1="[\u@$XBPS_MASTERDIR \W]$ " /bin/bash +h
 
 _EOF

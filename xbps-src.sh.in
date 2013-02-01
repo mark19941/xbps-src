@@ -275,6 +275,19 @@ else
 		fi
 		export PATH="$CCACHEPATH:$PATH"
 	fi
+	if [ -n "$XBPS_DISTCC" ]; then
+		DISTCCPATH="/usr/lib/distcc/bin"
+		if [ -n "$XBPS_HOSTDIR" -a -d "$XBPS_HOSTDIR/distcc" ]; then
+			export DISTCC_DIR="$XBPS_HOSTDIR/distcc"
+		else
+			if [ ! -d "$XBPS_MASTERDIR/distcc" ]; then
+				mkdir -p $XBPS_MASTERDIR/distcc
+			fi
+			export DISTCC_DIR="$XBPS_MASTERDIR/distcc"
+		fi
+		export DISTCC_HOSTS="$XBPS_DISTCC_HOSTS"
+		export PATH="$DISTCCPATH:$PATH"
+	fi
 fi
 
 if [ ! -f $XBPS_MASTERDIR/.xbps_perms_done ]; then
