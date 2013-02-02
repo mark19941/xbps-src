@@ -196,8 +196,8 @@ set_tmpl_common_vars() {
 		build_depends="${build_depends} ${_pkgdep}"
 	done
 
-	# For nonfree pkgs there's no point in building -dbg pkgs, disable them.
-	if [ -n "$nonfree" ]; then
+	# For nonfree/bootstrap pkgs there's no point in building -dbg pkgs, disable them.
+	if [ -n "$nonfree" -o -n "$bootstrap" ]; then
 		disable_debug=yes
 	fi
 
