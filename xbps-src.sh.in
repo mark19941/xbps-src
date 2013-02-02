@@ -20,7 +20,7 @@ fi
 XBPS_CONFIG_FILE=${XBPS_ETCDIR}/xbps-src.conf
 PROGNAME=$(basename $0)
 FAKEROOT_CMD="fakeroot --"
-CHROOT_CMD="linux-user-chroot --unshare-ipc --unshare-pid"
+CHROOT_CMD="${XBPS_LIBEXECDIR}/xbps-src-chroot-helper --unshare-ipc --unshare-pid"
 XBPS_MACHINE=$(uname -m)
 
 # Required utilities in host system for the bootstrap target.
@@ -28,7 +28,7 @@ REQHOST_UTILS_BOOTSTRAP="awk bash bison sed gcc msgfmt patch makeinfo \
 	perl fakeroot tar xz gzip bzip2"
 # Required utilities in host system for chroot ops.
 REQHOST_UTILS="xbps-install xbps-query xbps-rindex xbps-uhelper \
-	xbps-reconfigure xbps-remove xbps-create linux-user-chroot"
+	xbps-reconfigure xbps-remove xbps-create"
 
 check_reqhost_utils() {
 	local broken

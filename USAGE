@@ -67,7 +67,7 @@ installed into the host system:
 
 To build package with normal users the following packages are also required:
 
- - fakeroot and linux-user-chroot (http://git.gnome.org/browse/linux-user-chroot/)
+ - fakeroot
 
 Starting up
 -----------

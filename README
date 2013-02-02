@@ -37,7 +37,6 @@ DEPENDENCIES
 ============
 
 	* XBPS utilities
-	* linux-user-chroot
 	* fakeroot
 
 The following packages are required to build a full bootstrap from scratch:

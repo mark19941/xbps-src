@@ -1,16 +1,24 @@
 # xbps-src toplevel makefile.
 #
+# MUTABLE VARIABLES (CAN BE OVERRIDEN)
 PREFIX  ?= /usr/local
 SBINDIR ?= $(PREFIX)/sbin
 SHAREDIR ?= $(PREFIX)/share/xbps-src
 LIBEXECDIR ?= $(PREFIX)/libexec
 ETCDIR  ?= $(PREFIX)/etc/xbps
 
+PRIVILEGED_GROUP ?= wheel
+
+# INMUTABLE VARIABLES
 VERSION	= 35
 GITVER	:= $(shell git rev-parse HEAD)
 CONF_FILE = xbps-src.conf
 
-.PHONY: all
+CHROOT_C = linux-user-chroot.c
+CFLAGS += -O2 -Wall -Werror
+
+.PHONY: all clean install uninstall
+
 all:
 	sed -e	"s|@@XBPS_INSTALL_PREFIX@@|$(PREFIX)|g"		\
 	    -e	"s|@@XBPS_INSTALL_ETCDIR@@|$(ETCDIR)|g"		\
@@ -19,17 +27,20 @@ all:
 	    -e	"s|@@XBPS_INSTALL_LIBEXECDIR@@|$(LIBEXECDIR)|g"	\
 	    -e  "s|@@XBPS_SRC_VERSION@@|$(VERSION) ($(GITVER))|g"	\
 		xbps-src.sh.in > xbps-src
+	$(CC) $(CFLAGS) libexec/$(CHROOT_C) -o libexec/xbps-src-chroot-helper
 
 .PHONY: clean
 clean:
+	rm -f libexec/xbps-src-chroot-helper
 	rm -f xbps-src
 
 .PHONY: install
-install: all
+install-scripts: all
 	install -d $(DESTDIR)$(SBINDIR)
 	install -m 755 xbps-src $(DESTDIR)$(SBINDIR)
 	install -d $(DESTDIR)$(LIBEXECDIR)
 	install -m 755 libexec/xbps-src-doinst-helper $(DESTDIR)$(LIBEXECDIR)
+	install -m 750 libexec/xbps-src-chroot-helper $(DESTDIR)$(LIBEXECDIR)
 	install -d $(DESTDIR)$(SHAREDIR)/shutils
 	install -m 644 shutils/*.sh $(DESTDIR)$(SHAREDIR)/shutils
 	install -d $(DESTDIR)$(SHAREDIR)/helpers
@@ -42,6 +53,14 @@ install: all
 	if [ ! -f $(DESTDIR)$(ETCDIR)/$(CONF_FILE) ]; then      \
 		install -m644 etc/$(CONF_FILE) $(DESTDIR)$(ETCDIR); \
 	fi
+
+install: install-scripts
+	@echo
+	@echo "Applying special perms to $(DESTDIR)$(LIBEXECDIR)/xbps-src-chroot-helper"
+	@echo "This is a setgid binary (4750) with group '$(PRIVILEGED_GROUP)'"
+	@echo
+	chgrp $(PRIVILEGED_GROUP) $(DESTDIR)/$(LIBEXECDIR)/xbps-src-chroot-helper
+	chmod 4750 $(DESTDIR)$(LIBEXECDIR)/xbps-src-chroot-helper
 
 .PHONY: uninstall
 uninstall:

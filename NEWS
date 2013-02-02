@@ -1,3 +1,7 @@
+This file is not being updated anymore, see git log.
+
+--------------------------------------------------------------------
+
 v30:
  * Use "common/global-defs.sh" from the "xbps-packages" repo to know
    what package versions are required to build packages.
