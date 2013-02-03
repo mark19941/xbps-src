@@ -32,13 +32,13 @@ install_pkg() {
 
 	if [ ! -f "$XBPS_CONFIGURE_DONE" ]; then
 		configure_src_phase || return $?
-		[ "$target" = "configure" ] && return 0
 	fi
+	[ "$target" = "configure" ] && return 0
 
 	if [ ! -f "$XBPS_BUILD_DONE" ]; then
 		build_src_phase || return $?
-		[ "$target" = "build" ] && return 0
 	fi
+	[ "$target" = "build" ] && return 0
 
 	# Install pkg into destdir.
 	if [ ! -f "$XBPS_INSTALL_DONE" ]; then
