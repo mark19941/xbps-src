@@ -80,7 +80,9 @@ install_pkg_deps() {
 
 	if [ "$pkgname" != "${_ORIGINPKG}" -a -z "${_subpkg}" -a -n "$CHROOT_READY" ]; then
 		remove_pkg_autodeps || return $?
-		[ -n "$XBPS_CROSS_TRIPLET" ] && remove_pkg_autodeps "" CROSS || return $?
+		if [ -n "$XBPS_CROSS_TRIPLET" ]; then
+			remove_pkg_autodeps "" CROSS || return $?
+		fi
 	fi
 	unset _subpkg
 

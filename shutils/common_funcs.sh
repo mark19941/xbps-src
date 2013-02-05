@@ -35,7 +35,9 @@ remove_pkgdestdir_sighandler() {
 	fi
 
 	remove_pkg_autodeps ${_kwrksrc}
-	[ -n "$XBPS_CROSS_TRIPLET" ] && remove_pkg_autodeps ${_kwrksrc} CROSS
+	if [ -n "$XBPS_CROSS_TRIPLET" ]; then
+		remove_pkg_autodeps "${_kwrksrc}" CROSS || return 1
+	fi
 }
 
 run_func() {
