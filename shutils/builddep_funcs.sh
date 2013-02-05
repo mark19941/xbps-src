@@ -241,7 +241,7 @@ install_pkg_deps() {
 		install_pkg_from_repos "${i}"
 	done
 	for i in ${binpkg_crossdeps}; do
-		msg_normal "$pkgver: install '$i' (for $XBPS_CROSS_TRIPLET)...\n"
+		msg_normal "$pkgver: installing '$i' (for $XBPS_TARGET_ARCH)...\n"
 		install_pkg_from_repos "${i}" CROSS
 	done
 	if [ "$pkgname" = "${_ORIGINPKG}" ]; then
