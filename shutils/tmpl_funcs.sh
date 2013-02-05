@@ -245,6 +245,10 @@ set_tmpl_common_vars() {
 		export OBJCOPY="${XBPS_CROSS_TRIPLET}-objcopy"
 		export NM="${XBPS_CROSS_TRIPLET}-nm"
 		export READELF="${XBPS_CROSS_TRIPLET}-readelf"
+	else
+		export STRIP="strip"
+		export OBJDUMP="objdump"
+		export OBJCOPY="objcopy"
 	fi
 
 	if [ -z "$IN_CHROOT" ]; then
