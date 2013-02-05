@@ -56,7 +56,7 @@ check_reqhost_utils() {
 
 usage() {
 	cat << _EOF
-$PROGNAME: [-Chk] [-c file] [-m dir] <target> [pkgname]
+$PROGNAME: [-a arch] [-Chk] [-c file] [-m dir] <target> [pkgname]
 
 Targets: (only one may be specified)
  binary-bootstrap
@@ -134,15 +134,22 @@ is omitted xbps-src assumes that CWD is in the target package. Example:
 Both ways are equivalent.
 
 Options:
+ -a <cross-architecture>
+     Cross build packages for this architecture. Supported values:
+	armhf - for ARM EABI5 Hard Float
  -C  Do not remove build directory after successful installation.
- -c  Path to global configuration file:
+ -c  <config>
+      Path to global configuration file:
      if not specified ${XBPS_ETCDIR}/xbps-src.conf is used.
- -D  Path to XBPS_DISTDIR, overriding the setting in xbps-src.conf.
- -H  Path to XBPS_HOSTDIR, overriding the setting in xbps-src.conf.
+ -D  <distdir>
+     Path to XBPS_DISTDIR, overriding the setting in xbps-src.conf.
+ -H  <hostdir>
+     Path to XBPS_HOSTDIR, overriding the setting in xbps-src.conf.
  -h  Usage output.
  -K  Do not remove automatic package dependencies.
  -L  Disable ASCII colors.
- -m  Master directory to install packages and build binary packages,
+ -m  <masterdir
+     Master directory to install packages and build binary packages,
      overwritting the value set in configuration file xbps-src.conf.
 _EOF
 }
@@ -194,8 +201,9 @@ check_config_vars() {
 #
 # main()
 #
-while getopts "Cc:D:hH:KLm:V" opt; do
+while getopts "a:Cc:D:hH:KLm:V" opt; do
 	case $opt in
+	a) export _XBPS_TARCH="$OPTARG";;
 	C) export KEEP_WRKSRC=1;;
 	c) XBPS_CONFIG_FILE="$OPTARG";;
 	D) _DISTDIR="$OPTARG";;
@@ -240,7 +248,13 @@ if [ -n "${_HOSTDIR}" ]; then
 	export XBPS_HOSTDIR="$(realpath ${_HOSTDIR})"
 fi
 . ${XBPS_SHAREDIR}/shutils/init_funcs.sh
+
+if [ -f $XBPS_MASTERDIR/.xbps_perms_done ]; then
+	CHROOT_READY=1
+fi
+
 set_defvars
+set_cross_defvars
 
 # Check if stdout is a tty; if false disable colors.
 test -t 1 || export NOCOLORS=1
@@ -299,10 +313,6 @@ if [ ! -f $XBPS_MASTERDIR/.xbps_perms_done ]; then
 			prepare_chroot || return $?
 		fi
 	fi
-fi
-
-if [ -f $XBPS_MASTERDIR/.xbps_perms_done ]; then
-	CHROOT_READY=1
 fi
 
 export NOCOLORS=$NOCOLORS

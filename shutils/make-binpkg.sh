@@ -96,7 +96,11 @@ register_pkg() {
 		sleep 1
 	done
 	touch -f ${_pkgdir}/.xbps-src-index-lock
-	$XBPS_RINDEX_CMD -a ${_pkgdir}/${_binpkg}
+	if [ -n "$XBPS_CROSS_TRIPLET" ]; then
+		env XBPS_TARGET_ARCH="$XBPS_TARGET_ARCH" $XBPS_RINDEX_CMD -a ${_pkgdir}/${_binpkg}
+	else
+		$XBPS_RINDEX_CMD -a ${_pkgdir}/${_binpkg}
+	fi
 	rval=$?
 	rm -f ${_pkgdir}/.xbps-src-index-lock
 

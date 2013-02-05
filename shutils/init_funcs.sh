@@ -5,6 +5,7 @@ set_defvars() {
 
 	XBPS_HELPERSDIR=$XBPS_SHAREDIR/helpers
 	XBPS_SHUTILSDIR=$XBPS_SHAREDIR/shutils
+	XBPS_CROSSPFDIR=$XBPS_SHAREDIR/cross-profiles
 	XBPS_META_PATH=$XBPS_MASTERDIR/var/db/xbps
 	XBPS_PKGMETADIR=$XBPS_META_PATH/metadata
 
@@ -110,7 +111,63 @@ set_defvars() {
 		exit 1
 	fi
 
-	export XBPS_VERSION XBPS_APIVER XBPS_UHELPER_CMD XBPS_INSTALL_CMD
-	export XBPS_REMOVE_CMD XBPS_RECONFIGURE_CMD XBPS_QUERY_CMD XBPS_RINDEX_CMD
+	export XBPS_VERSION XBPS_APIVER XBPS_UHELPER_CMD
+	export XBPS_INSTALL_CMD XBPS_REMOVE_CMD XBPS_RECONFIGURE_CMD
+	export XBPS_QUERY_CMD XBPS_RINDEX_CMD
 	export XBPS_DIGEST_CMD XBPS_CMPVER_CMD XBPS_FETCH_CMD
+}
+
+set_cross_defvars() {
+	local CROSSVARS= i= val=
+
+	[ -z "$IN_CHROOT" -o -z "${_XBPS_TARCH}" ] && return 0
+
+	if [ -z "$CHROOT_READY" ]; then
+		echo "ERROR: chroot mode not activated (install a bootstrap)."
+		exit 1
+	fi
+	if [ ! -r ${XBPS_CROSSPFDIR}/${_XBPS_TARCH}.sh ]; then
+		echo "ERROR: missing cross build profile for ${_XBPS_TARCH}, exiting."
+		exit 1
+	fi
+	. ${XBPS_CROSSPFDIR}/${_XBPS_TARCH}.sh
+
+	# Install required pkgs for cross building.
+	check_installed_pkg cross-${XBPS_CROSS_TRIPLET}-0.1_1
+	if [ $? -ne 0 ]; then
+		echo "Installing required cross pkg: cross-${XBPS_CROSS_TRIPLET}"
+		$XBPS_INSTALL_CMD -y cross-${XBPS_CROSS_TRIPLET} 2>&1 >/dev/null
+		if [ $? -ne 0 ]; then
+			echo "ERROR: failed to install cross-${XBPS_CROSS_TRIPLET}"
+			exit 1
+		fi
+		echo "Installing required cross pkg: cross-vpkg-dummy"
+		$XBPS_INSTALL_CMD -r /usr/${XBPS_CROSS_TRIPLET} \
+			-y cross-vpkg-dummy 2>&1 >/dev/null
+		if [ $? -ne 0 ]; then
+			echo "ERROR: failed to install cross-vpkg-dummy"
+			exit 1
+		fi
+	fi
+
+	CROSSVARS="TARGET_ARCH CROSS_TRIPLET CROSS_CFLAGS CROSS_CXXFLAGS"
+	for i in ${CROSSVARS}; do
+		eval val="\$XBPS_$i"
+		if [ -z "$val" ]; then
+			echo "ERROR: XBPS_$i is not defined!"
+			exit 1
+		fi
+	done
+
+	XBPS_UHELPER_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_UHELPER -r /usr/${XBPS_CROSS_TRIPLET}"
+	XBPS_INSTALL_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_INSTALL_CMD -r /usr/${XBPS_CROSS_TRIPLET}"
+	XBPS_QUERY_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_QUERY_CMD -r /usr/${XBPS_CROSS_TRIPLET}"
+	XBPS_RINDEX_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_RINDEX_CMD "
+	XBPS_RECONFIGURE_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_RECONFIGURE_CMD -r /usr/${XBPS_CROSS_TRIPLET}"
+	XBPS_REMOVE_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_REMOVE_CMD -r /usr/${XBPS_CROSS_TRIPLET}"
+
+	export XBPS_TARGET_ARCH XBPS_CROSS_TRIPLET
+	export XBPS_CROSS_CFLAGS XBPS_CROSS_CXXFLAGS
+	export XBPS_UHELPER_XCMD XBPS_INSTALL_XCMD XBPS_QUERY_XCMD
+	export XBPS_RINDEX_XCMD XBPS_RECONFIGURE_XCMD XBPS_REMOVE_XCMD
 }

@@ -20,8 +20,8 @@ reset_tmpl_vars() {
 			pycompile_dirs pycompile_module systemd_services  \
 			homepage license kernel_hooks_version makejobs \
 			mutable_files nostrip_files skip_extraction \
-			softreplace run_depends build_depends \
-			depends makedepends fulldepends create_srcdir \
+			softreplace create_srcdir run_depends build_depends \
+			depends makedepends fulldepends crossmakedepends \
 			SUBPKG XBPS_EXTRACT_DONE XBPS_CONFIGURE_DONE \
 			XBPS_BUILD_DONE XBPS_INSTALL_DONE FILESDIR DESTDIR \
 			SRCPKGDESTDIR PATCHESDIR CFLAGS CXXFLAGS CPPFLAGS \
@@ -195,6 +195,18 @@ set_tmpl_common_vars() {
 		fi
 		build_depends="${build_depends} ${_pkgdep}"
 	done
+	for j in ${crossmakedepends}; do
+		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${j} 2>/dev/null)"
+		if [ -z "${_pkgdepname}" ]; then
+			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${j} 2>/dev/null)"
+		fi
+		if [ -z "${_pkgdepname}" ]; then
+			_pkgdep="$j>=0"
+		else
+			_pkgdep="$j"
+		fi
+		cross_build_depends="${cross_build_depends} ${_pkgdep}"
+	done
 
 	# For nonfree/bootstrap pkgs there's no point in building -dbg pkgs, disable them.
 	if [ -n "$nonfree" -o -n "$bootstrap" ]; then
@@ -206,29 +218,16 @@ set_tmpl_common_vars() {
 		DEBUG_CFLAGS="-g"
 	fi
 
-	if [ -n "$XBPS_CROSS_CFLAGS" ]; then
-		cflags="$XBPS_CROSS_CFLAGS"
-	elif [ -n "$XBPS_CFLAGS" ]; then
-		cflags="$XBPS_CFLAGS"
-	fi
-
-	if [ -n "$XBPS_CROSS_CXXFLAGS" ]; then
-		cxxflags="$XBPS_CROSS_CXXFLAGS"
-	elif [ -n "$XBPS_CXXFLAGS" ]; then
-		cxxflags="$XBPS_CXXFLAGS"
-	fi
-
-	export CFLAGS="$cflags $CFLAGS $DEBUG_CFLAGS"
-	export CXXFLAGS="$cxxflags $CXXFLAGS $DEBUG_CFLAGS"
-	export CPPFLAGS="$XBPS_CPPFLAGS $CPPFLAGS"
-	export LDFLAGS="$LDFLAGS $XBPS_LDFLAGS"
+	export CFLAGS="$XBPS_CFLAGS $XBPS_CROSS_CFLAGS $CFLAGS $DEBUG_CFLAGS"
+	export CXXFLAGS="$XBPS_CXXFLAGS $XBPS_CROSS_CXXFLAGS $CXXFLAGS $DEBUG_CFLAGS"
+	export CPPFLAGS="$XBPS_CPPFLAGS $XBPS_CROSS_CPPFLAGS $CPPFLAGS"
+	export LDFLAGS="$LDFLAGS $XBPS_LDFLAGS $XBPS_CROSS_LDFLAGS"
 
 	if [ -n "$broken_as_needed" -a -n "$XBPS_LDFLAGS" ]; then
 		export LDFLAGS="$(echo $LDFLAGS|sed -e "s|-Wl,--as-needed||g")"
 	fi
 
 	if [ -n "$XBPS_TARGET_ARCH" ]; then
-		export XBPS_TARGET_ARCH="$XBPS_TARGET_ARCH"
 		export XBPS_MACHINE="$XBPS_TARGET_ARCH"
 	fi
 

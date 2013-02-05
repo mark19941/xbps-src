@@ -29,10 +29,6 @@ XBPS_CFLAGS="$XBPS_CFLAGS"
 XBPS_CXXFLAGS="$XBPS_CFLAGS"
 XBPS_CPPFLAGS="$XBPS_CPPFLAGS"
 XBPS_LDFLAGS="$XBPS_LDFLAGS"
-XBPS_TARGET_ARCH="$XBPS_TARGET_ARCH"
-XBPS_CROSS_TRIPLET="$XBPS_CROSS_TRIPLET"
-XBPS_CROSS_CFLAGS="$XBPS_CROSS_CFLAGS"
-XBPS_CROSS_CXXFLAGS="$XBPS_CROSS_CXXFLAGS"
 _EOF
 	if [ -n "$XBPS_MAKEJOBS" ]; then
 		echo "XBPS_MAKEJOBS=$XBPS_MAKEJOBS" >> $XBPSSRC_CF
@@ -256,6 +252,9 @@ install_xbps_src() {
 	install -d ${XBPS_MASTERDIR}/usr/local/share/xbps-src/helpers
 	install -m644 ${XBPS_SHAREDIR}/helpers/*.sh \
 		${XBPS_MASTERDIR}/usr/local/share/xbps-src/helpers
+	install -d ${XBPS_MASTERDIR}/usr/local/share/xbps-src/cross-profiles
+	install -m644 ${XBPS_SHAREDIR}/cross-profiles/*.sh \
+		${XBPS_MASTERDIR}/usr/local/share/xbps-src/cross-profiles
 	set +e
 }
 
