@@ -161,6 +161,7 @@ install_pkg_deps() {
 		cd ${XBPS_MASTERDIR}
 		install_pkg_deps
 	done
+	[ -z "$XBPS_CROSS_TRIPLET" ] && return 0
 	#
 	# Cross target build dependencies.
 	#
