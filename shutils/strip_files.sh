@@ -24,10 +24,8 @@ make_debug() {
 	fname="$(basename $1)"
 	dbgfile="${dname}/${fname}"
 
-	[ -z "${objcopy_cmd}" ] && objcopy_cmd=objcopy
-
 	vmkdir "usr/lib/debug/${dname}"
-	${objcopy_cmd} --only-keep-debug --compress-debug-sections \
+	$OBJCOPY --only-keep-debug --compress-debug-sections \
 		"$1" "${DESTDIR}/usr/lib/debug/${dbgfile}" || \
 		msg_error "${pkgver}: failed to create dbg file: ${dbgfile}\n"
 	chmod 644 "${DESTDIR}/usr/lib/debug/${dbgfile}"
@@ -42,9 +40,7 @@ attach_debug() {
 	fname="$(basename $1)"
 	dbgfile="${dname}/${fname}"
 
-	[ -z "${objcopy_cmd}" ] && objcopy_cmd=objcopy
-
-	${objcopy_cmd} --add-gnu-debuglink="${DESTDIR}/usr/lib/debug/${dbgfile}" "$1" || \
+	$OBJCOPY --add-gnu-debuglink="${DESTDIR}/usr/lib/debug/${dbgfile}" "$1" || \
 		msg_error "${pkgver}: failed to attach dbg to ${dbgfile}\n"
 }
 
@@ -66,7 +62,6 @@ strip_files_real()
 	local f= x= found= fname=
 
 	[ -n "$nostrip" -o -n "$noarch" ] && return 0
-	[ -z "$strip_cmd" ] && strip_cmd=strip
 
 	msg_normal "$pkgver: creating debug files and stripping, please wait...\n"
 	find ${DESTDIR} -type f | while read f; do
@@ -85,22 +80,22 @@ strip_files_real()
 		application/x-executable*)
 			if echo "$(file $f)" | grep -q "statically linked"; then
 				# static binary
-				${strip_cmd} "$f" && \
+				$STRIP "$f" && \
 					echo "    Stripped static executable: $fname"
 			else
 				make_debug "$f"
-				${strip_cmd} "$f" && echo "   Stripped executable: $fname"
+				$STRIP "$f" && echo "   Stripped executable: $fname"
 				attach_debug "$f"
 			fi
 			;;
 		application/x-sharedlib*)
 			# shared library
 			make_debug "$f"
-			${strip_cmd} --strip-unneeded "$f" && echo "   Stripped library: $fname"
+			$STRIP --strip-unneeded "$f" && echo "   Stripped library: $fname"
 			attach_debug "$f"
 			;;
 		application/x-archive*)
-			${strip_cmd} --strip-debug "$f" && \
+			$STRIP --strip-debug "$f" && \
 				echo "   Stripped static library: $fname";;
 		esac
 	done

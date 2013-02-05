@@ -60,7 +60,7 @@ verify_rundeps() {
 
 		case "$(file -bi "$f")" in
 		application/x-executable*|application/x-sharedlib*)
-			for nlib in $(objdump -p "$f"|grep NEEDED|awk '{print $2}'); do
+			for nlib in $($OBJDUMP -p "$f"|grep NEEDED|awk '{print $2}'); do
 				if [ -z "$verify_deps" ]; then
 					verify_deps="$nlib"
 					continue

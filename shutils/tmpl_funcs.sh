@@ -206,22 +206,45 @@ set_tmpl_common_vars() {
 		DEBUG_CFLAGS="-g"
 	fi
 
-	[ -n "$XBPS_CFLAGS" ] && cflags="$XBPS_CFLAGS"
-	[ -n "$CFLAGS" ] && cflags="$cflags $CFLAGS"
-	[ -n "$XBPS_CXXFLAGS" ] && cxxflags="$XBPS_CXXFLAGS"
-	[ -n "$CXXFLAGS" ] && cxxflags="$cxxflags $CXXFLAGS"
-	[ -n "$XBPS_CPPFLAGS" ] && cppflags="$XBPS_CPPFLAGS"
-	[ -n "$CPPFLAGS" ] && cppflags="$cppflags $CPPFLAGS"
-	[ -n "$XBPS_LDFLAGS" ] && ldflags="$XBPS_LDFLAGS"
-	[ -n "$LDFLAGS" ] && ldflags="$ldflags $LDFLAGS"
+	if [ -n "$XBPS_CROSS_CFLAGS" ]; then
+		cflags="$XBPS_CROSS_CFLAGS"
+	elif [ -n "$XBPS_CFLAGS" ]; then
+		cflags="$XBPS_CFLAGS"
+	fi
 
-	[ -n "$cflags" ] && export CFLAGS="$cflags $DEBUG_CFLAGS"
-	[ -n "$cxxflags" ] && export CXXFLAGS="$cxxflags $DEBUG_CFLAGS"
-	[ -n "$cppflags" ] && export CPPFLAGS="$cppflags"
-	[ -n "$ldflags" ] && export LDFLAGS="$ldflags"
+	if [ -n "$XBPS_CROSS_CXXFLAGS" ]; then
+		cxxflags="$XBPS_CROSS_CXXFLAGS"
+	elif [ -n "$XBPS_CXXFLAGS" ]; then
+		cxxflags="$XBPS_CXXFLAGS"
+	fi
+
+	export CFLAGS="$cflags $CFLAGS $DEBUG_CFLAGS"
+	export CXXFLAGS="$cxxflags $CXXFLAGS $DEBUG_CFLAGS"
+	export CPPFLAGS="$XBPS_CPPFLAGS $CPPFLAGS"
+	export LDFLAGS="$LDFLAGS $XBPS_LDFLAGS"
 
 	if [ -n "$broken_as_needed" -a -n "$XBPS_LDFLAGS" ]; then
 		export LDFLAGS="$(echo $LDFLAGS|sed -e "s|-Wl,--as-needed||g")"
+	fi
+
+	if [ -n "$XBPS_TARGET_ARCH" ]; then
+		export XBPS_TARGET_ARCH="$XBPS_TARGET_ARCH"
+		export XBPS_MACHINE="$XBPS_TARGET_ARCH"
+	fi
+
+	if [ -n "$XBPS_CROSS_TRIPLET" ]; then
+		export CC="${XBPS_CROSS_TRIPLET}-gcc"
+		export CXX="${XBPS_CROSS_TRIPLET}-c++"
+		export CPP="${XBPS_CROSS_TRIPLET}-cpp"
+		export GCC="$CC"
+		export LD="${XBPS_CROSS_TRIPLET}-ld"
+		export AS="${XBPS_CROSS_TRIPLET}-as"
+		export RANLIB="${XBPS_CROSS_TRIPLET}-ranlib"
+		export STRIP="${XBPS_CROSS_TRIPLET}-strip"
+		export OBJDUMP="${XBPS_CROSS_TRIPLET}-objdump"
+		export OBJCOPY="${XBPS_CROSS_TRIPLET}-objcopy"
+		export NM="${XBPS_CROSS_TRIPLET}-nm"
+		export READELF="${XBPS_CROSS_TRIPLET}-readelf"
 	fi
 
 	if [ -z "$IN_CHROOT" ]; then
@@ -230,14 +253,6 @@ set_tmpl_common_vars() {
 			LDLIBPATH="/usr/lib/libfakeroot:$XBPS_MASTERDIR/usr/lib"
 		else
 			LDLIBPATH="$XBPS_MASTERDIR/usr/lib"
-		fi
-		if [ -n "$BUILD_32BIT" ]; then
-			# Force gcc multilib to emit 32bit binaries.
-			export CC="gcc -m32"
-			export CXX="g++ -m32"
-			# Export default 32bit directories.
-			LDLIBPATH="$LDLIBPATH:/lib32:/usr/lib32"
-			LDFLAGS="-L/lib32 -L/usr/lib32"
 		fi
 		export LDFLAGS="$LDFLAGS -L$XBPS_MASTERDIR/usr/lib"
 		export LD_LIBRARY_PATH="$LDLIBPATH"
