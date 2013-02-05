@@ -361,7 +361,7 @@ clean)
 	;;
 remove-autodeps)
 	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
-		chroot_handler remove-autodeps dummy
+		chroot_handler remove-autodeps
 	else
 		pkgver=xbps-src
 		remove_pkg_autodeps

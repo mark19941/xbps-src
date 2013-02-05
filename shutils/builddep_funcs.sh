@@ -26,7 +26,7 @@ install_pkg_from_repos() {
 		#	ENODEV  (19): package depends on missing dependencies.
 		#	ENOTSUP (95): no repositories registered.
 		#
-		remove_pkg_autodeps $KEEP_AUTODEPS
+		[ -z "$KEEP_AUTODEPS" ] && remove_pkg_autodeps
 		msg_red "$pkgver: failed to install '$1' dependency! (error $rval)\n"
 		cat $tmplogf && rm -f $tmplogf
 		msg_error "Please see above for the real error, exiting...\n"
@@ -36,27 +36,41 @@ install_pkg_from_repos() {
 	return $rval
 }
 
-remove_pkg_autodeps() {
+_remove_pkg_cross_deps() {
 	local rval= tmplogf=
-
-	[ -n "$1" -o -z "$CHROOT_READY" ] && return 0
+	[ -z "$XBPS_CROSS_TRIPLET" ] && return 0
 
 	cd $XBPS_MASTERDIR || return 1
-	msg_normal "$pkgver: removing automatic pkgdeps, please wait...\n"
-	# Autoremove installed binary packages.
+	msg_normal "$pkgver: removing autocrossdeps, please wait...\n"
 	tmplogf=$(mktemp)
-	if [ -n "$2" ]; then
-		$XBPS_RECONFIGURE_XCMD -a && $XBPS_REMOVE_XCMD -Ryo > $tmplogf 2>&1
-	else
-		$FAKEROOT_CMD $XBPS_RECONFIGURE_CMD -a && \
-		$FAKEROOT_CMD $XBPS_REMOVE_CMD -Ryo >$tmplogf 2>&1
-	fi
+	$XBPS_RECONFIGURE_XCMD -a && $XBPS_REMOVE_XCMD -Ryo > $tmplogf 2>&1
 	if [ $? -ne 0 ]; then
-		msg_red "$pkgver: failed to remove automatic dependencies:\n"
+		msg_red "$pkgver: failed to remove autocrossdeps:\n"
 		cat $tmplogf && rm -f $tmplogf
 		msg_error "$pkgver: cannot continue!\n"
 	fi
 	rm -f $tmplogf
+}
+
+
+remove_pkg_autodeps() {
+	local rval= tmplogf=
+
+	[ -z "$CHROOT_READY" ] && return 0
+
+	cd $XBPS_MASTERDIR || return 1
+	msg_normal "$pkgver: removing autodeps, please wait...\n"
+	tmplogf=$(mktemp)
+	$FAKEROOT_CMD $XBPS_RECONFIGURE_CMD -a && \
+		$FAKEROOT_CMD $XBPS_REMOVE_CMD -Ryo >$tmplogf 2>&1
+	if [ $? -ne 0 ]; then
+		msg_red "$pkgver: failed to remove autodeps:\n"
+		cat $tmplogf && rm -f $tmplogf
+		msg_error "$pkgver: cannot continue!\n"
+	fi
+	rm -f $tmplogf
+
+	_remove_pkg_cross_deps
 }
 
 #
@@ -80,9 +94,6 @@ install_pkg_deps() {
 
 	if [ "$pkgname" != "${_ORIGINPKG}" -a -z "${_subpkg}" -a -n "$CHROOT_READY" ]; then
 		remove_pkg_autodeps || return $?
-		if [ -n "$XBPS_CROSS_TRIPLET" ]; then
-			remove_pkg_autodeps "" CROSS || return $?
-		fi
 	fi
 	unset _subpkg
 

@@ -81,10 +81,7 @@ install_pkg() {
 
 	# Remove autodeps if target pkg is the origin pkg.
 	if [ "$pkgname" = "${_ORIGINPKG}" ]; then
-		remove_pkg_autodeps $KEEP_AUTODEPS || return 1
-		if [ -n "$XBPS_CROSS_TRIPLET" ]; then
-			remove_pkg_autodeps "$KEEP_AUTODEPS" CROSS || return 1
-		fi
+		[ -z "$KEEP_AUTODEPS" ] && remove_pkg_autodeps
 		[ -n "$CHROOT_READY" ] && exit 0
 	fi
 

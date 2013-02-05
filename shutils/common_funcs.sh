@@ -34,10 +34,7 @@ remove_pkgdestdir_sighandler() {
 		msg_red "$pkgver: removed files from DESTDIR...\n"
 	fi
 
-	remove_pkg_autodeps ${_kwrksrc}
-	if [ -n "$XBPS_CROSS_TRIPLET" ]; then
-		remove_pkg_autodeps "${_kwrksrc}" CROSS || return 1
-	fi
+	[ -n "${_kwrksrc}" ] && remove_pkg_autodeps
 }
 
 run_func() {
