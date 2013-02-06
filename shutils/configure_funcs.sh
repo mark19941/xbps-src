@@ -17,6 +17,7 @@ configure_src_phase() {
 
 	if [ -n "$XBPS_CROSS_TRIPLET" ]; then
 		CONFIGURE_SHARED_ARGS="${CONFIGURE_SHARED_ARGS} --host=${XBPS_CROSS_TRIPLET}"
+		CONFIGURE_SHARED_ARGS="${CONFIGURE_SHARED_ARGS} --with-libtool-sysroot=/usr/${XBPS_CROSS_TRIPLET}"
 	fi
 
 	cd $wrksrc || msg_error "$pkgver: cannot access wrksrc directory [$wrksrc].\n"
