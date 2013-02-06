@@ -174,6 +174,10 @@ install_pkg_deps() {
 		cd ${XBPS_MASTERDIR}
 		install_pkg_deps
 	done
+	for i in ${binpkg_deps}; do
+		msg_normal "$pkgver: installing '$i' (native)...\n"
+		install_pkg_from_repos "${i}"
+	done
 	[ -z "$XBPS_CROSS_TRIPLET" ] && return 0
 	#
 	# Cross target build dependencies.
@@ -249,10 +253,6 @@ install_pkg_deps() {
 		setup_tmpl ${_ORIGINPKG}
 		cd ${XBPS_MASTERDIR}
 		install_pkg_deps
-	done
-	for i in ${binpkg_deps}; do
-		msg_normal "$pkgver: installing '$i' (native)...\n"
-		install_pkg_from_repos "${i}"
 	done
 	for i in ${binpkg_crossdeps}; do
 		msg_normal "$pkgver: installing '$i' (for $XBPS_TARGET_ARCH)...\n"
