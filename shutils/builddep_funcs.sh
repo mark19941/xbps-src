@@ -220,7 +220,7 @@ install_pkg_deps() {
 					if [ -z "$binpkg_crossdeps" ]; then
 						binpkg_crossdeps="${pkgn}-${1}"
 					else
-						binpkg_crossdeps="${binpkg_deps} ${pkgn}-${1}"
+						binpkg_crossdeps="${binpkg_crossdeps} ${pkgn}-${1}"
 					fi
 					shift 2
 					continue
