@@ -81,7 +81,7 @@ strip_files_real()
 			if echo "$(file $f)" | grep -q "statically linked"; then
 				# static binary
 				$STRIP "$f" && \
-					echo "    Stripped static executable: $fname"
+					echo "   Stripped static executable: $fname"
 			else
 				make_debug "$f"
 				$STRIP "$f" && echo "   Stripped executable: $fname"
