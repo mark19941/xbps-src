@@ -124,6 +124,9 @@ Targets: (only one may be specified)
  show-files <pkgname>
    Show files installed by <pkgname>. Package must be installed into destdir.
 
+ zap
+   Removes a masterdir but preserving ccache, distcc and host directories.
+
 On targets that accept [pkgname], a package name can be specified and xbps-src
 will execute the task on any CWD (Current Working Directory). If the argument
 is omitted xbps-src assumes that CWD is in the target package. Example:
@@ -439,6 +442,23 @@ show-deps)
 show-build-deps)
 	setup_subpkg_tmpl ${_pkgname}
 	show_tmpl_build_deps
+	;;
+zap)
+	for f in bin boot builddir destdir dev etc home lib lib32 lib64 mnt \
+		opt proc root run sbin sys tmp usr var xbps \
+		.xbps_perms_done .xbps_shared_utils_done; do
+		if [ -d "$XBPS_MASTERDIR/$f" ]; then
+			echo "Removing directory $XBPS_MASTERDIR/$f ..."
+			rm -rf $XBPS_MASTERDIR/$f
+		elif [ -h "$XBPS_MASTERDIR/$f" ]; then
+			echo "Removing link $XBPS_MASTERDIR/$f ..."
+			rm -f $XBPS_MASTERDIR/$f
+		elif [ -f "$XBPS_MASTERDIR/$f" ]; then
+			echo "Removing file $XBPS_MASTERDIR/$f ..."
+			rm -f $XBPS_MASTERDIR/$f
+		fi
+	done
+	echo "$XBPS_MASTERDIR masterdir cleaned up."
 	;;
 *)
 	msg_red "xbps-src: invalid target $target.\n"
