@@ -166,12 +166,14 @@ prepare_binpkg_repos() {
 	if [ ! -f ${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf ]; then
 		install -Dm644 ${XBPS_SHAREDIR}/chroot/xbps.conf \
 			${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf
-		# Make sure to sync index for remote repositories.
-		xbps-install -r ${XBPS_MASTERDIR} \
-			-C ${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf \
-			-y foo >/dev/null 2>&1
 	fi
-
+	# Make sure to sync index for remote repositories.
+	case "$XBPS_VERSION" in
+	0.2[1-9]*) _args="-S";;
+	*) _args="-y foo 2>/dev/null";;
+	esac
+	xbps-install -r ${XBPS_MASTERDIR} \
+		-C ${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf ${_args}
 	return 0
 }
 
