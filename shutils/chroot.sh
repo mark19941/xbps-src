@@ -169,11 +169,13 @@ prepare_binpkg_repos() {
 	fi
 	# Make sure to sync index for remote repositories.
 	case "$XBPS_VERSION" in
-	0.2[1-9]*) _args="-S";;
-	*) _args="-y foo 2>&1 >/dev/null";;
+	0.2[1-9]*) xbps-install -r ${XBPS_MASTERDIR} \
+			-C ${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf -S
+		;;
+	*) xbps-install -r ${XBPS_MASTERDIR} \
+		-C ${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf -un 2>&1 >/dev/null
+		;;
 	esac
-	xbps-install -r ${XBPS_MASTERDIR} \
-		-C ${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf ${_args}
 	return 0
 }
 
