@@ -99,7 +99,7 @@ This will build all required packages via fakeroot in masterdir, therefore you
 can run it as normal user. Once the bootstrap packages have been built and
 installed into the 'masterdir' all packages will be built within the chroot.
 
-Alternatively if you are using Void GNU/Linux you can install a bootstrap
+Alternatively if you are using Void Linux you can install a bootstrap
 from binary packages with:
 
 	$ xbps-src binary-bootstrap
