@@ -29,12 +29,10 @@ all:
 		xbps-src.sh.in > xbps-src
 	$(CC) $(CFLAGS) libexec/$(CHROOT_C) -o libexec/xbps-src-chroot-helper
 
-.PHONY: clean
 clean:
 	rm -f libexec/xbps-src-chroot-helper
 	rm -f xbps-src
 
-.PHONY: install
 install-scripts: all
 	install -d $(DESTDIR)$(SBINDIR)
 	install -m 755 xbps-src $(DESTDIR)$(SBINDIR)
@@ -64,7 +62,6 @@ install: install-scripts
 	chgrp $(PRIVILEGED_GROUP) $(DESTDIR)/$(LIBEXECDIR)/xbps-src-chroot-helper
 	chmod 4750 $(DESTDIR)$(LIBEXECDIR)/xbps-src-chroot-helper
 
-.PHONY: uninstall
 uninstall:
 	-rm -f $(DESTDIR)$(SBINDIR)/xbps-src
 	-rm -f $(DESTDIR)$(LIBEXECDIR)/xbps-src-doinst-helper
