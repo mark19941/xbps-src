@@ -21,8 +21,10 @@ extract_distfiles() {
 	#
 	if [ -z "$distfiles" -o -n "$noextract" ]; then
 		[ ! -d "$wrksrc" ] && mkdir -p $wrksrc
-		run_func do_extract
-		touch -f $XBPS_EXTRACT_DONE
+		if declare -f do_extract >/dev/null; then
+			run_func do_extract
+			touch -f $XBPS_EXTRACT_DONE
+		fi
 		return 0
 	fi
 	if [ -n "$create_srcdir" ]; then
