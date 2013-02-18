@@ -7,6 +7,7 @@ export CONFIGURE_SHARED_ARGS="--prefix=/usr --sysconfdir=/etc
 	--infodir=/usr/share/info --mandir=/usr/share/man
 	--localstatedir=/var"
 
+
 configure_src_phase() {
 	local f= rval=
 
@@ -20,6 +21,14 @@ configure_src_phase() {
 	if [ -n "$build_wrksrc" ]; then
 		cd $build_wrksrc || \
 			msg_error "$pkgver: cannot access build_wrksrc directory [$build_wrksrc].\n"
+	fi
+
+	if [ -n "$XBPS_CROSS_TRIPLET" ]; then
+		CONFIGURE_SHARED_ARGS="${CONFIGURE_SHARED_ARGS}
+			--host=${XBPS_CROSS_TRIPLET}
+			--with-libtool-sysroot=/usr/$XBPS_CROSS_TRIPLET
+			PKG_CONFIG_SYSROOT_DIR=/usr/$XBPS_CROSS_TRIPLET
+			PKG_CONFIG_LIBDIR=/usr/$XBPS_CROSS_TRIPLET/lib/pkgconfig"
 	fi
 
 	. $XBPS_SHUTILSDIR/common_funcs.sh
