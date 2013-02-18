@@ -40,7 +40,7 @@ extract_distfiles() {
 	done
 
 	if [ -n "$create_wrksrc" ]; then
-		mkdir -p ${wrksrc} || return 1
+		mkdir -p ${wrksrc} || msg_error "$pkgver: failed to create wrksrc.\n"
 	fi
 
 	msg_normal "$pkgver: extracting distfile(s), please wait...\n"
@@ -142,6 +142,7 @@ extract_distfiles() {
 	touch -f $XBPS_FETCH_DONE
 	touch -f $XBPS_EXTRACT_DONE
 
-	run_func post_extract
-	return 0
+	if declare -f post_extract >/dev/null; then
+		run_func post_extract
+	fi
 }

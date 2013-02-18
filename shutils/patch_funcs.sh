@@ -48,6 +48,7 @@ _process_patch() {
 apply_tmpl_patches() {
 	local f=
 
+	[ -f $XBPS_APPLYPATCHES_DONE ] && return 0
 	[ ! -d $PATCHESDIR ] && return 0
 
 	if [ -r $PATCHESDIR/series ]; then

@@ -18,7 +18,7 @@ strip_files()
 make_debug() {
 	local dname= fname= dbgfile=
 
-	[ -n "$disable_debug" ] && return
+	[ -n "$disable_debug" ] && return 0
 
 	dname=$(echo "$(dirname $1)"|sed -e "s|${DESTDIR}||g")
 	fname="$(basename $1)"
@@ -26,35 +26,43 @@ make_debug() {
 
 	vmkdir "usr/lib/debug/${dname}"
 	$OBJCOPY --only-keep-debug --compress-debug-sections \
-		"$1" "${DESTDIR}/usr/lib/debug/${dbgfile}" || \
+		"$1" "${DESTDIR}/usr/lib/debug/${dbgfile}"
+	if [ $? -ne 0 ]; then
 		msg_error "${pkgver}: failed to create dbg file: ${dbgfile}\n"
+	fi
 	chmod 644 "${DESTDIR}/usr/lib/debug/${dbgfile}"
 }
 
 attach_debug() {
 	local dname= fname= dbgfile=
 
-	[ -n "$disable_debug" ] && return
+	[ -n "$disable_debug" ] && return 0
 
 	dname=$(echo "$(dirname $1)"|sed -e "s|${DESTDIR}||g")
 	fname="$(basename $1)"
 	dbgfile="${dname}/${fname}"
 
-	$OBJCOPY --add-gnu-debuglink="${DESTDIR}/usr/lib/debug/${dbgfile}" "$1" || \
+	$OBJCOPY --add-gnu-debuglink="${DESTDIR}/usr/lib/debug/${dbgfile}" "$1"
+	if [ $? -ne 0 ]; then
 		msg_error "${pkgver}: failed to attach dbg to ${dbgfile}\n"
+	fi
 }
 
 create_debug_pkg() {
 	local _pkgname=
 
-	[ -n "$disable_debug" ] && return
-	[ ! -d "${DESTDIR}/usr/lib/debug" ] && return
+	[ -n "$disable_debug" ] && return 0
+	[ ! -d "${DESTDIR}/usr/lib/debug" ] && return 0
 
 	_pkgname="${pkgname}-dbg"
 	mkdir -p "${XBPS_DESTDIR}/${_pkgname}-${version}/usr/lib"
-	mv ${DESTDIR}/usr/lib/debug  \
+	mv ${DESTDIR}/usr/lib/debug \
 		${XBPS_DESTDIR}/${_pkgname}-${version}/usr/lib
+	if [ $? -ne 0 ]; then
+		msg_error "$pkgver: failed to create debug pkg\n"
+	fi
 	rmdir "${DESTDIR}/usr/lib" 2>/dev/null
+	return 0
 }
 
 strip_files_real()
@@ -80,23 +88,25 @@ strip_files_real()
 		application/x-executable*)
 			if echo "$(file $f)" | grep -q "statically linked"; then
 				# static binary
-				$STRIP "$f" && \
-					echo "   Stripped static executable: $fname"
+				$STRIP "$f" || msg_error "$pkgver: failed to strip $fname\n"
+				echo "   Stripped static executable: $fname"
 			else
 				make_debug "$f"
-				$STRIP "$f" && echo "   Stripped executable: $fname"
+				$STRIP "$f" || msg_error "$pkgver: failed to strip $fname\n"
+				echo "   Stripped executable: $fname"
 				attach_debug "$f"
 			fi
 			;;
 		application/x-sharedlib*)
 			# shared library
-			make_debug "$f"
-			$STRIP --strip-unneeded "$f" && echo "   Stripped library: $fname"
+			make_debug "$f" || return $?
+			$STRIP --strip-unneeded "$f" || msg_error "$pkgver: failed to strip $fname\n"
+			echo "   Stripped library: $fname"
 			attach_debug "$f"
 			;;
 		application/x-archive*)
-			$STRIP --strip-debug "$f" && \
-				echo "   Stripped static library: $fname";;
+			$STRIP --strip-debug "$f" || msg_error "$pkgver: failed to strip $fname\n"
+			echo "   Stripped static library: $fname";;
 		esac
 	done
 

@@ -3,12 +3,39 @@
 # Common functions for xbps.
 #
 
-run_func_error() {
-	local func="$1"
+run_func() {
+	local func="$1" logpipe= logfile= teepid=
 
+	logpipe=/tmp/xbps_src_logpipe.$$
+	if [ -d "${wrksrc}" ]; then
+		logfile=${wrksrc}/.xbps_${func}.log
+	else
+		logfile=$(mktemp -t xbps_${func}_${pkgname}.log.XXXXXXXX)
+	fi
+
+	msg_normal "$pkgver: running $func ...\n"
+
+	set -E
+	trap 'error_func $func $LINENO' ERR
+
+	mkfifo "$logpipe"
+	tee "$logfile" < "$logpipe" &
+	teepid=$!
+
+	$func &>"$logpipe"
+
+	wait $teepid
+	rm "$logpipe"
+
+	set +E
+}
+
+error_func() {
 	remove_pkgdestdir_sighandler ${pkgname} $KEEP_AUTODEPS
-	echo
-	msg_error "$pkgver: '$func' interrupted!\n"
+	if [ -n "$1" -a -n "$2" ]; then
+		msg_red "$pkgver: failed to run $1() at line $2.\n"
+	fi
+	exit 2
 }
 
 remove_pkgdestdir_sighandler() {
@@ -31,45 +58,11 @@ remove_pkgdestdir_sighandler() {
 
 	if [ -d "$XBPS_DESTDIR/${sourcepkg}-${version%_*}" ]; then
 		rm -rf "$XBPS_DESTDIR/${sourcepkg}-${version%_*}"
-		msg_red "$pkgver: removed files from DESTDIR...\n"
 	fi
-
-	[ -n "${_kwrksrc}" ] && remove_pkg_autodeps
-}
-
-run_func() {
-	local rval= logpipe= logfile=
-
-	[ -z "$1" ] && return 1
-
-	if type ${1} >/dev/null 2>&1; then
-		logpipe=/tmp/xbps_src_logpipe.$$
-		if [ -d "${wrksrc}" ]; then
-			logfile=${wrksrc}/.xbps_${1}.log
-		else
-			logfile=$(mktemp -t xbps_${1}_${pkgname}.log.XXXXXXXX)
-		fi
-		mkfifo "$logpipe"
-		exec 3>&1
-		tee "$logfile" < "$logpipe" &
-		exec 1>"$logpipe" 2>"$logpipe"
-		set -e
-		trap "run_func_error $1 && return $?" INT
-		msg_normal "$pkgver: running $1 phase...\n"
-		$1 2>&1
-		rval=$?
-		set +e
-		trap - INT
-		exec 1>&3 2>&3 3>&-
-		rm -f "$logpipe"
-		if [ $rval -ne 0 ]; then
-			msg_error "$pkgver: $1 failed!\n"
-		else
-			msg_normal "$pkgver: $1 phase done.\n"
-			return 0
-		fi
+	if [ -f ${wrksrc}/.xbps_install_done ]; then
+		rm -f ${wrksrc}/.xbps_install_done
 	fi
-	return 255 # function not found.
+	[ -z "${_kwrksrc}" ] && remove_pkg_autodeps
 }
 
 msg_red() {
@@ -91,6 +84,7 @@ msg_red_nochroot() {
 
 msg_error() {
 	msg_red "$@"
+	[ -n "$IN_CHROOT" -a -n "$PPID" ] && kill -INT $PPID
 	exit 1
 }
 

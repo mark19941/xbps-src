@@ -7,6 +7,7 @@ build_src_phase() {
 	local rval=
 
 	[ -z $pkgname -o -z $version ] && return 1
+	[ -f "$XBPS_BUILD_DONE" ] && return 0
 
 	# Skip this phase for meta-template style builds.
 	[ -n "$build_style" -a "$build_style" = "meta-template" ] && return 0
@@ -21,12 +22,16 @@ build_src_phase() {
 		makejobs="-j$XBPS_MAKEJOBS"
 	fi
 
+	. $XBPS_SHUTILSDIR/common_funcs.sh
+
 	# Run pre_build func.
 	if [ ! -f $XBPS_PRE_BUILD_DONE ]; then
 		cd $wrksrc
 		[ -n "$build_wrksrc" ] && cd $build_wrksrc
-		run_func pre_build
-		[ $? -eq 0 ] && touch -f $XBPS_PRE_BUILD_DONE
+		if declare -f pre_build >/dev/null; then
+			run_func pre_build
+			touch -f $XBPS_PRE_BUILD_DONE
+		fi
 	fi
 
 	if [ -r $XBPS_HELPERSDIR/${build_style}.sh ]; then
@@ -36,17 +41,17 @@ build_src_phase() {
 	# do_build()
 	cd $wrksrc
 	[ -n "$build_wrksrc" ] && cd $build_wrksrc
-	run_func do_build
-	rval=$?
-
+	if declare -f do_build >/dev/null; then
+		run_func do_build
+		touch -f $XBPS_BUILD_DONE
+	fi
 	# Run post_build func.
 	if [ ! -f $XBPS_POST_BUILD_DONE ]; then
 		cd $wrksrc
 		[ -n "$build_wrksrc" ] && cd $build_wrksrc
-		run_func post_build
-		[ $? -eq 0 ] && touch -f $XBPS_POST_BUILD_DONE
+		if declare -f post_build >/dev/null; then
+			run_func post_build
+			touch -f $XBPS_POST_BUILD_DONE
+		fi
 	fi
-
-	[ "$rval" -eq 0 ] && touch -f $XBPS_BUILD_DONE
-	return 0
 }

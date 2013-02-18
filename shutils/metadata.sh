@@ -19,11 +19,11 @@ write_metadata() {
 		. $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template
 		pkgname=${subpkg}
 		set_tmpl_common_vars
-		write_metadata_real || return $?
+		write_metadata_real
 	done
 
 	setup_tmpl ${sourcepkg}
-	write_metadata_real || return $?
+	write_metadata_real
 	return $?
 }
 

@@ -21,44 +21,37 @@ install_pkg() {
 	fetch_distfiles
 
 	# Fetch, extract, build and install into the destination directory.
-	if [ ! -f "$XBPS_EXTRACT_DONE" ]; then
-		extract_distfiles || return $?
-	fi
+	extract_distfiles
 
 	# Apply patches if requested by template file
-	if [ ! -f $XBPS_APPLYPATCHES_DONE ]; then
-		apply_tmpl_patches || return $?
-	fi
+	apply_tmpl_patches
 
-	if [ ! -f "$XBPS_CONFIGURE_DONE" ]; then
-		configure_src_phase || return $?
-	fi
+	# Run configure phase
+	configure_src_phase
 	[ "$target" = "configure" ] && return 0
 
-	if [ ! -f "$XBPS_BUILD_DONE" ]; then
-		build_src_phase || return $?
-	fi
+	# Run build phase
+	build_src_phase
 	[ "$target" = "build" ] && return 0
 
 	# Install pkg into destdir.
 	if [ ! -f "$XBPS_INSTALL_DONE" ]; then
+		trap 'exit 1' INT HUP TERM
+
 		env XBPS_MACHINE=${XBPS_MACHINE} wrksrc=${wrksrc}	\
 			MASTERDIR="${XBPS_MASTERDIR}"			\
 			CONFIG_FILE=${XBPS_CONFIG_FILE}			\
 			XBPS_SRC_VERSION="${XBPS_SRC_VERSION}"		\
 			${FAKEROOT_CMD} ${XBPS_LIBEXECDIR}/xbps-src-doinst-helper \
-			${sourcepkg} || return $?
+			${sourcepkg}
 
 		# Strip binaries/libraries.
 		strip_files
 
 		# Write metadata to package's destdir.
 		write_metadata
-		if [ $? -ne 0 ]; then
-			msg_red "$pkgver: failed to create package metadata!\n"
-			remove_pkgdestdir_sighandler $pkgname
-			return 1
-		fi
+
+		trap - INT HUP TERM
 	fi
 
 	cd $XBPS_MASTERDIR
@@ -72,7 +65,7 @@ install_pkg() {
 	make_binpkg
 	rval=$?
 	[ $rval -ne 0 -a $rval -ne 6 ] && return $rval
-	remove_pkg || return $?
+	remove_pkg
 
 	# Remove $wrksrc if -C not specified.
 	if [ -d "$wrksrc" -a -z "$KEEP_WRKSRC" ]; then

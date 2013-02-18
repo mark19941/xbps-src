@@ -3,22 +3,18 @@
 # Runs the "configure" phase for a pkg. This setups the Makefiles or any
 # other stuff required to be able to build binaries or such.
 #
-export CONFIGURE_SHARED_ARGS="--prefix=/usr --sysconfdir=/etc \
-	--infodir=/usr/share/info --mandir=/usr/share/man \
+export CONFIGURE_SHARED_ARGS="--prefix=/usr --sysconfdir=/etc
+	--infodir=/usr/share/info --mandir=/usr/share/man
 	--localstatedir=/var"
 
 configure_src_phase() {
 	local f= rval=
 
 	[ -z $pkgname ] && return 1
+	[ -f "$XBPS_CONFIGURE_DONE" ] && return 0
 
 	# Skip this phase for meta-template style builds.
 	[ -n "$build_style" -a "$build_style" = "meta-template" ] && return 0
-
-	if [ -n "$XBPS_CROSS_TRIPLET" ]; then
-		CONFIGURE_SHARED_ARGS="${CONFIGURE_SHARED_ARGS} --host=${XBPS_CROSS_TRIPLET}"
-		CONFIGURE_SHARED_ARGS="${CONFIGURE_SHARED_ARGS} --with-libtool-sysroot=/usr/${XBPS_CROSS_TRIPLET}"
-	fi
 
 	cd $wrksrc || msg_error "$pkgver: cannot access wrksrc directory [$wrksrc].\n"
 	if [ -n "$build_wrksrc" ]; then
@@ -26,12 +22,16 @@ configure_src_phase() {
 			msg_error "$pkgver: cannot access build_wrksrc directory [$build_wrksrc].\n"
 	fi
 
+	. $XBPS_SHUTILSDIR/common_funcs.sh
+
 	# Run pre_configure func.
 	if [ ! -f $XBPS_PRECONFIGURE_DONE ]; then
 		cd $wrksrc
 		[ -n "$build_wrksrc" ] && cd $build_wrksrc
-		run_func pre_configure
-		[ $? -eq 0 ] && touch -f $XBPS_PRECONFIGURE_DONE
+		if declare -f pre_configure >/dev/null; then
+			run_func pre_configure
+			touch -f $XBPS_PRECONFIGURE_DONE
+		fi
 	fi
 
 
@@ -41,17 +41,18 @@ configure_src_phase() {
 	# run do_configure()
 	cd $wrksrc
 	[ -n "$build_wrksrc" ] && cd $build_wrksrc
-	run_func do_configure
-	rval=$?
+	if declare -f do_configure >/dev/null; then
+		run_func do_configure
+		touch -f $XBPS_CONFIGURE_DONE
+	fi
 
 	# Run post_configure func.
 	if [ ! -f $XBPS_POSTCONFIGURE_DONE ]; then
 		cd $wrksrc
 		[ -n "$build_wrksrc" ] && cd $build_wrksrc
-		run_func post_configure
-		[ $? -eq 0 ] && touch -f $XBPS_POSTCONFIGURE_DONE
+		if declare -f post_configure >/dev/null; then
+			run_func post_configure
+			touch -f $XBPS_POSTCONFIGURE_DONE
+		fi
 	fi
-
-	[ "$rval" -eq 0 ] && touch -f $XBPS_CONFIGURE_DONE
-	return 0
 }

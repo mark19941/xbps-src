@@ -39,8 +39,10 @@ fetch_distfiles() {
 	if [ -n "$nofetch" ]; then
 		cd ${XBPS_BUILDDIR}
 		[ -n "$build_wrksrc" ] && mkdir -p "$wrksrc"
-		run_func do_fetch
-		touch -f $XBPS_FETCH_DONE
+		if declare -f do_fetch >/dev/null; then
+			run_func do_fetch
+			touch -f $XBPS_FETCH_DONE
+		fi
 		return 0
 	fi
 

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!//bin/bash
 
 PKG_TMPLNAME="$1"
 
@@ -34,8 +34,10 @@ install_src_phase() {
 
 	# Run pre_install func.
 	if [ ! -f $XBPS_PRE_INSTALL_DONE ]; then
-		run_func pre_install
-		[ $? -eq 0 ] && touch -f $XBPS_PRE_INSTALL_DONE
+		if declare -f pre_install >/dev/null; then
+			run_func pre_install
+			touch -f $XBPS_PRE_INSTALL_DONE
+		fi
 	fi
 
 	# do_install()
@@ -44,14 +46,18 @@ install_src_phase() {
 	fi
 	cd $wrksrc
 	[ -n "$build_wrksrc" ] && cd $build_wrksrc
-	run_func do_install
+	if declare -f do_install >/dev/null; then
+		run_func do_install
+	fi
 
 	# Run post_install func.
 	if [ ! -f $XBPS_POST_INSTALL_DONE ]; then
 		cd $wrksrc
 		[ -n "$build_wrksrc" ] && cd $build_wrksrc
-		run_func post_install
-		[ $? -eq 0 ] && touch -f $XBPS_POST_INSTALL_DONE
+		if declare -f post_install >/dev/null; then
+			run_func post_install
+			touch -f $XBPS_POST_INSTALL_DONE
+		fi
 	fi
 
 	# Remove libtool archives by default.
@@ -90,8 +96,8 @@ install_src_phase() {
 		fi
 		cd $wrksrc
 		[ -n "$build_wrksrc" ] && cd $build_wrksrc
-		run_func do_install
-		if [ $? -eq 0 ]; then
+		if declare -f do_install >/dev/null; then
+			run_func do_install
 			touch -f ${wrksrc}/.xbps_do_install_${pkgname}_done
 			# Remove empty directories by default.
 			for f in $(find ${DESTDIR} -depth -type d); do

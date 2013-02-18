@@ -36,12 +36,12 @@ See the USAGE file to know more in how to use xbps-src.
 DEPENDENCIES
 ============
 
+	* GNU bash
 	* XBPS utilities
 	* fakeroot
 
 The following packages are required to build a full bootstrap from scratch:
 
-	* A POSIX compatible shell
 	* GNU Awk
 	* GNU Binutils
 	* GNU Bison

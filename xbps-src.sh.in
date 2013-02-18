@@ -1,7 +1,14 @@
-#!/bin/sh
+#!/bin/bash
+
 umask 022
 
-trap "echo 'Interrupted! exiting...'; exit" INT TERM
+exit_func() {
+	remove_pkgdestdir_sighandler $pkgname $KEEP_AUTODEPS
+	msg_red "xbps-src: a failure has ocurred! exiting...\n"
+	exit 2
+}
+
+trap 'exit_func' INT TERM
 
 readonly XBPS_SRC_VERSION="@@XBPS_SRC_VERSION@@"
 
@@ -403,9 +410,9 @@ build|configure|install-destdir|build-pkg)
 	setup_tmpl ${_pkgname}
 	_ORIGINPKG="${_pkgname}"
 	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
-		chroot_handler $target ${_ORIGINPKG} || exit $?
+		chroot_handler $target ${_ORIGINPKG}
 	else
-		install_pkg "$target" || exit $?
+		install_pkg "$target"
 	fi
 	;;
 remove-destdir)
