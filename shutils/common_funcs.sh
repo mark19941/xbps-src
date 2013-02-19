@@ -62,7 +62,6 @@ remove_pkgdestdir_sighandler() {
 	if [ -f ${wrksrc}/.xbps_install_done ]; then
 		rm -f ${wrksrc}/.xbps_install_done
 	fi
-	[ -z "${_kwrksrc}" ] && remove_pkg_autodeps
 }
 
 msg_red() {

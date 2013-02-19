@@ -36,8 +36,6 @@ install_pkg() {
 
 	# Install pkg into destdir.
 	if [ ! -f "$XBPS_INSTALL_DONE" ]; then
-		trap 'exit 1' INT HUP TERM
-
 		env XBPS_MACHINE=${XBPS_MACHINE} wrksrc=${wrksrc}	\
 			MASTERDIR="${XBPS_MASTERDIR}"			\
 			CONFIG_FILE=${XBPS_CONFIG_FILE}			\
@@ -50,8 +48,6 @@ install_pkg() {
 
 		# Write metadata to package's destdir.
 		write_metadata
-
-		trap - INT HUP TERM
 	fi
 
 	cd $XBPS_MASTERDIR

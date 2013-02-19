@@ -3,12 +3,14 @@
 umask 022
 
 exit_func() {
-	remove_pkgdestdir_sighandler $pkgname $KEEP_AUTODEPS
+	[ -z "$KEEP_AUTODEPS" ] && remove_pkg_autodeps
 	msg_red "xbps-src: a failure has ocurred! exiting...\n"
 	exit 2
 }
 
-trap 'exit_func' INT TERM
+if [ -z "$IN_CHROOT" ]; then
+	trap 'exit_func' INT TERM HUP
+fi
 
 readonly XBPS_SRC_VERSION="@@XBPS_SRC_VERSION@@"
 

@@ -61,8 +61,8 @@ remove_pkg_autodeps() {
 	cd $XBPS_MASTERDIR || return 1
 	msg_normal "$pkgver: removing autodeps, please wait...\n"
 	tmplogf=$(mktemp)
-	$FAKEROOT_CMD $XBPS_RECONFIGURE_CMD -a && \
-		$FAKEROOT_CMD $XBPS_REMOVE_CMD -Ryo >$tmplogf 2>&1
+	( $FAKEROOT_CMD $XBPS_RECONFIGURE_CMD -a;
+	  $FAKEROOT_CMD $XBPS_REMOVE_CMD -Ryo; ) >> $tmplogf 2>&1
 	if [ $? -ne 0 ]; then
 		msg_red "$pkgver: failed to remove autodeps:\n"
 		cat $tmplogf && rm -f $tmplogf
