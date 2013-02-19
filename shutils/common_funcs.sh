@@ -84,7 +84,6 @@ msg_red_nochroot() {
 
 msg_error() {
 	msg_red "$@"
-	[ -n "$IN_CHROOT" -a -n "$PPID" ] && kill -INT $PPID
 	exit 1
 }
 
