@@ -18,10 +18,6 @@ build_src_phase() {
 			msg_error "$pkgver: cannot access build_wrksrc directory [$build_wrksrc]\n"
 	fi
 
-	if [ -n "$XBPS_MAKEJOBS" -a -z "$disable_parallel_build" ]; then
-		makejobs="-j$XBPS_MAKEJOBS"
-	fi
-
 	. $XBPS_SHUTILSDIR/common_funcs.sh
 
 	# Run pre_build func.

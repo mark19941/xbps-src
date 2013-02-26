@@ -218,6 +218,10 @@ set_tmpl_common_vars() {
 		DEBUG_CFLAGS="-g"
 	fi
 
+	if [ -n "$XBPS_MAKEJOBS" -a -z "$disable_parallel_build" ]; then
+		makejobs="-j$XBPS_MAKEJOBS"
+	fi
+
 	export CFLAGS="$XBPS_CFLAGS $XBPS_CROSS_CFLAGS $CFLAGS $DEBUG_CFLAGS"
 	export CXXFLAGS="$XBPS_CXXFLAGS $XBPS_CROSS_CXXFLAGS $CXXFLAGS $DEBUG_CFLAGS"
 	export CPPFLAGS="$XBPS_CPPFLAGS $XBPS_CROSS_CPPFLAGS $CPPFLAGS"
