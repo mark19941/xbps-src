@@ -245,9 +245,18 @@ set_tmpl_common_vars() {
 		export NM="${XBPS_CROSS_TRIPLET}-nm"
 		export READELF="${XBPS_CROSS_TRIPLET}-readelf"
 	else
+		export CC="cc"
+		export CXX="g++"
+		export CPP="cpp"
+		export GCC="$CC"
+		export LD="ld"
+		export AS="as"
+		export RANLIB="ranlib"
 		export STRIP="strip"
 		export OBJDUMP="objdump"
 		export OBJCOPY="objcopy"
+		export NM="nm"
+		export READELF="readelf"
 	fi
 
 	if [ -z "$IN_CHROOT" ]; then
