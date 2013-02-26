@@ -24,11 +24,14 @@ configure_src_phase() {
 	fi
 
 	if [ -n "$XBPS_CROSS_TRIPLET" ]; then
+		XBPS_PKGCONFIG_ARGS="
+			PKG_CONFIG_SYSROOT_DIR=/usr/$XBPS_CROSS_TRIPLET
+			PKG_CONFIG_LIBDIR=/usr/$XBPS_CROSS_TRIPLET/lib/pkgconfig"
+
 		CONFIGURE_SHARED_ARGS="${CONFIGURE_SHARED_ARGS}
 			--host=${XBPS_CROSS_TRIPLET}
 			--with-libtool-sysroot=/usr/$XBPS_CROSS_TRIPLET
-			PKG_CONFIG_SYSROOT_DIR=/usr/$XBPS_CROSS_TRIPLET
-			PKG_CONFIG_LIBDIR=/usr/$XBPS_CROSS_TRIPLET/lib/pkgconfig"
+			$XBPS_PKGCONFIG_ARGS"
 	fi
 
 	. $XBPS_SHUTILSDIR/common_funcs.sh
