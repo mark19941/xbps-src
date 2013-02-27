@@ -103,53 +103,15 @@ prepare_chroot() {
 	done
 	[ ! -d $XBPS_MASTERDIR/boot ] && mkdir -p $XBPS_MASTERDIR/boot
 
-	cat > $XBPS_MASTERDIR/etc/passwd <<_EOF
-root:x:0:0:root:/root:/bin/bash
-nobody:x:99:99:Unprivileged User:/dev/null:/bin/false
-$(whoami):x:$(id -u):$(id -g):$(whoami) user:/tmp:/bin/xbps-shell
-_EOF
+	# Copy /etc/passwd and /etc/group from base-files.
+	cp -f $XBPS_SRCPKGDIR/base-files/files/passwd $XBPS_MASTERDIR/etc
+	echo "$(whoami):x:$(id -u):$(id -g):$(whoami) user:/tmp:/bin/xbps-shell" \
+		>> $XBPS_MASTERDIR/etc/passwd
+	cp -f $XBPS_SRCPKGDIR/base-files/files/group $XBPS_MASTERDIR/etc
+	echo "$(whoami):x:$(id -g):" >> $XBPS_MASTERDIR/etc/group
 
-	# Default group list as specified by LFS.
-	cat > $XBPS_MASTERDIR/etc/group <<_EOF
-root:x:0:
-bin:x:1:
-sys:x:2:
-kmem:x:3:
-wheel:x:4:
-tty:x:5:
-tape:x:6:
-daemon:x:7:
-floppy:x:8:
-disk:x:9:
-lp:x:10:
-dialout:x:11:
-audio:x:12:
-video:x:13:
-utmp:x:14:
-usb:x:15:
-cdrom:x:16:
-optical:x:17:
-mail:x:18:
-storage:x:19:
-scanner:x:20:
-nogroup:x:99:
-users:x:1000:
-$(whoami):x:$(id -g):
-_EOF
-
-	# Default file as in Ubuntu.
-	cat > $XBPS_MASTERDIR/etc/hosts <<_EOF
-127.0.0.1	xbps	localhost.localdomain	localhost
-127.0.1.1	xbps
-
-# The following lines are desirable for IPv6 capable hosts
-::1     ip6-localhost ip6-loopback
-fe00::0 ip6-localnet
-ff00::0 ip6-mcastprefix
-ff02::1 ip6-allnodes
-ff02::2 ip6-allrouters
-ff02::3 ip6-allhosts
-_EOF
+	# Copy /etc/hosts from base-files.
+	cp -f $XBPS_SRCPKGDIR/base-files/files/hosts $XBPS_MASTERDIR/etc
 
 	create_binsh_symlink
 
