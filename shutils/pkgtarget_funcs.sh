@@ -69,6 +69,11 @@ install_pkg() {
 		remove_tmpl_wrksrc $wrksrc
 	fi
 
+	# pkg cleanup
+	if declare -f do_clean >/dev/null; then
+		run_func do_clean
+	fi
+
 	# Remove autodeps if target pkg is the origin pkg.
 	if [ "$pkgname" = "${_ORIGINPKG}" ]; then
 		[ -z "$KEEP_AUTODEPS" ] && remove_pkg_autodeps

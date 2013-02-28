@@ -376,7 +376,9 @@ clean)
 		chroot_handler $target ${_pkgname} || exit $?
 	else
 		remove_tmpl_wrksrc $wrksrc
-		run_func do_clean
+		if declare -f do_clean >/dev/null; then
+			run_func do_clean
+		fi
 	fi
 	;;
 remove-autodeps)
