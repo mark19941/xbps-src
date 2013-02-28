@@ -336,7 +336,10 @@ case "$target" in
 binary-bootstrap)
 	# binary bootstrap
 	msg_normal "Installing bootstrap from binary package repositories...\n"
-	xbps-install -r $XBPS_MASTERDIR \
+	case "$XBPS_VERSION" in
+		0.[2-9][1-9]*) _args="-S" ;;
+	esac
+	xbps-install ${_args} -r $XBPS_MASTERDIR \
 		-c $XBPS_MASTERDIR/host/repocache \
 		-y base-chroot && \
 		msg_normal "Installed bootstrap successfully!\n"
