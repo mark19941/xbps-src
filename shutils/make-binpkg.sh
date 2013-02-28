@@ -121,6 +121,8 @@ make_binpkg_real() {
 
 	if [ -n "$noarch" ]; then
 		arch=noarch
+	elif [ -n "$XBPS_TARGET_MACHINE" ]; then
+		arch=$XBPS_TARGET_MACHINE
 	else
 		arch=$XBPS_MACHINE
 	fi

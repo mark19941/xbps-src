@@ -129,8 +129,6 @@ set_cross_defvars() {
 
 	. ${XBPS_CROSSPFDIR}/${_XBPS_TARCH}.sh
 
-	export XBPS_MACHINE=$XBPS_TARGET_ARCH
-
 	if [ -z "$CHROOT_READY" ]; then
 		echo "ERROR: chroot mode not activated (install a bootstrap)."
 		exit 1
@@ -175,4 +173,6 @@ set_cross_defvars() {
 	export XBPS_CROSS_TRIPLET XBPS_CROSS_CFLAGS XBPS_CROSS_CXXFLAGS
 	export XBPS_UHELPER_XCMD XBPS_INSTALL_XCMD XBPS_QUERY_XCMD
 	export XBPS_RINDEX_XCMD XBPS_RECONFIGURE_XCMD XBPS_REMOVE_XCMD
+	export XBPS_TARGET_MACHINE=$XBPS_TARGET_ARCH
+	export XBPS_CROSS_BUILD=1
 }

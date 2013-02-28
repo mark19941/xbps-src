@@ -32,18 +32,12 @@ write_metadata() {
 # these will be used for binary packages.
 #
 write_metadata_real() {
-	local f= i= j= found= arch= dirat= lnkat= newlnk=
+	local f= i= j= found= dirat= lnkat= newlnk=
 	local lver= TMPFLIST= TMPFPLIST= found= _depname=
 	local fpattern="s|${DESTDIR}||g;s|^\./$||g;/^$/d"
 
 	if [ ! -d "${DESTDIR}" ]; then
 		msg_error "$pkgver: not installed in destdir!\n"
-	fi
-
-	if [ -n "$noarch" ]; then
-		arch=noarch
-	else
-		arch=$XBPS_MACHINE
 	fi
 
 	lver="${version}_${revision}"
