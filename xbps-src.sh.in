@@ -372,7 +372,12 @@ clean)
 		_pkgname=$(basename_cwd)
 	fi
 	setup_tmpl ${_pkgname}
-	remove_tmpl_wrksrc $wrksrc
+	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
+		chroot_handler $target ${_pkgname} || exit $?
+	else
+		remove_tmpl_wrksrc $wrksrc
+		run_func do_clean
+	fi
 	;;
 remove-autodeps)
 	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
