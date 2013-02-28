@@ -23,14 +23,14 @@ configure_src_phase() {
 			msg_error "$pkgver: cannot access build_wrksrc directory [$build_wrksrc].\n"
 	fi
 
-	if [ -n "$XBPS_CROSS_TRIPLET" ]; then
+	if [ -n "$XBPS_CROSS_BUILD" ]; then
 		XBPS_PKGCONFIG_ARGS="
-			PKG_CONFIG_SYSROOT_DIR=/usr/$XBPS_CROSS_TRIPLET
-			PKG_CONFIG_LIBDIR=/usr/$XBPS_CROSS_TRIPLET/lib/pkgconfig"
+			PKG_CONFIG_SYSROOT_DIR=$XBPS_CROSS_BASE
+			PKG_CONFIG_LIBDIR=$XBPS_CROSS_BASE/lib/pkgconfig"
 
 		CONFIGURE_SHARED_ARGS="${CONFIGURE_SHARED_ARGS}
 			--host=${XBPS_CROSS_TRIPLET}
-			--with-libtool-sysroot=/usr/$XBPS_CROSS_TRIPLET
+			--with-libtool-sysroot=$XBPS_CROSS_BASE
 			$XBPS_PKGCONFIG_ARGS"
 	fi
 

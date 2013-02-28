@@ -4,13 +4,12 @@
 XBPS_PYVER="2.7" # currently 2.7 is the default python
 
 do_build() {
-	if [ -n "$XBPS_CROSS_TRIPLET" ]; then
+	if [ -n "$XBPS_CROSS_BUILD" ]; then
 		CC="${XBPS_CROSS_TRIPLET}-gcc -pthread"
 		LDSHARED="${CC} -shared"
-		CROSSBASE="/usr/$XBPS_CROSS_TRIPLET"
-		PYPREFIX="$CROSSBASE"
-		CFLAGS="$CFLAGS -I${CROSSBASE}/include/python${XBPS_PYVER} -I${CROSSBASE}/usr/include"
-		LDFLAGS="$LDFLAGS -L${CROSSBASE}/lib/python${XBPS_PYVER} -L${CROSSBASE}/lib"
+		PYPREFIX="$XBPS_CROSS_BASE"
+		CFLAGS="$CFLAGS -I${XBPS_CROSS_BASE}/include/python${XBPS_PYVER} -I${XBPS_CROSS_BASE}/usr/include"
+		LDFLAGS="$LDFLAGS -L${XBPS_CROSS_BASE}/lib/python${XBPS_PYVER} -L${XBPS_CROSS_BASE}/lib"
 		env CC="$CC" LDSHARED="$LDSHARED" \
 			PYPREFIX="$PYPREFIX" CFLAGS="$CFLAGS" \
 			LDFLAGS="$LDFLAGS" python setup.py build ${make_build_args}
@@ -23,13 +22,12 @@ do_install() {
 	if [ -z "$make_install_args" ]; then
 		make_install_args="--prefix=/usr --root=$DESTDIR"
 	fi
-	if [ -n "$XBPS_CROSS_TRIPLET" ]; then
+	if [ -n "$XBPS_CROSS_BUILD" ]; then
 		CC="${XBPS_CROSS_TRIPLET}-gcc -pthread"
 		LDSHARED="${CC} -shared"
-		CROSSBASE="/usr/$XBPS_CROSS_TRIPLET"
-		PYPREFIX="$CROSSBASE"
-		CFLAGS="$CFLAGS -I${CROSSBASE}/include/python${XBPS_PYVER} -I${CROSSBASE}/usr/include"
-		LDFLAGS="$LDFLAGS -L${CROSSBASE}/lib/python${XBPS_PYVER} -L${CROSSBASE}/lib"
+		PYPREFIX="$XBPS_CROSS_BASE"
+		CFLAGS="$CFLAGS -I${XBPS_CROSS_BASE}/include/python${XBPS_PYVER} -I${XBPS_CROSS_BASE}/usr/include"
+		LDFLAGS="$LDFLAGS -L${XBPS_CROSS_BASE}/lib/python${XBPS_PYVER} -L${XBPS_CROSS_BASE}/lib"
 		env CC="$CC" LDSHARED="$LDSHARED" \
 			PYPREFIX="$PYPREFIX" CFLAGS="$CFLAGS" \
 			LDFLAGS="$LDFLAGS" python setup.py install ${make_install_args}

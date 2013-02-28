@@ -237,7 +237,7 @@ set_tmpl_common_vars() {
 		export LDFLAGS="$(echo $LDFLAGS|sed -e "s|-Wl,--as-needed||g")"
 	fi
 
-	if [ -n "$XBPS_CROSS_TRIPLET" ]; then
+	if [ -n "$XBPS_CROSS_BUILD" ]; then
 		export CC="${XBPS_CROSS_TRIPLET}-gcc"
 		export CXX="${XBPS_CROSS_TRIPLET}-c++"
 		export CPP="${XBPS_CROSS_TRIPLET}-cpp"

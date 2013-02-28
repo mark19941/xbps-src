@@ -38,7 +38,7 @@ install_pkg_from_repos() {
 
 _remove_pkg_cross_deps() {
 	local rval= tmplogf=
-	[ -z "$XBPS_CROSS_TRIPLET" ] && return 0
+	[ -z "$XBPS_CROSS_BUILD" ] && return 0
 
 	cd $XBPS_MASTERDIR || return 1
 	msg_normal "$pkgver: removing autocrossdeps, please wait...\n"
@@ -178,7 +178,7 @@ install_pkg_deps() {
 		msg_normal "$pkgver: installing '$i' (native)...\n"
 		install_pkg_from_repos "${i}"
 	done
-	[ -z "$XBPS_CROSS_TRIPLET" ] && return 0
+	[ -z "$XBPS_CROSS_BUILD" ] && return 0
 	#
 	# Cross target build dependencies.
 	#
