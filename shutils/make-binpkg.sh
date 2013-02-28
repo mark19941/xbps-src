@@ -45,8 +45,10 @@ make_binpkg() {
 
 	[ -z "$pkgname" ] && return 1
 
-	msg_normal "$pkgver: fetching source git revisions, please wait...\n"
-	git_revs $pkgname
+	if [ -n "$XBPS_USE_GIT_REVS" ]; then
+		msg_normal "$pkgver: fetching source git revisions, please wait...\n"
+		git_revs $pkgname
+	fi
 
 	for subpkg in ${subpackages}; do
 		unset_pkg_vars
