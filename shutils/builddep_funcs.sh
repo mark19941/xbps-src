@@ -78,24 +78,11 @@ remove_pkg_autodeps() {
 #
 install_pkg_deps() {
 	local i= pkgn= iver= missing_deps= missing_crossdeps=
-	local binpkg_deps= binpkg_crossdeps= _props= _subpkg= _exact=
+	local binpkg_deps= binpkg_crossdeps= _props= _exact=
 
 	[ -z "$pkgname" ] && return 2
 	[ -z "$build_depends" -a -z "$cross_build_depends" ] && return 0
 	[ -n "$ORIGIN_PKGDEPS_DONE" ] && return 0
-
-	# Remove autodeps in case a dependency was built from source.
-	for i in ${subpackages}; do
-		if [ "${i}" = "${pkgname}" ]; then
-			_subpkg=1
-			break
-		fi
-	done
-
-	if [ "$pkgname" != "${_ORIGINPKG}" -a -z "${_subpkg}" -a -n "$CHROOT_READY" ]; then
-		remove_pkg_autodeps || return $?
-	fi
-	unset _subpkg
 
 	msg_normal "$pkgver: required dependencies:\n"
 
@@ -161,16 +148,16 @@ install_pkg_deps() {
 	for i in ${missing_deps}; do
 		# packages not found in repos, install from source.
 		curpkgdepname=$($XBPS_UHELPER_CMD getpkgdepname "$i")
-		setup_tmpl ${curpkgdepname}
+		setup_subpkg_tmpl ${curpkgdepname}
 		# Check if version in srcpkg satisfied required dependency,
 		# and bail out if doesn't.
 		${XBPS_UHELPER_CMD} pkgmatch "$pkgver" "$i"
 		if [ $? -eq 0 ]; then
-			setup_tmpl ${_ORIGINPKG}
+			setup_subpkg_tmpl ${_ORIGINPKG}
 			msg_error_nochroot "$pkgver: required dependency '$i' cannot be resolved!\n"
 		fi
 		install_pkg
-		setup_tmpl ${_ORIGINPKG}
+		setup_subpkg_tmpl ${_ORIGINPKG}
 		cd ${XBPS_MASTERDIR}
 		install_pkg_deps
 	done
@@ -241,16 +228,16 @@ install_pkg_deps() {
 	for i in ${missing_crossdeps}; do
 		# packages not found in repos, install from source.
 		curpkgdepname=$($XBPS_UHELPER_CMD getpkgdepname "$i")
-		setup_tmpl ${curpkgdepname}
+		setup_subpkg_tmpl ${curpkgdepname}
 		# Check if version in srcpkg satisfied required dependency,
 		# and bail out if doesn't.
 		${XBPS_UHELPER_CMD} pkgmatch "$pkgver" "$i"
 		if [ $? -eq 0 ]; then
-			setup_tmpl ${_ORIGINPKG}
+			setup_subpkg_tmpl ${_ORIGINPKG}
 			msg_error_nochroot "$pkgver: required dependency '$i' cannot be resolved!\n"
 		fi
 		install_pkg
-		setup_tmpl ${_ORIGINPKG}
+		setup_subpkg_tmpl ${_ORIGINPKG}
 		cd ${XBPS_MASTERDIR}
 		install_pkg_deps
 	done

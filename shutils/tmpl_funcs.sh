@@ -21,7 +21,8 @@ reset_tmpl_vars() {
 			homepage license kernel_hooks_version makejobs \
 			mutable_files nostrip_files skip_extraction \
 			softreplace create_srcdir run_depends build_depends \
-			depends makedepends fulldepends crossmakedepends \
+			cross_build_depends crossmakedepends \
+			depends makedepends fulldepends \
 			SUBPKG XBPS_EXTRACT_DONE XBPS_CONFIGURE_DONE \
 			XBPS_BUILD_DONE XBPS_INSTALL_DONE FILESDIR DESTDIR \
 			SRCPKGDESTDIR PATCHESDIR CFLAGS CXXFLAGS CPPFLAGS \
@@ -64,7 +65,7 @@ setup_subpkg_tmpl() {
 
 	if [ -r "$XBPS_SRCPKGDIR/$1/$1.template" ]; then
 		setup_tmpl $1
-		unset build_depends depends run_depends
+		unset build_depends cross_build_depends depends run_depends
 		. $XBPS_SRCPKGDIR/$1/$1.template
 		for f in ${subpackages}; do
 			[ "$f" != "$1" ] && continue
