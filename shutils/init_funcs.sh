@@ -140,7 +140,7 @@ set_cross_defvars() {
 	check_installed_pkg cross-${XBPS_CROSS_TRIPLET}-0.1_1
 	if [ $? -ne 0 ]; then
 		echo "Installing required cross pkg: cross-${XBPS_CROSS_TRIPLET}"
-		$XBPS_INSTALL_CMD -y cross-${XBPS_CROSS_TRIPLET} 2>&1 >/dev/null
+		$XBPS_INSTALL_CMD -Ay cross-${XBPS_CROSS_TRIPLET} 2>&1 >/dev/null
 		if [ $? -ne 0 ]; then
 			echo "ERROR: failed to install cross-${XBPS_CROSS_TRIPLET}"
 			exit 1
