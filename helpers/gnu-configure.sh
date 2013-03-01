@@ -12,6 +12,10 @@ do_configure() {
 	if [ -z "$broken_as_needed" ]; then
 		sed -i "s/^\([ \t]*tmp_sharedflag\)='-shared'/\1='-shared -Wl,--as-needed'/" ${configure_script}
 	fi
+	# Automatically detect musl toolchains.
+	for f in $(find ${wrksrc} -type f -name *config*.sub); do
+		cp -f ${XBPS_CROSSPFDIR}/config.sub ${f}
+	done
 	${configure_script} ${CONFIGURE_SHARED_ARGS} ${configure_args}
 }
 

@@ -147,14 +147,17 @@ Both ways are equivalent.
 
 Options:
  -a <cross-architecture>
-     Cross build packages for this target architecture. Supported values:
-	armv6hf - for ARMv6 EABI5 Hard Float
-	mips	- for MIPS o32 BE Soft Float
-	mipsel	- for MIPS o32 LE Soft Float
+     Cross build packages for this target arch/system/abi. Supported values:
+
+	armv6hf 	- for ARMv6 EABI5 (LE Hard Float / GNU)
+	armv6hf-musl	- for ARMv6 EABI5 (LE Hard Float / Musl libc)
+	mips		- for MIPS o32 (BE Soft Float / GNU)
+	mipsel		- for MIPS o32 (LE Soft Float / GNU)
+
  -C  Do not remove build directory after successful installation.
  -c  <config>
-      Path to global configuration file:
-     if not specified ${XBPS_ETCDIR}/xbps-src.conf is used.
+     Path to global configuration file (defaults to 
+     ${XBPS_ETCDIR}/xbps-src.conf).
  -D  <distdir>
      Path to XBPS_DISTDIR, overriding the setting in xbps-src.conf.
  -H  <hostdir>
@@ -164,7 +167,7 @@ Options:
  -L  Disable ASCII colors.
  -m  <masterdir
      Master directory to install packages and build binary packages,
-     overwritting the value set in configuration file xbps-src.conf.
+     overwritting the value set in configuration file.
 _EOF
 }
 

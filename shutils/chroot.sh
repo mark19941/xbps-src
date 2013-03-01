@@ -221,6 +221,8 @@ install_xbps_src() {
 	install -d ${XBPS_MASTERDIR}/usr/local/share/xbps-src/cross-profiles
 	install -m644 ${XBPS_SHAREDIR}/cross-profiles/*.sh \
 		${XBPS_MASTERDIR}/usr/local/share/xbps-src/cross-profiles
+	install -m644 ${XBPS_SHAREDIR}/cross-profiles/config.sub \
+		${XBPS_MASTERDIR}/usr/local/share/xbps-src/cross-profiles
 	set +e
 }
 
