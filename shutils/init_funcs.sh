@@ -145,13 +145,12 @@ set_cross_defvars() {
 			echo "ERROR: failed to install cross-${XBPS_CROSS_TRIPLET}"
 			exit 1
 		fi
-		echo "Installing required cross pkg: cross-vpkg-dummy"
-		$XBPS_INSTALL_CMD -r /usr/${XBPS_CROSS_TRIPLET} \
-			-y cross-vpkg-dummy 2>&1 >/dev/null
-		if [ $? -ne 0 ]; then
-			echo "ERROR: failed to install cross-vpkg-dummy"
-			exit 1
-		fi
+	fi
+	$XBPS_INSTALL_CMD -r /usr/${XBPS_CROSS_TRIPLET} \
+		-y cross-vpkg-dummy 2>&1 >/dev/null
+	if [ $? -ne 0 -a $? -ne 6 ]; then
+		echo "ERROR: failed to install cross-vpkg-dummy"
+		exit 1
 	fi
 
 	CROSSVARS="TARGET_ARCH CROSS_TRIPLET CROSS_CFLAGS CROSS_CXXFLAGS"
