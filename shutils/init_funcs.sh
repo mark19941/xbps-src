@@ -120,14 +120,14 @@ set_defvars() {
 set_cross_defvars() {
 	local CROSSVARS= i= val=
 
-	[ -z "${_XBPS_TARCH}" ] && return 0
+	[ -z "$XBPS_CROSS_BUILD" ] && return 0
 
-	if [ ! -r ${XBPS_CROSSPFDIR}/${_XBPS_TARCH}.sh ]; then
-		echo "ERROR: missing cross build profile for ${_XBPS_TARCH}, exiting."
+	if [ ! -r ${XBPS_CROSSPFDIR}/${XBPS_CROSS_BUILD}.sh ]; then
+		echo "ERROR: missing cross build profile for ${XBPS_CROSS_BUILD}, exiting."
 		exit 1
 	fi
 
-	. ${XBPS_CROSSPFDIR}/${_XBPS_TARCH}.sh
+	. ${XBPS_CROSSPFDIR}/${XBPS_CROSS_BUILD}.sh
 
 	if [ -z "$CHROOT_READY" ]; then
 		echo "ERROR: chroot mode not activated (install a bootstrap)."
@@ -174,5 +174,4 @@ set_cross_defvars() {
 	export XBPS_RINDEX_XCMD XBPS_RECONFIGURE_XCMD XBPS_REMOVE_XCMD
 	export XBPS_TARGET_MACHINE=$XBPS_TARGET_ARCH
 	export XBPS_CROSS_BASE=/usr/$XBPS_CROSS_TRIPLET
-	export XBPS_CROSS_BUILD=1
 }

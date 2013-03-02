@@ -220,7 +220,7 @@ check_config_vars() {
 #
 while getopts "a:Cc:D:hH:KLm:V" opt; do
 	case $opt in
-	a) export _XBPS_TARCH="$OPTARG";;
+	a) export XBPS_CROSS_BUILD="$OPTARG";;
 	C) export KEEP_WRKSRC=1;;
 	c) XBPS_CONFIG_FILE="$OPTARG";;
 	D) _DISTDIR="$OPTARG";;
