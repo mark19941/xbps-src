@@ -4,13 +4,13 @@ umask 022
 
 exit_func() {
 	[ -z "$KEEP_AUTODEPS" ] && remove_pkg_autodeps
-	msg_red "xbps-src: a failure has ocurred! exiting...\n"
+	if [ -z "$IN_CHROOT" ]; then
+		msg_red "xbps-src: a failure has ocurred! exiting...\n"
+	fi
 	exit 2
 }
 
-if [ -z "$IN_CHROOT" ]; then
-	trap 'exit_func' INT TERM HUP
-fi
+trap 'exit_func' INT TERM HUP
 
 readonly XBPS_SRC_VERSION="@@XBPS_SRC_VERSION@@"
 
