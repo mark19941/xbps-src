@@ -165,7 +165,7 @@ Options:
  -h  Usage output.
  -K  Do not remove automatic package dependencies.
  -L  Disable ASCII colors.
- -m  <masterdir
+ -m  <masterdir>
      Master directory to install packages and build binary packages,
      overwritting the value set in configuration file.
 _EOF
