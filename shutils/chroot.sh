@@ -43,6 +43,9 @@ _EOF
 		echo "XBPS_DISTCC=$XBPS_DISTCC" >> $XBPSSRC_CF
 		echo "XBPS_DISTCC_HOSTS=\"${XBPS_DISTCC_HOSTS}\"" >> $XBPSSRC_CF
 	fi
+	if [ -n "$XBPS_USE_GIT_REVS" ]; then
+		echo "XBPS_USE_GIT_REVS=yes" >> $XBPSSRC_CF
+	fi
 
 	echo "# End of configuration file." >> $XBPSSRC_CF
 
