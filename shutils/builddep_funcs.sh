@@ -115,19 +115,19 @@ install_pkg_deps() {
 		else
 			if [ -n "${_exact}" ]; then
 				unset _exact
-				_props=$($XBPS_QUERY_CMD -R -pversion,repository "${pkgn}" 2>/dev/null)
+				_props=$($XBPS_QUERY_CMD -R -ppkgver,repository "${pkgn}" 2>/dev/null)
 			else
-				_props=$($XBPS_QUERY_CMD -R -pversion,repository "${i}" 2>/dev/null)
+				_props=$($XBPS_QUERY_CMD -R -ppkgver,repository "${i}" 2>/dev/null)
 			fi
 			if [ -n "${_props}" ]; then
 				set -- ${_props}
-				$XBPS_UHELPER_CMD pkgmatch ${pkgn}-${1} "${i}"
+				$XBPS_UHELPER_CMD pkgmatch ${1} "${i}"
 				if [ $? -eq 1 ]; then
 					echo "   ${i}: found $1 in $2."
 					if [ -z "$binpkg_deps" ]; then
-						binpkg_deps="${pkgn}-${1}"
+						binpkg_deps="${1}"
 					else
-						binpkg_deps="${binpkg_deps} ${pkgn}-${1}"
+						binpkg_deps="${binpkg_deps} ${1}"
 					fi
 					shift 2
 					continue
@@ -195,19 +195,19 @@ install_pkg_deps() {
 		else
 			if [ -n "${_exact}" ]; then
 				unset _exact
-				_props=$($XBPS_QUERY_XCMD -R -pversion,repository "${pkgn}" 2>/dev/null)
+				_props=$($XBPS_QUERY_XCMD -R -ppkgver,repository "${pkgn}" 2>/dev/null)
 			else
-				_props=$($XBPS_QUERY_XCMD -R -pversion,repository "${i}" 2>/dev/null)
+				_props=$($XBPS_QUERY_XCMD -R -ppkgver,repository "${i}" 2>/dev/null)
 			fi
 			if [ -n "${_props}" ]; then
 				set -- ${_props}
-				$XBPS_UHELPER_CMD pkgmatch ${pkgn}-${1} "${i}"
+				$XBPS_UHELPER_CMD pkgmatch ${1} "${i}"
 				if [ $? -eq 1 ]; then
 					echo "   ${i}: (cross) found $1 in $2."
 					if [ -z "$binpkg_crossdeps" ]; then
-						binpkg_crossdeps="${pkgn}-${1}"
+						binpkg_crossdeps="${1}"
 					else
-						binpkg_crossdeps="${binpkg_crossdeps} ${pkgn}-${1}"
+						binpkg_crossdeps="${binpkg_crossdeps} ${1}"
 					fi
 					shift 2
 					continue
