@@ -43,7 +43,7 @@ _remove_pkg_cross_deps() {
 	cd $XBPS_MASTERDIR || return 1
 	msg_normal "$pkgver: removing autocrossdeps, please wait...\n"
 	tmplogf=$(mktemp)
-	$XBPS_RECONFIGURE_XCMD -a && $XBPS_REMOVE_XCMD -Ryo > $tmplogf 2>&1
+	$XBPS_REMOVE_XCMD -Ryo > $tmplogf 2>&1
 	if [ $? -ne 0 ]; then
 		msg_red "$pkgver: failed to remove autocrossdeps:\n"
 		cat $tmplogf && rm -f $tmplogf
