@@ -50,14 +50,15 @@ set_defvars() {
 		[ -r "$f" ] && . $f
 	done
 
+	: ${XBPS_INSTALL:=xbps-install}
+	: ${XBPS_QUERY:=xbps-query}
+	: ${XBPS_RINDEX:=xbps-rindex}
+	: ${XBPS_UHELPER:=xbps-uhelper}
+	: ${XBPS_CREATE:=xbps-create}
+	: ${XBPS_RECONFIGURE:=xbps-reconfigure}
+	: ${XBPS_REMOVE:=xbps-remove}
+
 	if [ -n "$IN_CHROOT" ]; then
-		XBPS_INSTALL=/usr/local/sbin/xbps-install
-		XBPS_QUERY=/usr/local/sbin/xbps-query
-		XBPS_RINDEX=/usr/local/sbin/xbps-rindex
-		XBPS_UHELPER=/usr/local/sbin/xbps-uhelper
-		XBPS_CREATE=/usr/local/sbin/xbps-create
-		XBPS_RECONFIGURE=/usr/local/sbin/xbps-reconfigure
-		XBPS_REMOVE=/usr/local/sbin/xbps-remove
 		XBPS_UHELPER_CMD="$XBPS_UHELPER"
 		XBPS_INSTALL_CMD="$XBPS_INSTALL -C /usr/local/etc/xbps/xbps.conf"
 		XBPS_QUERY_CMD="$XBPS_QUERY -C /usr/local/etc/xbps/xbps.conf"
@@ -65,13 +66,6 @@ set_defvars() {
 		XBPS_RECONFIGURE_CMD="$XBPS_RECONFIGURE -C /usr/local/etc/xbps/xbps.conf"
 		XBPS_REMOVE_CMD="$XBPS_REMOVE -C /usr/local/etc/xbps/xbps.conf"
 	else
-		: ${XBPS_INSTALL:=xbps-install}
-		: ${XBPS_QUERY:=xbps-query}
-		: ${XBPS_RINDEX:=xbps-rindex}
-		: ${XBPS_UHELPER:=xbps-uhelper}
-		: ${XBPS_CREATE:=xbps-create}
-		: ${XBPS_RECONFIGURE:=xbps-reconfigure}
-		: ${XBPS_REMOVE:=xbps-remove}
 		XBPS_UHELPER_CMD="$XBPS_UHELPER -r $XBPS_MASTERDIR"
 		XBPS_INSTALL_CMD="$XBPS_INSTALL -C /empty.conf -R $XBPS_PACKAGESDIR -r $XBPS_MASTERDIR"
 		XBPS_QUERY_CMD="$XBPS_QUERY -C /empty.conf -D $XBPS_PACKAGESDIR -r $XBPS_MASTERDIR"

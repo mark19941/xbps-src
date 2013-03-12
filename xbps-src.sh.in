@@ -68,8 +68,10 @@ usage() {
 $PROGNAME: [-a target] [-Chk] [-c file] [-m dir] <target> [pkgname]
 
 Targets: (only one may be specified)
- binary-bootstrap
+ binary-bootstrap [arch]
    Install bootstrap packages from host repositories into <masterdir>.
+   If the optional 'arch' argument is set, it will install bootstrap packages
+   from this architecture, and its required xbps utilities.
 
  bootstrap
    Build and install from source the bootstrap packages into <masterdir>.
@@ -149,10 +151,11 @@ Options:
  -a <cross-architecture>
      Cross build packages for this target arch/system/abi. Supported values:
 
-	armv6hf 	- for ARMv6 EABI5 (LE Hard Float / GNU)
-	armv6hf-musl	- for ARMv6 EABI5 (LE Hard Float / Musl libc)
-	mips		- for MIPS o32 (BE Soft Float / GNU)
-	mipsel		- for MIPS o32 (LE Soft Float / GNU)
+	i686		- for i686 GNU/Linux
+	armv6hf 	- for ARMv6 EABI5 (LE Hard Float) GNU/Linux
+	armv6hf-musl	- for ARMv6 EABI5 (LE Hard Float) Musl/Linux
+	mips		- for MIPS o32 (BE Soft Float) GNU/Linux
+	mipsel		- for MIPS o32 (LE Soft Float) GNU/Linux
 
  -C  Do not remove build directory after successful installation.
  -c  <config>
@@ -344,10 +347,26 @@ binary-bootstrap)
 	case "$XBPS_VERSION" in
 		0.[2-9][1-9]*) _args="-S" ;;
 	esac
-	xbps-install ${_args} -r $XBPS_MASTERDIR \
+	# _pkgname == arch
+	if [ -n "${_pkgname}" ]; then
+		_bootstrap_arch="env XBPS_TARGET_ARCH=${_pkgname}"
+	fi
+
+	${_bootstrap_arch} xbps-install ${_args} -r $XBPS_MASTERDIR \
 		-c $XBPS_MASTERDIR/host/repocache \
-		-y base-chroot && \
-		msg_normal "Installed bootstrap successfully!\n"
+		-y 'base-chroot>=0.32' xbps-static
+
+	if [ $? -ne 0 ]; then
+		msg_error "Failed to install bootstrap packages!\n"
+	fi
+	# Reconfigure base-directories.
+	xbps-reconfigure -r $XBPS_MASTERDIR -f base-directories &>/dev/null
+
+	# Create symlinks for xbps utils.
+	for f in ${REQHOST_UTILS}; do
+		ln -sfr ${XBPS_MASTERDIR}/usr/sbin/${f}.static ${XBPS_MASTERDIR}/usr/sbin/${f}
+	done
+	msg_normal "Installed bootstrap successfully!\n"
 	;;
 bootstrap)
 	# bootstrap from sources
