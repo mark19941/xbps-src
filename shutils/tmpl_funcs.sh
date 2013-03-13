@@ -3,7 +3,7 @@
 # Resets all vars used by a template.
 #
 reset_tmpl_vars() {
-	local TMPL_VARS="pkgname distfiles configure_args strip_cmd \
+	local TMPL_VARS="pkgname distfiles configure_args \
 			make_build_args make_install_args build_style	\
 			short_desc maintainer long_desc checksum wrksrc	\
 			make_cmd bootstrap register_shell \
