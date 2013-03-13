@@ -136,6 +136,11 @@ prepare_binpkg_repos() {
 	case "$XBPS_VERSION" in
 	0.2[1-9]*) xbps-install -r ${XBPS_MASTERDIR} \
 			-C ${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf -S
+		if [ -n "$XBPS_CROSS_BUILD" ]; then
+			env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH \
+				xbps-install -r $XBPS_MASTERDIR/usr/$XBPS_CROSS_TRIPLET \
+					-C ${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf -S
+		fi
 		;;
 	*) xbps-install -r ${XBPS_MASTERDIR} \
 		-C ${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf -un 2>&1 >/dev/null
