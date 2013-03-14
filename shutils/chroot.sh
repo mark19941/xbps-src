@@ -63,7 +63,6 @@ XBPS_SRC_VERSION="$XBPS_SRC_VERSION"
 . /usr/local/etc/xbps/xbps-src.conf
 . /usr/local/share/xbps-src/shutils/init_funcs.sh
 
-export TERM=linux
 export XBPS_ETCDIR=/usr/local/etc/xbps
 export XBPS_SHAREDIR=/usr/local/share/xbps-src
 export XBPS_LIBEXECDIR=/usr/local/libexec/xbps-src
@@ -81,7 +80,7 @@ exec env -i PATH="\$PATH" XBPS_ETCDIR="\$XBPS_ETCDIR" \
 	XBPS_UHELPER_CMD="\$XBPS_UHELPER_CMD" XBPS_FETCH_CMD="\$XBPS_FETCH_CMD" \
 	XBPS_CMPVER_CMD="\$XBPS_CMPVER_CMD" XBPS_DIGEST_CMD="\$XBPS_DIGEST_CMD" \
 	DISTCC_HOSTS="\$XBPS_DISTCC_HOSTS" DISTCC_DIR="/distcc" CCACHE_DIR="/ccache" \
-	IN_CHROOT=1 LANG=C PS1="[\u@$XBPS_MASTERDIR \W]$ " /bin/bash +h
+	IN_CHROOT=1 LANG=C TERM=linux PS1="[\u@$XBPS_MASTERDIR \W]$ " /bin/bash +h
 
 _EOF
 	chmod 755 $XBPS_MASTERDIR/bin/xbps-shell
