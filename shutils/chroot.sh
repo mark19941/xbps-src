@@ -63,6 +63,7 @@ XBPS_SRC_VERSION="$XBPS_SRC_VERSION"
 . /usr/local/etc/xbps/xbps-src.conf
 . /usr/local/share/xbps-src/shutils/init_funcs.sh
 
+export TERM=linux
 export XBPS_ETCDIR=/usr/local/etc/xbps
 export XBPS_SHAREDIR=/usr/local/share/xbps-src
 export XBPS_LIBEXECDIR=/usr/local/libexec/xbps-src
