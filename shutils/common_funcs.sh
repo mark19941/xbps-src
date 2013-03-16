@@ -31,14 +31,14 @@ run_func() {
 }
 
 error_func() {
-	remove_pkgdestdir_sighandler ${pkgname} $KEEP_AUTODEPS
+	remove_pkg_destdir ${pkgname} $KEEP_AUTODEPS
 	if [ -n "$1" -a -n "$2" ]; then
 		msg_red "$pkgver: failed to run $1() at line $2.\n"
 	fi
 	exit 2
 }
 
-remove_pkgdestdir_sighandler() {
+remove_pkg_destdir() {
 	local subpkg= _pkgname="$1" _kwrksrc="$2"
 
 	setup_tmpl ${_pkgname}
@@ -83,7 +83,7 @@ msg_red_nochroot() {
 
 msg_error() {
 	msg_red "$@"
-	exit 1
+	kill -INT $$; exit 1
 }
 
 msg_error_nochroot() {

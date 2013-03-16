@@ -4,9 +4,8 @@ umask 022
 
 exit_func() {
 	[ -z "$KEEP_AUTODEPS" ] && remove_pkg_autodeps
-	if [ -z "$IN_CHROOT" ]; then
-		msg_red "xbps-src: a failure has ocurred! exiting...\n"
-	fi
+	remove_pkg_destdir
+	msg_red "xbps-src: a failure has ocurred! exiting...\n"
 	exit 2
 }
 
