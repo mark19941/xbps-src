@@ -478,8 +478,7 @@ show-build-deps)
 	;;
 zap)
 	for f in bin boot builddir destdir dev etc home lib lib32 lib64 mnt \
-		opt proc root run sbin sys tmp usr var xbps \
-		.xbps_perms_done .xbps_shared_utils_done; do
+		opt proc root run sbin sys tmp usr var xbps .xbps_chroot_init; do
 		if [ -d "$XBPS_MASTERDIR/$f" ]; then
 			echo "Removing directory $XBPS_MASTERDIR/$f ..."
 			rm -rf $XBPS_MASTERDIR/$f
