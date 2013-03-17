@@ -5,7 +5,9 @@ umask 022
 exit_func() {
 	[ -z "$KEEP_AUTODEPS" ] && remove_pkg_autodeps
 	remove_pkg_destdir
-	msg_red "xbps-src: a failure has ocurred! exiting...\n"
+	if [ -z "$IN_CHROOT" ]; then
+		msg_red "xbps-src: a failure has ocurred! exiting...\n"
+	fi
 	exit 2
 }
 
@@ -13,17 +15,11 @@ trap 'exit_func' INT TERM HUP
 
 readonly XBPS_SRC_VERSION="@@XBPS_SRC_VERSION@@"
 
-if [ -n "$IN_CHROOT" ]; then
-	export XBPS_ETCDIR=/usr/local/etc/xbps
-	export XBPS_SHAREDIR=/usr/local/share/xbps-src
-	export XBPS_LIBEXECDIR=/usr/local/libexec
-else
-	export XBPS_PREFIX=${DESTDIR}@@XBPS_INSTALL_PREFIX@@
-	export XBPS_ETCDIR=${DESTDIR}@@XBPS_INSTALL_ETCDIR@@
-	export XBPS_SBINDIR=${DESTDIR}@@XBPS_INSTALL_SBINDIR@@
-	export XBPS_SHAREDIR=${DESTDIR}@@XBPS_INSTALL_SHAREDIR@@
-	export XBPS_LIBEXECDIR=${DESTDIR}@@XBPS_INSTALL_LIBEXECDIR@@
-fi
+export XBPS_PREFIX=${DESTDIR}@@XBPS_INSTALL_PREFIX@@
+export XBPS_ETCDIR=${DESTDIR}@@XBPS_INSTALL_ETCDIR@@
+export XBPS_SBINDIR=${DESTDIR}@@XBPS_INSTALL_SBINDIR@@
+export XBPS_SHAREDIR=${DESTDIR}@@XBPS_INSTALL_SHAREDIR@@
+export XBPS_LIBEXECDIR=${DESTDIR}@@XBPS_INSTALL_LIBEXECDIR@@
 
 XBPS_CONFIG_FILE=${XBPS_ETCDIR}/xbps-src.conf
 PROGNAME=$(basename $0)
@@ -34,6 +30,7 @@ XBPS_MACHINE=$(uname -m)
 # Required utilities in host system for the bootstrap target.
 REQHOST_UTILS_BOOTSTRAP="awk bash bison sed gcc msgfmt patch makeinfo \
 	perl fakeroot tar xz gzip bzip2"
+
 # Required utilities in host system for chroot ops.
 REQHOST_UTILS="xbps-install xbps-query xbps-rindex xbps-uhelper \
 	xbps-reconfigure xbps-remove xbps-create"
@@ -42,10 +39,9 @@ check_reqhost_utils() {
 	local broken
 
 	[ -n "$IN_CHROOT" ] && return 0
-	[ -n "$1" ] && utils=${REQHOST_UTILS_BOOTSTRAP}
 
 	for f in ${REQHOST_UTILS}; do
-		if ! command -v ${f} 2>&1 >/dev/null; then
+		if ! command -v ${f} &>/dev/null; then
 			echo "${f} is missing in your system, can't continue!"
 			broken=1
 		fi
@@ -54,7 +50,7 @@ check_reqhost_utils() {
 	[ -z "$1" ] && return 0
 
 	for f in ${REQHOST_UTILS_BOOTSTRAP}; do
-		if ! command -v ${f} 2>&1 >/dev/null; then
+		if ! command -v ${f} &>/dev/null; then
 			echo "${f} is missing in your system, can't continue!"
 			broken=1
 		fi
@@ -67,6 +63,7 @@ usage() {
 $PROGNAME: [-a target] [-Chk] [-c file] [-m dir] <target> [pkgname]
 
 Targets: (only one may be specified)
+
  binary-bootstrap [arch]
    Install bootstrap packages from host repositories into <masterdir>.
    If the optional 'arch' argument is set, it will install bootstrap packages
@@ -178,11 +175,10 @@ basename_cwd() {
 }
 
 check_config_vars() {
-	local val= cffound= f= cfpaths= cf="xbps-src.conf"
+	local val= cffound= f=
 
 	if [ -z "$XBPS_CONFIG_FILE" ]; then
-		cfpaths="@@XBPS_INSTALL_PREFIX@@/etc/${cf} ./etc/${cf}"
-		for f in $cfpaths; do
+		for f in @@XBPS_ETCDIRX@@/xbps-src.conf ./etc/xbps-src.conf; do
 			if [ -f ${f} ]; then
 				XBPS_CONFIG_FILE=${f}
 				cffound=yes
@@ -268,8 +264,8 @@ if [ -n "${_HOSTDIR}" ]; then
 fi
 . ${XBPS_SHAREDIR}/shutils/init_funcs.sh
 
-if [ -f $XBPS_MASTERDIR/.xbps_perms_done ]; then
-	CHROOT_READY=1
+if [ -f $XBPS_MASTERDIR/.xbps_chroot_init ]; then
+	export CHROOT_READY=1
 fi
 
 set_defvars
@@ -288,13 +284,13 @@ fi
 #
 if [ -z "$IN_CHROOT" ]; then
 	# In non chroot case always prefer host tools.
-	MYPATH="$PATH:$XBPS_MASTERDIR/bin:$XBPS_MASTERDIR/usr/bin"
+	MYPATH="$PATH:$XBPS_MASTERDIR/usr/bin:$XBPS_MASTERDIR/usr/sbin"
 	MYPATH="$MYPATH:$XBPS_MASTERDIR/usr/local/bin"
 	MYPATH="$MYPATH:$XBPS_MASTERDIR/usr/local/sbin"
 	export PATH="$MYPATH"
 else
-	MYPATH="/usr/local/sbin:/bin:/sbin:/usr/bin:/usr/sbin"
-	MYPATH="$MYPATH:/usr/local/bin:/usr/lib/perl5/core_perl/bin"
+	MYPATH="/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
+	MYPATH="$MYPATH:/usr/lib/perl5/core_perl/bin"
 	export PATH="$MYPATH"
 	if [ -n "$XBPS_CCACHE" ]; then
 		CCACHEPATH="/usr/lib/ccache/bin"
@@ -323,7 +319,7 @@ else
 	fi
 fi
 
-if [ ! -f $XBPS_MASTERDIR/.xbps_perms_done ]; then
+if [ -z "$CHROOT_READY" ]; then
 	if [ -n "$BASE_CHROOT_REQ" ]; then
 		check_installed_pkg base-chroot-$BASE_CHROOT_REQ
 		if [ $? -eq 0 ]; then
@@ -353,18 +349,13 @@ binary-bootstrap)
 
 	${_bootstrap_arch} xbps-install ${_args} -r $XBPS_MASTERDIR \
 		-c $XBPS_MASTERDIR/host/repocache \
-		-y 'base-chroot>=0.32' xbps-static
+		-y 'base-chroot>=0.33' 'xbps>=0.21_5'
 
 	if [ $? -ne 0 ]; then
 		msg_error "Failed to install bootstrap packages!\n"
 	fi
 	# Reconfigure base-directories.
 	xbps-reconfigure -r $XBPS_MASTERDIR -f base-directories &>/dev/null
-
-	# Create symlinks for xbps utils.
-	for f in ${REQHOST_UTILS}; do
-		ln -sfr ${XBPS_MASTERDIR}/usr/sbin/${f}.static ${XBPS_MASTERDIR}/usr/sbin/${f}
-	done
 	msg_normal "Installed bootstrap successfully!\n"
 	;;
 bootstrap)
@@ -505,6 +496,7 @@ zap)
 *)
 	msg_red "xbps-src: invalid target $target.\n"
 	usage && exit 1
+	;;
 esac
 
 # Agur

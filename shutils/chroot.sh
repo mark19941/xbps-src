@@ -15,11 +15,11 @@ chroot_init() {
 
 	msg_normal "Starting chroot on $XBPS_MASTERDIR.\n"
 
-	if [ ! -d $XBPS_MASTERDIR/usr/local/etc/xbps ]; then
-		mkdir -p $XBPS_MASTERDIR/usr/local/etc/xbps
+	if [ ! -d $XBPS_MASTERDIR/etc/xbps ]; then
+		mkdir -p $XBPS_MASTERDIR/etc/xbps
 	fi
 
-	XBPSSRC_CF=$XBPS_MASTERDIR/usr/local/etc/xbps/xbps-src.conf
+	XBPSSRC_CF=$XBPS_MASTERDIR/etc/xbps/xbps-src.conf
 
 	cat > $XBPSSRC_CF <<_EOF
 # Generated configuration file by xbps-src, DO NOT EDIT!
@@ -60,25 +60,21 @@ _EOF
 
 XBPS_SRC_VERSION="$XBPS_SRC_VERSION"
 
-. /usr/local/etc/xbps/xbps-src.conf
-. /usr/local/share/xbps-src/shutils/init_funcs.sh
+. /etc/xbps/xbps-src.conf
+. /usr/share/xbps-src/shutils/init_funcs.sh
 
-export XBPS_ETCDIR=/usr/local/etc/xbps
-export XBPS_SHAREDIR=/usr/local/share/xbps-src
-export XBPS_LIBEXECDIR=/usr/local/libexec/xbps-src
+export XBPS_ETCDIR=/etc/xbps
+export XBPS_SHAREDIR=/usr/share/xbps-src
+export XBPS_LIBEXECDIR=/usr/libexec/xbps-src
 
 set_defvars
 
-PATH=/usr/local/sbin:/usr/lib/perl5/core_perl/bin:/usr/bin:/usr/sbin
+PATH=/usr/bin:/usr/sbin:/usr/lib/perl5/core_perl/bin
 
 exec env -i PATH="\$PATH" XBPS_ETCDIR="\$XBPS_ETCDIR" \
 	XBPS_SHAREDIR="\$XBPS_SHAREDIR" XBPS_LIBEXECDIR="\$XBPS_LIBEXECDIR" \
-	XBPS_INSTALL_CMD="\$XBPS_INSTALL_CMD" \
-	XBPS_RECONFIGURE_CMD="\$XBPS_RECONFIGURE_CMD" \
-	XBPS_REMOVE_CMD="\$XBPS_REMOVE_CMD" \
-	XBPS_QUERY_CMD="\$XBPS_QUERY_CMD" \
-	XBPS_UHELPER_CMD="\$XBPS_UHELPER_CMD" XBPS_FETCH_CMD="\$XBPS_FETCH_CMD" \
-	XBPS_CMPVER_CMD="\$XBPS_CMPVER_CMD" XBPS_DIGEST_CMD="\$XBPS_DIGEST_CMD" \
+	XBPS_FETCH_CMD="\$XBPS_FETCH_CMD" XBPS_CMPVER_CMD="\$XBPS_CMPVER_CMD" \
+	XBPS_DIGEST_CMD="\$XBPS_DIGEST_CMD" \
 	DISTCC_HOSTS="\$XBPS_DISTCC_HOSTS" DISTCC_DIR="/distcc" CCACHE_DIR="/ccache" \
 	IN_CHROOT=1 LANG=C TERM=linux PS1="[\u@$XBPS_MASTERDIR \W]$ " /bin/bash +h
 
@@ -89,7 +85,9 @@ _EOF
 prepare_chroot() {
 	local f=
 
-	if [ ! -f $XBPS_MASTERDIR/bin/bash ]; then
+	if [ -f $XBPS_MASTERDIR/.xbps_chroot_init ]; then
+		return 0
+	elif [ ! -f $XBPS_MASTERDIR/bin/bash ]; then
 		msg_error "Bootstrap not installed in $XBPS_MASTERDIR, can't continue.\n"
 	fi
 
@@ -98,13 +96,9 @@ prepare_chroot() {
 	cp -f /etc/services $XBPS_MASTERDIR/etc
 	[ -f /etc/localtime ] && cp -f /etc/localtime $XBPS_MASTERDIR/etc
 
-	for f in run/utmp log/btmp log/lastlog log/wtmp; do
-		touch -f $XBPS_MASTERDIR/var/$f
+	for f in dev sys proc xbps host boot; do
+		[ ! -d $XBPS_MASTERDIR/$f ] && mkdir -p $XBPS_MASTERDIR/$f
 	done
-	for f in run/utmp log/lastlog; do
-		chmod 644 $XBPS_MASTERDIR/var/$f
-	done
-	[ ! -d $XBPS_MASTERDIR/boot ] && mkdir -p $XBPS_MASTERDIR/boot
 
 	# Copy /etc/passwd and /etc/group from base-files.
 	cp -f $XBPS_SRCPKGDIR/base-files/files/passwd $XBPS_MASTERDIR/etc
@@ -116,57 +110,29 @@ prepare_chroot() {
 	# Copy /etc/hosts from base-files.
 	cp -f $XBPS_SRCPKGDIR/base-files/files/hosts $XBPS_MASTERDIR/etc
 
-	create_binsh_symlink
-
-	touch $XBPS_MASTERDIR/.xbps_perms_done
-}
-
-create_binsh_symlink() {
 	ln -sfr ${XBPS_MASTERDIR}/bin/bash ${XBPS_MASTERDIR}/bin/sh
+	rm -f $XBPS_MASTERDIR/etc/xbps/xbps.conf
+
+	touch $XBPS_MASTERDIR/.xbps_chroot_init
 }
 
 prepare_binpkg_repos() {
 	local f=
 
-	if [ ! -f ${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf ]; then
+	if [ ! -f ${XBPS_MASTERDIR}/etc/xbps/xbps.conf ]; then
 		install -Dm644 ${XBPS_SHAREDIR}/chroot/xbps.conf \
-			${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf
+			${XBPS_MASTERDIR}/etc/xbps/xbps.conf
 	fi
 	# Make sure to sync index for remote repositories.
-	case "$XBPS_VERSION" in
-	0.2[1-9]*) xbps-install -r ${XBPS_MASTERDIR} \
-			-C ${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf -S
-		if [ -n "$XBPS_CROSS_BUILD" ]; then
-			env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH \
-				xbps-install -r $XBPS_MASTERDIR/usr/$XBPS_CROSS_TRIPLET \
-					-C ${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf -S
-		fi
-		;;
-	*) xbps-install -r ${XBPS_MASTERDIR} \
-		-C ${XBPS_MASTERDIR}/usr/local/etc/xbps/xbps.conf -un 2>&1 >/dev/null
-		;;
-	esac
-	return 0
-}
+	xbps-install -r ${XBPS_MASTERDIR} \
+			-C ${XBPS_MASTERDIR}/etc/xbps/xbps.conf -S
+	if [ -n "$XBPS_CROSS_BUILD" ]; then
+		env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH \
+			xbps-install -r $XBPS_MASTERDIR/usr/$XBPS_CROSS_TRIPLET \
+				-C ${XBPS_MASTERDIR}/etc/xbps/xbps.conf -S
+	fi
 
-install_xbps_src() {
-	set -e
-	install -Dm755 ${XBPS_SBINDIR}/xbps-src \
-		${XBPS_MASTERDIR}/usr/local/sbin/xbps-src
-	install -Dm755 ${XBPS_LIBEXECDIR}/xbps-src-doinst-helper \
-		${XBPS_MASTERDIR}/usr/local/libexec/xbps-src-doinst-helper
-	install -d ${XBPS_MASTERDIR}/usr/local/share/xbps-src/shutils
-	install -m644 ${XBPS_SHAREDIR}/shutils/*.sh \
-		${XBPS_MASTERDIR}/usr/local/share/xbps-src/shutils
-	install -d ${XBPS_MASTERDIR}/usr/local/share/xbps-src/helpers
-	install -m644 ${XBPS_SHAREDIR}/helpers/*.sh \
-		${XBPS_MASTERDIR}/usr/local/share/xbps-src/helpers
-	install -d ${XBPS_MASTERDIR}/usr/local/share/xbps-src/cross-profiles
-	install -m644 ${XBPS_SHAREDIR}/cross-profiles/*.sh \
-		${XBPS_MASTERDIR}/usr/local/share/xbps-src/cross-profiles
-	install -m644 ${XBPS_SHAREDIR}/cross-profiles/config.sub \
-		${XBPS_MASTERDIR}/usr/local/share/xbps-src/cross-profiles
-	set +e
+	return 0
 }
 
 chroot_handler() {
@@ -182,13 +148,7 @@ chroot_handler() {
 
 	[ -z "$action" -a -z "$pkg" ] && return 1
 
-	for f in dev sys proc xbps host; do
-		[ ! -d $XBPS_MASTERDIR/$f ] && mkdir -p $XBPS_MASTERDIR/$f
-	done
-
 	chroot_init || return $?
-	create_binsh_symlink || return $?
-	install_xbps_src || return $?
 	prepare_binpkg_repos || return $?
 
 	if [ "$action" = "chroot" ]; then

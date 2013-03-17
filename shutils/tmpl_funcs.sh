@@ -267,15 +267,4 @@ set_tmpl_common_vars() {
 		export NM="nm"
 		export READELF="readelf"
 	fi
-
-	if [ -z "$IN_CHROOT" ]; then
-		export CPPFLAGS="-I$XBPS_MASTERDIR/usr/include"
-		if [ -d /usr/lib/libfakeroot ]; then
-			LDLIBPATH="/usr/lib/libfakeroot:$XBPS_MASTERDIR/usr/lib"
-		else
-			LDLIBPATH="$XBPS_MASTERDIR/usr/lib"
-		fi
-		export LDFLAGS="$LDFLAGS -L$XBPS_MASTERDIR/usr/lib"
-		export LD_LIBRARY_PATH="$LDLIBPATH"
-	fi
 }
