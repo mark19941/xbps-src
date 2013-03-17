@@ -185,7 +185,7 @@ make_binpkg_real() {
 	#
 	# Create the XBPS binary package.
 	#
-	${FAKEROOT_CMD} ${XBPS_CREATE_CMD} \
+	${XBPS_CREATE_CMD} \
 		--architecture ${arch} \
 		--provides "${_provides}" \
 		--conflicts "${_conflicts}" \

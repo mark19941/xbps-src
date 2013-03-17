@@ -41,7 +41,7 @@ install_pkg() {
 			wrksrc=${wrksrc} MASTERDIR="${XBPS_MASTERDIR}"	\
 			CONFIG_FILE=${XBPS_CONFIG_FILE}			\
 			XBPS_SRC_VERSION="${XBPS_SRC_VERSION}"		\
-			${FAKEROOT_CMD} ${XBPS_LIBEXECDIR}/xbps-src-doinst-helper \
+			${XBPS_LIBEXECDIR}/xbps-src-doinst-helper	\
 			${sourcepkg} || exit 1
 
 		# Strip binaries/libraries.
