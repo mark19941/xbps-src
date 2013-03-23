@@ -52,6 +52,7 @@ setup_tmpl() {
 	if [ -f $XBPS_SRCPKGDIR/${pkg}/template ]; then
 		reset_tmpl_vars
 		. $XBPS_SRCPKGDIR/${pkg}/template
+		sourcepkg=$pkgname
 		set_build_options
 		prepare_tmpl
 	else
@@ -169,9 +170,6 @@ set_tmpl_common_vars() {
 	FILESDIR=$XBPS_SRCPKGDIR/$pkgname/files
 	PATCHESDIR=$XBPS_SRCPKGDIR/$pkgname/patches
 	DESTDIR=${XBPS_DESTDIR}/${pkgname}-${version}
-	if [ -z "${sourcepkg}" ]; then
-		sourcepkg=${pkgname}
-	fi
 	SRCPKGDESTDIR=${XBPS_DESTDIR}/${sourcepkg}-${version}
 
 	if [ -z "$SUBPKG" ]; then
