@@ -52,8 +52,8 @@ setup_tmpl() {
 	if [ -f $XBPS_SRCPKGDIR/${pkg}/template ]; then
 		reset_tmpl_vars
 		. $XBPS_SRCPKGDIR/${pkg}/template
-		prepare_tmpl
 		set_build_options
+		prepare_tmpl
 	else
 		msg_error "Cannot find $pkg build template file.\n"
 	fi
