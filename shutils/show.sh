@@ -53,3 +53,26 @@ show_tmpl_build_deps() {
 		echo "$f"
 	done
 }
+
+show_tmpl_options() {
+	local f= j= state= desc= enabled=
+
+	if [ -f $XBPS_SRCPKGDIR/$pkgname/template.options ]; then
+		. $XBPS_SRCPKGDIR/$pkgname/template.options
+		for f in ${build_options}; do
+			for j in ${build_options_default}; do
+				if [ "$f" = "$j" ]; then
+					enabled=1
+					break
+				fi
+			done
+			state="OFF"
+			if [ -n "$enabled" ]; then
+				state="ON"
+				unset enabled
+			fi
+			eval desc="\$desc_option_$f"
+			printf "$f:\t$desc [$state]\n"
+		done
+	fi
+}

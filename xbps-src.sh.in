@@ -60,7 +60,7 @@ check_reqhost_utils() {
 
 usage() {
 	cat << _EOF
-$PROGNAME: [-a target] [-Chk] [-c file] [-m dir] <target> [pkgname]
+$PROGNAME: [-a cross-arch] [-Chk] [-c file] [-m dir] [-o opts] <target> [pkgname]
 
 Targets: (only one may be specified)
 
@@ -121,15 +121,18 @@ Targets: (only one may be specified)
  show [pkgname]
    Show information for the specified package.
 
+ show-build-deps <pkgname>
+   Show required build dependencies for <pkgname>.
+
  show-deps <pkgname>
    Show required run-time dependencies for <pkgname>. Package must be
    installed into destdir.
 
- show-build-deps <pkgname>
-   Show required build dependencies for <pkgname>.
-
  show-files <pkgname>
    Show files installed by <pkgname>. Package must be installed into destdir.
+
+ show-options [pkgname]
+   Show available build options by <pkgname>.
 
  zap
    Removes a masterdir but preserving ccache, distcc and host directories.
@@ -144,7 +147,7 @@ is omitted xbps-src assumes that CWD is in the target package. Example:
 Both ways are equivalent.
 
 Options:
- -a <cross-architecture>
+ -a <cross-arch>
      Cross build packages for this target arch/system/abi. Supported values:
 
 	i686		- for i686 GNU/Linux
@@ -167,6 +170,9 @@ Options:
  -m  <masterdir>
      Master directory to install packages and build binary packages,
      overwritting the value set in configuration file.
+ -o opt,~opt2,...
+     Enable or disable (prefixed with ~) package build options.
+     Supported options can be shown with the 'show-options' target.
 _EOF
 }
 
@@ -213,10 +219,33 @@ check_config_vars() {
 	fi
 }
 
+install_bbotstrap() {
+	# binary bootstrap
+	msg_normal "Installing bootstrap from binary package repositories...\n"
+	case "$XBPS_VERSION" in
+		0.[2-9][1-9]*) _args="-S" ;;
+	esac
+	# _pkgname == arch
+	if [ -n "${_pkgname}" ]; then
+		_bootstrap_arch="env XBPS_TARGET_ARCH=${_pkgname}"
+	fi
+
+	${_bootstrap_arch} xbps-install ${_args} -r $XBPS_MASTERDIR \
+		-c $XBPS_MASTERDIR/host/repocache \
+		-y 'base-chroot>=0.33' 'xbps>=0.21_5'
+
+	if [ $? -ne 0 ]; then
+		msg_error "Failed to install bootstrap packages!\n"
+	fi
+	# Reconfigure base-directories.
+	xbps-reconfigure -r $XBPS_MASTERDIR -f base-directories &>/dev/null
+	msg_normal "Installed bootstrap successfully!\n"
+}
+
 #
 # main()
 #
-while getopts "a:Cc:D:hH:KLm:V" opt; do
+while getopts "a:Cc:D:hH:KLm:o:V" opt; do
 	case $opt in
 	a) export XBPS_CROSS_BUILD="$OPTARG";;
 	C) export KEEP_WRKSRC=1;;
@@ -233,6 +262,7 @@ while getopts "a:Cc:D:hH:KLm:V" opt; do
 			mkdir -p ${_MASTERDIR}
 		fi
 		;;
+	o) export XBPS_BUILD_OPTS="$OPTARG";;
 	V) echo $XBPS_SRC_VERSION && exit 0;;
 	--) shift; break;;
 	esac
@@ -322,10 +352,16 @@ fi
 if [ -z "$CHROOT_READY" ]; then
 	if [ -n "$BASE_CHROOT_REQ" ]; then
 		check_installed_pkg base-chroot-$BASE_CHROOT_REQ
-		if [ $? -eq 0 ]; then
+		if [ $? -ne 0 ]; then
+			# Missing bootstrap.
+			if [ "$target" != "binary-bootstrap" ]; then
+				msg_error "Bootstrap not installed, use binary-bootstrap.\n"
+			fi
+		else
 			# Prepare chroot if required base-chroot pkg is installed.
 			msg_normal "Preparing chroot on $XBPS_MASTERDIR...\n"
 			prepare_chroot || return $?
+			export CHROOT_READY=1
 		fi
 	fi
 fi
@@ -337,26 +373,7 @@ export NOCOLORS=$NOCOLORS
 #
 case "$target" in
 binary-bootstrap)
-	# binary bootstrap
-	msg_normal "Installing bootstrap from binary package repositories...\n"
-	case "$XBPS_VERSION" in
-		0.[2-9][1-9]*) _args="-S" ;;
-	esac
-	# _pkgname == arch
-	if [ -n "${_pkgname}" ]; then
-		_bootstrap_arch="env XBPS_TARGET_ARCH=${_pkgname}"
-	fi
-
-	${_bootstrap_arch} xbps-install ${_args} -r $XBPS_MASTERDIR \
-		-c $XBPS_MASTERDIR/host/repocache \
-		-y 'base-chroot>=0.33' 'xbps>=0.21_5'
-
-	if [ $? -ne 0 ]; then
-		msg_error "Failed to install bootstrap packages!\n"
-	fi
-	# Reconfigure base-directories.
-	xbps-reconfigure -r $XBPS_MASTERDIR -f base-directories &>/dev/null
-	msg_normal "Installed bootstrap successfully!\n"
+	install_bbotstrap
 	;;
 bootstrap)
 	# bootstrap from sources
@@ -475,6 +492,14 @@ show-deps)
 show-build-deps)
 	setup_subpkg_tmpl ${_pkgname}
 	show_tmpl_build_deps
+	;;
+show-options)
+	if [ -z "${_pkgname}" ]; then
+		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
+		_pkgname=$(basename_cwd)
+	fi
+	setup_tmpl ${_pkgname}
+	show_tmpl_options
 	;;
 zap)
 	for f in bin boot builddir destdir dev etc home lib lib32 lib64 mnt \

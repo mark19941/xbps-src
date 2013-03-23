@@ -198,6 +198,7 @@ make_binpkg_real() {
 		--maintainer "${maintainer}" \
 		--long-desc "${long_desc}" --desc "${short_desc}" \
 		--built-with "xbps-src-${XBPS_SRC_VERSION}" \
+		--build-options "${build_options_set}" \
 		--pkgver "${pkgver}" --quiet \
 		--source-revisions "$(cat ${SRCPKG_GITREVS_FILE:-/dev/null} 2>/dev/null)" \
 		${_preserve} ${_sourcerevs} ${DESTDIR}

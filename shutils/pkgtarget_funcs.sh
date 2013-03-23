@@ -1,11 +1,69 @@
 # -*-* shell *-*-
-#
-# Installs a pkg by reading its build template file.
-#
+
+set_build_options() {
+	local f j opt optval
+	local -A options
+
+	[ ! -f $XBPS_SRCPKGDIR/$pkgname/template.options ] && return 0
+
+	. $XBPS_SRCPKGDIR/$pkgname/template.options
+
+	for f in ${build_options}; do
+		OIFS="$IFS"; IFS=','
+		for j in ${XBPS_BUILD_OPTS}; do
+			opt=${j#\~}
+			opt_disabled=${j:0:1}
+			if [ "$opt" = "$f" ]; then
+				if [ "$opt_disabled" != "~" ]; then
+					options[$opt]=1
+				else
+					options[$opt]=0
+				fi
+			fi
+		done
+		IFS="$OIFS"
+	done
+
+	for f in ${build_options_default}; do
+		optval=${options[$f]}
+		if [[ -z "$optval" ]] || [[ $optval -eq 1 ]]; then
+			options[$f]=1
+		fi
+	done
+
+	# Prepare final options.
+	for f in ${!options[@]}; do
+		optval=${options[$f]}
+		[[ $optval -eq 1 ]] && eval build_option_${f}=1
+	done
+
+	if declare -f do_options >/dev/null; then
+		do_options
+	fi
+	unset run_depends build_depends crossbuild_depends
+	set_tmpl_common_vars
+
+	msg_normal "$pkgver: build options:\n"
+	for f in ${build_options}; do
+		optval=${options[$f]}
+		if [[ $optval -eq 1 ]]; then
+			state=enabled
+			build_options_set="${build_options_set} ${f}"
+		else
+			state=disabled
+			build_options_set="${build_options_set} ~${f}"
+		fi
+		echo "   $f: $state"
+	done
+}
+
 install_pkg() {
 	local target="$1" lrepo=
 
 	[ -z "$pkgname" ] && return 1
+
+	# Set pkg build options.
+	set_build_options
 
 	# Install dependencies required by this package.
 	if [ ! -f "$XBPS_INSTALL_DONE" ]; then
@@ -96,9 +154,6 @@ install_pkg() {
 	fi
 }
 
-#
-# Removes package files from destdir.
-#
 remove_pkg() {
 	local subpkg= pkg= target="$1"
 

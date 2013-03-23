@@ -154,7 +154,8 @@ chroot_handler() {
 	if [ "$action" = "chroot" ]; then
 		$CHROOT_CMD ${_chargs} $XBPS_MASTERDIR /bin/xbps-shell || rv=$?
 	else
-		[ -n "${XBPS_CROSS_BUILD}" ] && arg="$arg -a ${XBPS_CROSS_BUILD}"
+		[ -n "$XBPS_BUILD_OPTS" ] && arg="$arg -o $XBPS_BUILD_OPTS"
+		[ -n "$XBPS_CROSS_BUILD" ] && arg="$arg -a $XBPS_CROSS_BUILD"
 		[ -n "$KEEP_WRKSRC" ] && arg="$arg -C"
 		[ -n "$KEEP_AUTODEPS" ] && arg="$arg -K"
 		[ -n "$NOCOLORS" ] && arg="$arg -L"
