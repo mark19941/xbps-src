@@ -1,7 +1,7 @@
 # -*-* shell *-*-
 
 set_build_options() {
-	local f j opt optval
+	local f j opt optval _optsset
 	local -A options
 
 	[ ! -f $XBPS_SRCPKGDIR/$pkgname/template.options ] && return 0
@@ -48,13 +48,22 @@ set_build_options() {
 		optval=${options[$f]}
 		if [[ $optval -eq 1 ]]; then
 			state=enabled
-			build_options_set="${build_options_set} ${f}"
+			_optsset="${_optsset} ${f}"
 		else
 			state=disabled
-			build_options_set="${build_options_set} ~${f}"
+			_optsset="${_optsset} ~${f}"
 		fi
 		echo "   $f: $state"
 	done
+
+	for f in ${_optsset}; do
+		if [ -z "$PKG_BUILD_OPTIONS" ]; then
+			PKG_BUILD_OPTIONS="$f"
+		else
+			PKG_BUILD_OPTIONS="$PKG_BUILD_OPTIONS $f"
+		fi
+	done
+	export PKG_BUILD_OPTIONS
 }
 
 install_pkg() {
@@ -63,6 +72,7 @@ install_pkg() {
 	[ -z "$pkgname" ] && return 1
 
 	# Set pkg build options.
+	unset PKG_BUILD_OPTIONS
 	set_build_options
 
 	# Install dependencies required by this package.

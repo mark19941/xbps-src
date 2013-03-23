@@ -23,7 +23,7 @@ reset_tmpl_vars() {
 			softreplace create_srcdir run_depends build_depends \
 			cross_build_depends crossmakedepends \
 			depends makedepends fulldepends \
-			build_options build_options_default build_options_set \
+			build_options build_options_default \
 			SUBPKG XBPS_EXTRACT_DONE XBPS_CONFIGURE_DONE \
 			XBPS_BUILD_DONE XBPS_INSTALL_DONE FILESDIR DESTDIR \
 			SRCPKGDESTDIR PATCHESDIR CFLAGS CXXFLAGS CPPFLAGS \
