@@ -40,10 +40,7 @@ set_build_options() {
 	if declare -f do_options >/dev/null; then
 		do_options
 	fi
-	unset run_depends build_depends crossbuild_depends
-	set_tmpl_common_vars
 
-	msg_normal "$pkgver: build options:\n"
 	for f in ${build_options}; do
 		optval=${options[$f]}
 		if [[ $optval -eq 1 ]]; then
@@ -53,7 +50,6 @@ set_build_options() {
 			state=disabled
 			_optsset="${_optsset} ~${f}"
 		fi
-		echo "   $f: $state"
 	done
 
 	for f in ${_optsset}; do
@@ -63,17 +59,25 @@ set_build_options() {
 			PKG_BUILD_OPTIONS="$PKG_BUILD_OPTIONS $f"
 		fi
 	done
-	export PKG_BUILD_OPTIONS
 }
+
+show_build_options() {
+	[ -z "$PKG_BUILD_OPTIONS" ] && return 0
+
+	msg_normal "$pkgver: build options: "
+	for f in ${PKG_BUILD_OPTIONS}; do
+		printf "$f "
+	done
+	msg_normal_append "\n"
+}
+
 
 install_pkg() {
 	local target="$1" lrepo=
 
 	[ -z "$pkgname" ] && return 1
 
-	# Set pkg build options.
-	unset PKG_BUILD_OPTIONS
-	set_build_options
+	show_build_options
 
 	# Install dependencies required by this package.
 	if [ ! -f "$XBPS_INSTALL_DONE" ]; then

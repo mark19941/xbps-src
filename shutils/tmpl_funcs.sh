@@ -27,7 +27,7 @@ reset_tmpl_vars() {
 			SUBPKG XBPS_EXTRACT_DONE XBPS_CONFIGURE_DONE \
 			XBPS_BUILD_DONE XBPS_INSTALL_DONE FILESDIR DESTDIR \
 			SRCPKGDESTDIR PATCHESDIR CFLAGS CXXFLAGS CPPFLAGS \
-			CC CXX LDFLAGS LD_LIBRARY_PATH"
+			CC CXX LDFLAGS LD_LIBRARY_PATH PKG_BUILD_OPTIONS"
 
 	local TMPL_FUNCS="pre_configure pre_build pre_install do_build \
 			  do_install do_configure do_fetch post_configure \
@@ -53,6 +53,7 @@ setup_tmpl() {
 		reset_tmpl_vars
 		. $XBPS_SRCPKGDIR/${pkg}/template
 		prepare_tmpl
+		set_build_options
 	else
 		msg_error "Cannot find $pkg build template file.\n"
 	fi
