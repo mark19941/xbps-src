@@ -72,7 +72,7 @@ show_tmpl_options() {
 				unset enabled
 			fi
 			eval desc="\$desc_option_$f"
-			printf "$f:\t$desc [$state]\n"
+			printf "$f: $desc [$state]\n"
 		done
 	fi
 }
