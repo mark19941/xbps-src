@@ -49,7 +49,7 @@ show_tmpl_build_deps() {
 	local f=
 
 	# build time deps
-	for f in ${build_depends}; do
+	for f in ${host_build_depends} ${build_depends}; do
 		echo "$f"
 	done
 }

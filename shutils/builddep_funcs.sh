@@ -8,7 +8,7 @@
 # Any other error number otherwise.
 #
 install_pkg_from_repos() {
-	local rval= tmplogf= cross="$2"
+	local rval= tmplogf=
 
 	tmplogf=$(mktemp)
 	if [ -n "$2" ]; then
@@ -89,7 +89,7 @@ install_pkg_deps() {
 	#
 	# Native build dependencies.
 	#
-	for i in ${build_depends}; do
+	for i in ${host_build_depends}; do
 		pkgn=$($XBPS_UHELPER_CMD getpkgdepname "${i}")
 		if [ -z "$pkgn" ]; then
 			pkgn=$($XBPS_UHELPER_CMD getpkgname "${i}")
@@ -165,11 +165,11 @@ install_pkg_deps() {
 		msg_normal "$pkgver: installing '$i' (native)...\n"
 		install_pkg_from_repos "${i}"
 	done
-	[ -z "$XBPS_CROSS_BUILD" ] && return 0
+
 	#
-	# Cross target build dependencies.
+	# Cross or library build dependencies.
 	#
-	for i in ${cross_build_depends}; do
+	for i in ${build_depends}; do
 		pkgn=$($XBPS_UHELPER_CMD getpkgdepname "${i}")
 		if [ -z "$pkgn" ]; then
 			pkgn=$($XBPS_UHELPER_CMD getpkgname "${i}")
@@ -183,13 +183,13 @@ install_pkg_deps() {
 		if [ $rval -eq 0 ]; then
 			iver=$($XBPS_UHELPER_XCMD version "${pkgn}")
 			if [ $? -eq 0 -a -n "$iver" ]; then
-				echo "   ${i}: (cross) found '$pkgn-$iver'."
+				echo "   ${i}: found '$pkgn-$iver'."
 				continue
 			fi
 		elif [ $rval -eq 1 ]; then
 			iver=$($XBPS_UHELPER_XCMD version "${pkgn}")
 			if [ $? -eq 0 -a -n "$iver" ]; then
-				echo "   ${i}: (cross) installed ${iver} (unresolved) removing..."
+				echo "   ${i}: installed ${iver} (unresolved) removing..."
 				$XBPS_REMOVE_XCMD -iyf $pkgn >/dev/null 2>&1
 			fi
 		else
@@ -203,7 +203,7 @@ install_pkg_deps() {
 				set -- ${_props}
 				$XBPS_UHELPER_CMD pkgmatch ${1} "${i}"
 				if [ $? -eq 1 ]; then
-					echo "   ${i}: (cross) found $1 in $2."
+					echo "   ${i}: found $1 in $2."
 					if [ -z "$binpkg_crossdeps" ]; then
 						binpkg_crossdeps="${1}"
 					else
@@ -212,11 +212,11 @@ install_pkg_deps() {
 					shift 2
 					continue
 				else
-					echo "   ${i}: (cross) not found."
+					echo "   ${i}: not found."
 				fi
 				shift 2
 			else
-				echo "   ${i}: (cross) not found."
+				echo "   ${i}: not found."
 			fi
 		fi
 		if [ -z "$missing_crossdeps" ]; then
@@ -242,8 +242,8 @@ install_pkg_deps() {
 		install_pkg_deps
 	done
 	for i in ${binpkg_crossdeps}; do
-		msg_normal "$pkgver: installing '$i' (for $XBPS_TARGET_ARCH)...\n"
-		install_pkg_from_repos "${i}" CROSS
+		msg_normal "$pkgver: installing '$i' ...\n"
+		install_pkg_from_repos "${i}" cross
 	done
 	if [ "$pkgname" = "${_ORIGINPKG}" ]; then
 		ORIGIN_PKGDEPS_DONE=1
@@ -256,7 +256,7 @@ install_pkg_deps() {
 # package, 1 if no match and 2 if not installed.
 #
 check_pkgdep_matched() {
-	local pkg="$1" cross="$2" uhelper= pkgn= iver=
+	local pkg="$1" uhelper= pkgn= iver=
 
 	[ -z "$pkg" ] && return 255
 

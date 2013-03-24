@@ -20,9 +20,9 @@ reset_tmpl_vars() {
 			pycompile_dirs pycompile_module systemd_services  \
 			homepage license kernel_hooks_version makejobs \
 			mutable_files nostrip_files skip_extraction \
-			softreplace create_srcdir run_depends build_depends \
-			cross_build_depends crossmakedepends \
-			depends makedepends fulldepends \
+			softreplace create_srcdir \
+			depends fulldepends makedepends hostmakedepends \
+			run_depends build_depends host_build_depends \
 			build_options build_options_default \
 			SUBPKG XBPS_EXTRACT_DONE XBPS_CONFIGURE_DONE \
 			XBPS_BUILD_DONE XBPS_INSTALL_DONE FILESDIR DESTDIR \
@@ -68,7 +68,7 @@ setup_subpkg_tmpl() {
 
 	if [ -r "$XBPS_SRCPKGDIR/$1/$1.template" ]; then
 		setup_tmpl $1
-		unset build_depends cross_build_depends depends run_depends
+		unset depends run_depends
 		. $XBPS_SRCPKGDIR/$1/$1.template
 		for f in ${subpackages}; do
 			[ "$f" != "$1" ] && continue
@@ -190,7 +190,19 @@ set_tmpl_common_vars() {
 		fi
 		run_depends="${run_depends} ${_pkgdep}"
 	done
-	for j in ${makedepends} ${fulldepends}; do
+	for j in ${hostmakedepends} ${fulldepends}; do
+		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${j} 2>/dev/null)"
+		if [ -z "${_pkgdepname}" ]; then
+			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${j} 2>/dev/null)"
+		fi
+		if [ -z "${_pkgdepname}" ]; then
+			_pkgdep="$j>=0"
+		else
+			_pkgdep="$j"
+		fi
+		host_build_depends="${host_build_depends} ${_pkgdep}"
+	done
+	for j in ${makedepends}; do
 		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${j} 2>/dev/null)"
 		if [ -z "${_pkgdepname}" ]; then
 			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${j} 2>/dev/null)"
@@ -201,18 +213,6 @@ set_tmpl_common_vars() {
 			_pkgdep="$j"
 		fi
 		build_depends="${build_depends} ${_pkgdep}"
-	done
-	for j in ${crossmakedepends}; do
-		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${j} 2>/dev/null)"
-		if [ -z "${_pkgdepname}" ]; then
-			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${j} 2>/dev/null)"
-		fi
-		if [ -z "${_pkgdepname}" ]; then
-			_pkgdep="$j>=0"
-		else
-			_pkgdep="$j"
-		fi
-		cross_build_depends="${cross_build_depends} ${_pkgdep}"
 	done
 
 	# For nonfree/bootstrap pkgs there's no point in building -dbg pkgs, disable them.
