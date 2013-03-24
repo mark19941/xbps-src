@@ -81,7 +81,7 @@ install_pkg_deps() {
 	local binpkg_deps= binpkg_crossdeps= _props= _exact=
 
 	[ -z "$pkgname" ] && return 2
-	[ -z "$build_depends" -a -z "$cross_build_depends" ] && return 0
+	[ -z "$build_depends" -a -z "$host_build_depends" ] && return 0
 	[ -n "$ORIGIN_PKGDEPS_DONE" ] && return 0
 
 	msg_normal "$pkgver: required dependencies:\n"
