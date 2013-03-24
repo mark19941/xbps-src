@@ -71,6 +71,23 @@ show_build_options() {
 	msg_normal_append "\n"
 }
 
+check_pkg_arch() {
+	if [ -n "$BEGIN_INSTALL" -a -n "$only_for_archs" ]; then
+		if [ -n "$XBPS_CROSS_BUILD" ]; then
+			if $(echo "$only_for_archs"|grep -q "$XBPS_TARGET_MACHINE"); then
+				found=1
+			fi
+		else
+			if $(echo "$only_for_archs"|grep -q "$XBPS_MACHINE"); then
+				found=1
+			fi
+		fi
+		if [ -z "$found" ]; then
+			msg_red "$pkgname: this package cannot be built on $XBPS_MACHINE.\n"
+			exit 0
+		fi
+	fi
+}
 
 install_pkg() {
 	local target="$1" lrepo=
@@ -78,6 +95,7 @@ install_pkg() {
 	[ -z "$pkgname" ] && return 1
 
 	show_build_options
+	check_pkg_arch
 
 	# Install dependencies required by this package.
 	if [ ! -f "$XBPS_INSTALL_DONE" ]; then

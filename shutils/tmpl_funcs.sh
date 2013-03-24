@@ -103,22 +103,6 @@ prepare_tmpl() {
 		fi
 	done
 
-	if [ -n "$BEGIN_INSTALL" -a -n "$only_for_archs" ]; then
-		if [ -n "$XBPS_CROSS_BUILD" ]; then
-			if $(echo "$only_for_archs"|grep -q "$XBPS_TARGET_MACHINE"); then
-				found=1
-			fi
-		else
-			if $(echo "$only_for_archs"|grep -q "$XBPS_MACHINE"); then
-				found=1
-			fi
-		fi
-		if [ -z "$found" ]; then
-			msg_red "$pkgname: this package cannot be built on $XBPS_MACHINE.\n"
-			exit 0
-		fi
-	fi
-
 	if [ -n "$build_requires" ]; then
 		local xbpssrcver=$(xbps-src -V)
 		$XBPS_CMPVER_CMD $build_requires $xbpssrcver
