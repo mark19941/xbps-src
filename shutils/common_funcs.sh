@@ -31,7 +31,7 @@ run_func() {
 }
 
 error_func() {
-	remove_pkg_destdir ${pkgname} $KEEP_AUTODEPS
+	[ -z "$KEEP_DESTDIR" ] && remove_pkg_destdir ${pkgname} $KEEP_AUTODEPS
 	if [ -n "$1" -a -n "$2" ]; then
 		msg_red "$pkgver: failed to run $1() at line $2.\n"
 	fi

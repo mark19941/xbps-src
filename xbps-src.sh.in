@@ -4,7 +4,7 @@ umask 022
 
 exit_func() {
 	[ -z "$KEEP_AUTODEPS" ] && remove_pkg_autodeps
-	remove_pkg_destdir
+	[ -z "$KEEP_DESTDIR" ] && remove_pkg_destdir
 	if [ -z "$IN_CHROOT" ]; then
 		msg_red "xbps-src: a failure has ocurred! exiting...\n"
 	fi
@@ -165,7 +165,7 @@ Options:
  -H  <hostdir>
      Path to XBPS_HOSTDIR, overriding the setting in xbps-src.conf.
  -h  Usage output.
- -K  Do not remove automatic package dependencies.
+ -K  Do not remove automatic package dependencies not destdir.
  -L  Disable ASCII colors.
  -m  <masterdir>
      Master directory to install packages and build binary packages,
@@ -253,7 +253,7 @@ while getopts "a:Cc:D:hH:KLm:o:V" opt; do
 	D) _DISTDIR="$OPTARG";;
 	H) _HOSTDIR="$OPTARG";;
 	h) usage && exit 0;;
-	K) export KEEP_AUTODEPS=1;;
+	K) export KEEP_AUTODEPS=1; export KEEP_DESTDIR=1;;
 	L) export NOCOLORS=1;;
 	m)
 		_MASTERDIR_FLAG=1
