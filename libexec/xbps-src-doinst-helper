@@ -12,6 +12,7 @@ fi
 
 . ${XBPS_SHAREDIR}/shutils/init_funcs.sh
 set_defvars
+set_cross_defvars
 
 install_src_phase() {
 	local f= i= subpkg=
