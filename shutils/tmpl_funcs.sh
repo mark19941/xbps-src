@@ -68,7 +68,7 @@ setup_subpkg_tmpl() {
 
 	if [ -r "$XBPS_SRCPKGDIR/$1/$1.template" ]; then
 		setup_tmpl $1
-		unset depends run_depends
+		unset build_depends host_build_depends depends run_depends
 		. $XBPS_SRCPKGDIR/$1/$1.template
 		for f in ${subpackages}; do
 			[ "$f" != "$1" ] && continue
