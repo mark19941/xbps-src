@@ -149,7 +149,7 @@ set_cross_defvars() {
 		fi
 	fi
 	$XBPS_INSTALL_CMD -r /usr/${XBPS_CROSS_TRIPLET} \
-		-y cross-vpkg-dummy 2>&1 >/dev/null
+		-Sy cross-vpkg-dummy 2>&1 >/dev/null
 	if [ $? -ne 0 -a $? -ne 6 ]; then
 		echo "ERROR: failed to install cross-vpkg-dummy"
 		exit 1
