@@ -4,18 +4,19 @@
 #
 
 run_func() {
-	local func="$1" logpipe= logfile= teepid=
+	local func="$1" restoretrap= logpipe= logfile= teepid=
 
-	logpipe=/tmp/xbps_src_logpipe.$$
 	if [ -d "${wrksrc}" ]; then
+		logpipe=$(mktemp -u --tmpdir=${wrksrc} .XXXXXXXX.logpipe)
 		logfile=${wrksrc}/.xbps_${func}.log
 	else
-		logfile=$(mktemp -t xbps_${func}_${pkgname}.log.XXXXXXXX)
+		logpipe=$(mktemp -u .xbps_${func}_${pkgname}_logpipe.XXXXXXX)
+		logfile=$(mktemp -t .xbps_${func}_${pkgname}.log.XXXXXXXX)
 	fi
 
 	msg_normal "$pkgver: running $func ...\n"
 
-	set -E
+	restoretrap=$(trap -p ERR)
 	trap 'error_func $func $LINENO' ERR
 
 	mkfifo "$logpipe"
@@ -27,7 +28,7 @@ run_func() {
 	wait $teepid
 	rm "$logpipe"
 
-	set +E
+	eval "$restoretrap"
 }
 
 error_func() {
