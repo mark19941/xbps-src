@@ -7,11 +7,11 @@ run_func() {
 	local func="$1" restoretrap= logpipe= logfile= teepid=
 
 	if [ -d "${wrksrc}" ]; then
-		logpipe=$(mktemp -u --tmpdir=${wrksrc} .XXXXXXXX.logpipe)
-		logfile=${wrksrc}/.xbps_${func}.log
+		logpipe=$(mktemp -u --tmpdir=${wrksrc} .xbps_${XBPS_CROSS_TRIPLET}_XXXXXXXX.logpipe)
+		logfile=${wrksrc}/.xbps_${XBPS_CROSS_TRIPLET}_${func}.log
 	else
-		logpipe=$(mktemp -u .xbps_${func}_${pkgname}_logpipe.XXXXXXX)
-		logfile=$(mktemp -t .xbps_${func}_${pkgname}.log.XXXXXXXX)
+		logpipe=$(mktemp -u .xbps_${XBPS_CROSS_TRIPLET}_${func}_${pkgname}_logpipe.XXXXXXX)
+		logfile=$(mktemp -t .xbps_${XBPS_CROSS_TRIPLET}_${func}_${pkgname}.log.XXXXXXXX)
 	fi
 
 	msg_normal "$pkgver: running $func ...\n"

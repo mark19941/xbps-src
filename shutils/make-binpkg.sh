@@ -41,7 +41,7 @@ unset_pkg_vars() {
 }
 
 make_binpkg() {
-	local subpkg= rval=
+	local subpkg= rval= _destdir=
 
 	[ -z "$pkgname" ] && return 1
 
@@ -57,12 +57,17 @@ make_binpkg() {
 		set_tmpl_common_vars
 		make_binpkg_real
 		# Generate -dbg pkg automagically.
-		if [ -d "${XBPS_DESTDIR}/${subpkg}-dbg-${version}" ]; then
+		if [ -n "$XBPS_CROSS_BUILD" ]; then
+			_destdir="$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET"
+		else
+			_destdir="$XBPS_DESTDIR"
+		fi
+		if [ -d "${_destdir}/${subpkg}-dbg-${version}" ]; then
 			unset_pkg_vars
 			pkgname="${subpkg}-dbg"
 			pkgver="${pkgname}-${version}_${revision}"
 			short_desc="${short_desc} (debug files)"
-			DESTDIR="${XBPS_DESTDIR}/${pkgname}-${version}"
+			DESTDIR="${_destdir}/${pkgname}-${version}"
 			make_binpkg_real
 		fi
 		setup_tmpl ${sourcepkg}
@@ -74,12 +79,17 @@ make_binpkg() {
 	make_binpkg_real
 	rval=$?
 	# Generate -dbg pkg automagically.
-	if [ -d "${XBPS_DESTDIR}/${pkgname}-dbg-${version}" ]; then
+	if [ -n "$XBPS_CROSS_BUILD" ]; then
+		_destdir="$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET"
+	else
+		_destdir="$XBPS_DESTDIR"
+	fi
+	if [ -d "${_destdir}/${pkgname}-dbg-${version}" ]; then
 		unset_pkg_vars
 		pkgname="${pkgname}-dbg"
 		pkgver="${pkgname}-${version}_${revision}"
 		short_desc="${short_desc} (debug files)"
-		DESTDIR="${XBPS_DESTDIR}/${pkgname}-${version}"
+		DESTDIR="${_destdir}/${pkgname}-${version}"
 		make_binpkg_real
 		setup_tmpl ${sourcepkg}
 	fi

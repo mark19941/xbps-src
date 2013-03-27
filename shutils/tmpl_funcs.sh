@@ -117,18 +117,22 @@ prepare_tmpl() {
 	[ -z "$wrksrc" ] && wrksrc="$pkgname-$version"
 	wrksrc="$XBPS_BUILDDIR/$wrksrc"
 
-	XBPS_FETCH_DONE="$wrksrc/.xbps_fetch_done"
-	XBPS_EXTRACT_DONE="$wrksrc/.xbps_extract_done"
-	XBPS_APPLYPATCHES_DONE="$wrksrc/.xbps_applypatches_done"
-	XBPS_CONFIGURE_DONE="$wrksrc/.xbps_configure_done"
-	XBPS_PRECONFIGURE_DONE="$wrksrc/.xbps_pre_configure_done"
-	XBPS_POSTCONFIGURE_DONE="$wrksrc/.xbps_post_configure_done"
-	XBPS_BUILD_DONE="$wrksrc/.xbps_build_done"
-	XBPS_PRE_BUILD_DONE="$wrksrc/.xbps_pre_build_done"
-	XBPS_POST_BUILD_DONE="$wrksrc/.xbps_post_build_done"
-	XBPS_INSTALL_DONE="$wrksrc/.xbps_install_done"
-	XBPS_PRE_INSTALL_DONE="$wrksrc/.xbps_pre_install_done"
-	XBPS_POST_INSTALL_DONE="$wrksrc/.xbps_post_install_done"
+	if [ -n "$XBPS_CROSS_BUILD" ]; then
+		_cross="$XBPS_CROSS_TRIPLET"
+	fi
+
+	XBPS_FETCH_DONE="$wrksrc/.xbps_${_cross}_fetch_done"
+	XBPS_EXTRACT_DONE="$wrksrc/.xbps_${_cross}_extract_done"
+	XBPS_APPLYPATCHES_DONE="$wrksrc/.xbps_${_cross}_applypatches_done"
+	XBPS_CONFIGURE_DONE="$wrksrc/.xbps_${_cross}_configure_done"
+	XBPS_PRECONFIGURE_DONE="$wrksrc/.xbps_${_cross}_pre_configure_done"
+	XBPS_POSTCONFIGURE_DONE="$wrksrc/.xbps_${_cross}_post_configure_done"
+	XBPS_BUILD_DONE="$wrksrc/.xbps_${_cross}_build_done"
+	XBPS_PRE_BUILD_DONE="$wrksrc/.xbps_${_cross}_pre_build_done"
+	XBPS_POST_BUILD_DONE="$wrksrc/.xbps_${_cross}_post_build_done"
+	XBPS_INSTALL_DONE="$wrksrc/.xbps_${_cross}_install_done"
+	XBPS_PRE_INSTALL_DONE="$wrksrc/.xbps_${_cross}_pre_install_done"
+	XBPS_POST_INSTALL_DONE="$wrksrc/.xbps_${_cross}_post_install_done"
 
 	set_tmpl_common_vars
 }
@@ -150,8 +154,14 @@ set_tmpl_common_vars() {
 	pkgver="${pkgname}-${version}_${revision}"
 	FILESDIR=$XBPS_SRCPKGDIR/$pkgname/files
 	PATCHESDIR=$XBPS_SRCPKGDIR/$pkgname/patches
-	DESTDIR=${XBPS_DESTDIR}/${pkgname}-${version}
-	SRCPKGDESTDIR=${XBPS_DESTDIR}/${sourcepkg}-${version}
+
+	if [ -n "$XBPS_CROSS_BUILD" ]; then
+		DESTDIR=${XBPS_DESTDIR}/${XBPS_CROSS_TRIPLET}/${pkgname}-${version}
+		SRCPKGDESTDIR=${XBPS_DESTDIR}/${XBPS_CROSS_TRIPLET}/${sourcepkg}-${version}
+	else
+		DESTDIR=${XBPS_DESTDIR}/${pkgname}-${version}
+		SRCPKGDESTDIR=${XBPS_DESTDIR}/${sourcepkg}-${version}
+	fi
 
 	if [ -z "$SUBPKG" ]; then
 		_deps="${depends} ${fulldepends}"

@@ -54,7 +54,11 @@ create_debug_pkg() {
 	[ -n "$disable_debug" ] && return 0
 	[ ! -d "${DESTDIR}/usr/lib/debug" ] && return 0
 
-	_pkgname="${pkgname}-dbg"
+	if [ -n "$XBPS_CROSS_BUILD" ]; then
+		_pkgname="${XBPS_CROSS_TRIPLET}/${pkgname}-dbg"
+	else
+		_pkgname="${pkgname}-dbg"
+	fi
 	mkdir -p "${XBPS_DESTDIR}/${_pkgname}-${version}/usr/lib"
 	mv ${DESTDIR}/usr/lib/debug \
 		${XBPS_DESTDIR}/${_pkgname}-${version}/usr/lib

@@ -192,6 +192,12 @@ remove_pkg() {
 
 	[ -z $pkgname ] && msg_error "unexistent package, aborting.\n"
 
+	if [ -n "$XBPS_CROSS_BUILD" ]; then
+		_destdir="$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET"
+	else
+		_destdir="$XBPS_DESTDIR"
+	fi
+
 	for subpkg in ${subpackages}; do
 		. ${XBPS_SRCPKGDIR}/${sourcepkg}/${subpkg}.template
 		set_tmpl_common_vars
@@ -199,32 +205,32 @@ remove_pkg() {
 		if [ -n "$revision" ]; then
 			local _pkg="${pkg}_${revision}"
 		fi
-		if [ -d "$XBPS_DESTDIR/${pkg}" ]; then
+		if [ -d "${_destdir}/${pkg}" ]; then
 			msg_normal "${_pkg}: removing files from destdir...\n"
-			rm -rf "$XBPS_DESTDIR/${pkg}"
+			rm -rf "${_destdir}/${pkg}"
 		else
 			msg_warn "${_pkg}: not installed in destdir!\n"
 		fi
 		# Remove leftover files in $wrksrc.
-		if [ -f "${wrksrc}/.xbps_do_install_${subpkg}_done" ]; then
-			rm -f ${wrksrc}/.xbps_do_install_${subpkg}_done
+		if [ -f "${wrksrc}/.xbps_${XBPS_CROSS_TRIPLET}_do_install_${subpkg}_done" ]; then
+			rm -f ${wrksrc}/.xbps_${XBPS_CROSS_TRIPLET}_do_install_${subpkg}_done
 		fi
 		# Remove -dbg packages.
-		if [ -d "$XBPS_DESTDIR/${subpkg}-dbg-${version}" ]; then
+		if [ -d "${_destdir}/${subpkg}-dbg-${version}" ]; then
 			msg_normal "${_pkg}: removing debug pkg...\n"
-			rm -rf $XBPS_DESTDIR/${subpkg}-dbg-${version}
+			rm -rf ${_destdir}/${subpkg}-dbg-${version}
 		fi
 	done
 
 	pkg="${pkgname}-${version}"
-	if [ -d "$XBPS_DESTDIR/${pkg}" ]; then
+	if [ -d "${_destdir}/${pkg}" ]; then
 		msg_normal "${pkgver}: removing files from destdir...\n"
-		rm -rf "$XBPS_DESTDIR/${pkg}"
+		rm -rf "${_destdir}/${pkg}"
 	fi
 	# Remove -dbg pkg.
-	if [ -d "$XBPS_DESTDIR/${pkgname}-dbg-${version}" ]; then
+	if [ -d "${_destdir}/${pkgname}-dbg-${version}" ]; then
 		msg_normal "${pkgver}: removing debug pkg...\n"
-		rm -rf $XBPS_DESTDIR/${pkgname}-dbg-${version}
+		rm -rf ${_destdir}/${pkgname}-dbg-${version}
 	fi
 
 	[ -f $XBPS_PRE_INSTALL_DONE ] && rm -f $XBPS_PRE_INSTALL_DONE
