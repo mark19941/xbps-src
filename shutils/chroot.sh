@@ -82,7 +82,7 @@ _EOF
 	chmod 755 $XBPS_MASTERDIR/bin/xbps-shell
 }
 
-prepare_chroot() {
+chroot_prepare() {
 	local f=
 
 	if [ -f $XBPS_MASTERDIR/.xbps_chroot_init ]; then
@@ -116,7 +116,7 @@ prepare_chroot() {
 	touch $XBPS_MASTERDIR/.xbps_chroot_init
 }
 
-prepare_binpkg_repos() {
+chroot_sync_repos() {
 	local f=
 
 	if [ ! -f ${XBPS_MASTERDIR}/etc/xbps/xbps.conf ]; then
@@ -148,8 +148,9 @@ chroot_handler() {
 
 	[ -z "$action" -a -z "$pkg" ] && return 1
 
+	chroot_prepare || return $?
 	chroot_init || return $?
-	prepare_binpkg_repos || return $?
+	chroot_sync_repos || return $?
 
 	if [ "$action" = "chroot" ]; then
 		$CHROOT_CMD ${_chargs} $XBPS_MASTERDIR /bin/xbps-shell || rv=$?

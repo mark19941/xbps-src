@@ -67,7 +67,8 @@ Targets: (only one may be specified)
  binary-bootstrap [arch]
    Install bootstrap packages from host repositories into <masterdir>.
    If the optional 'arch' argument is set, it will install bootstrap packages
-   from this architecture, and its required xbps utilities.
+   from this architecture, and its required xbps utilities. The <masterdir>
+   will be initialized for chroot operations.
 
  bootstrap
    Build and install from source the bootstrap packages into <masterdir>.
@@ -240,6 +241,7 @@ install_bbotstrap() {
 	# Reconfigure base-directories.
 	xbps-reconfigure -r $XBPS_MASTERDIR -f base-directories &>/dev/null
 	msg_normal "Installed bootstrap successfully!\n"
+	chroot_prepare
 }
 
 #
@@ -360,7 +362,7 @@ if [ -z "$CHROOT_READY" ]; then
 		else
 			# Prepare chroot if required base-chroot pkg is installed.
 			msg_normal "Preparing chroot on $XBPS_MASTERDIR...\n"
-			prepare_chroot || return $?
+			chroot_prepare || return $?
 			export CHROOT_READY=1
 		fi
 	fi
