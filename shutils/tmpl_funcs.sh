@@ -148,9 +148,6 @@ set_tmpl_common_vars() {
 	[ -z "$pkgname" ] && return 1
 
 	pkgver="${pkgname}-${version}_${revision}"
-
-	. $XBPS_SHUTILSDIR/install_files.sh
-
 	FILESDIR=$XBPS_SRCPKGDIR/$pkgname/files
 	PATCHESDIR=$XBPS_SRCPKGDIR/$pkgname/patches
 	DESTDIR=${XBPS_DESTDIR}/${pkgname}-${version}

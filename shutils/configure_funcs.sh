@@ -7,7 +7,6 @@ export CONFIGURE_SHARED_ARGS="--prefix=/usr --sysconfdir=/etc
 	--infodir=/usr/share/info --mandir=/usr/share/man
 	--localstatedir=/var"
 
-
 configure_src_phase() {
 	local f= rval=
 
@@ -33,8 +32,6 @@ configure_src_phase() {
 			--with-libtool-sysroot=$XBPS_CROSS_BASE
 			$XBPS_PKGCONFIG_ARGS"
 	fi
-
-	. $XBPS_SHUTILSDIR/common_funcs.sh
 
 	# Run pre_configure func.
 	if [ ! -f $XBPS_PRECONFIGURE_DONE ]; then
