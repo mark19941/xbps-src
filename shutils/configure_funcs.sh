@@ -28,7 +28,8 @@ configure_src_phase() {
 			PKG_CONFIG_LIBDIR=$XBPS_CROSS_BASE/lib/pkgconfig"
 
 		CONFIGURE_SHARED_ARGS="${CONFIGURE_SHARED_ARGS}
-			--host=${XBPS_CROSS_TRIPLET}
+			--host=$XBPS_CROSS_TRIPLET
+			--with-sysroot=$XBPS_CROSS_BASE
 			--with-libtool-sysroot=$XBPS_CROSS_BASE
 			$XBPS_PKGCONFIG_ARGS"
 	fi
