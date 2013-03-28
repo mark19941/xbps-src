@@ -16,6 +16,7 @@ run_func() {
 
 	msg_normal "$pkgver: running $func ...\n"
 
+	set -E
 	restoretrap=$(trap -p ERR)
 	trap 'error_func $func $LINENO' ERR
 
@@ -29,6 +30,7 @@ run_func() {
 	rm "$logpipe"
 
 	eval "$restoretrap"
+	set +E
 }
 
 error_func() {
