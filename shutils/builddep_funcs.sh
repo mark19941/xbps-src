@@ -12,9 +12,9 @@ install_pkg_from_repos() {
 
 	tmplogf=$(mktemp)
 	if [ -n "$2" ]; then
-		$XBPS_INSTALL_XCMD -Ay "$1" >$tmplogf 2>&1
+		$FAKEROOT_CMD $XBPS_INSTALL_XCMD -Ayd "$1" >$tmplogf 2>&1
 	else
-		$FAKEROOT_CMD $XBPS_INSTALL_CMD -Ay "$1" >$tmplogf 2>&1
+		$FAKEROOT_CMD $XBPS_INSTALL_CMD -Ayd "$1" >$tmplogf 2>&1
 	fi
 	rval=$?
 	if [ $rval -ne 0 -a $rval -ne 17 ]; then
