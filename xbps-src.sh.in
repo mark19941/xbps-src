@@ -499,7 +499,7 @@ export XBPS_DIGEST_CMD XBPS_CMPVER_CMD XBPS_FETCH_CMD
 if [ -z "$IN_CHROOT" ]; then
 	# In non chroot case always prefer host tools.
 	MYPATH="$XBPS_MASTERDIR/usr/bin:$XBPS_MASTERDIR/usr/sbin"
-	export PATH="$MYPATH:$PATH"
+	export PATH="$PATH:$MYPATH"
 else
 	MYPATH="/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
 	MYPATH="$MYPATH:/usr/lib/perl5/core_perl/bin"
