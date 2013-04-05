@@ -26,7 +26,7 @@ install_pkg_from_repos() {
 		#	ENODEV  (19): package depends on missing dependencies.
 		#	ENOTSUP (95): no repositories registered.
 		#
-		[ -z "$KEEP_AUTODEPS" ] && remove_pkg_autodeps
+		[ -z "$XBPS_KEEP_ALL" ] && remove_pkg_autodeps
 		msg_red "$pkgver: failed to install '$1' dependency! (error $rval)\n"
 		cat $tmplogf && rm -f $tmplogf
 		msg_error "Please see above for the real error, exiting...\n"
