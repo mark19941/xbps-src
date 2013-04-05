@@ -1,8 +1,8 @@
-# -*-* shell *-*-
+#!/bin/bash
 #
-# Applies to the build directory all patches found in PATCHESDIR
-# (srcpkgs/$pkgname/patches).
-#
+# Passed arguments:
+#	$1 - pkgname [REQUIRED]
+
 _process_patch() {
 	local _args= _patch= i=$1
 
@@ -45,25 +45,45 @@ _process_patch() {
 	fi
 }
 
-apply_tmpl_patches() {
-	local f=
+if [ $# -ne 1 ]; then
+	echo "$(basename $0): invalid number of arguments: pkgname"
+	exit 1
+fi
 
-	[ -f $XBPS_APPLYPATCHES_DONE ] && return 0
-	[ ! -d $PATCHESDIR ] && return 0
+PKGNAME="$1"
 
-	if [ -r $PATCHESDIR/series ]; then
-		cat $PATCHESDIR/series | while read f; do
-			_process_patch "$PATCHESDIR/$f"
-		done
-	else
-		for f in $PATCHESDIR/*; do
-			[ ! -f $f ] && continue
-			if $(echo $f|grep -Eq '^.*.args$'); then
-				continue
-			fi
-			_process_patch $f
-		done
-	fi
+. $XBPS_CONFIG_FILE
+. $XBPS_SHUTILSDIR/common.sh
 
-	touch -f $XBPS_APPLYPATCHES_DONE
-}
+for f in $XBPS_COMMONDIR/*.sh; do
+	. $f
+done
+
+setup_pkg "$PKGNAME"
+
+XBPS_APPLYPATCHES_DONE="$wrksrc/.xbps_${CROSS_BUILD}_applypatches_done"
+
+if [ -f $XBPS_APPLYPATCHES_DONE ]; then
+	exit 0
+fi
+if [ ! -d $PATCHESDIR ]; then
+	exit 0
+fi
+
+if [ -r $PATCHESDIR/series ]; then
+	cat $PATCHESDIR/series | while read f; do
+		_process_patch "$PATCHESDIR/$f"
+	done
+else
+	for f in $PATCHESDIR/*; do
+		[ ! -f $f ] && continue
+		if $(echo $f|grep -Eq '^.*.args$'); then
+			continue
+		fi
+		_process_patch $f
+	done
+fi
+
+touch -f $XBPS_APPLYPATCHES_DONE
+
+exit 0

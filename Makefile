@@ -37,7 +37,9 @@ install-scripts: all
 	install -d $(DESTDIR)$(SBINDIR)
 	install -m 755 xbps-src $(DESTDIR)$(SBINDIR)
 	install -d $(DESTDIR)$(LIBEXECDIR)
-	install -m 755 libexec/xbps-src-doinst-helper $(DESTDIR)$(LIBEXECDIR)
+	for f in libexec/*.sh; do	\
+		install -m 755 $$f $(DESTDIR)$(LIBEXECDIR)/$$(basename $${f%.sh});	\
+	done
 	install -m 750 libexec/xbps-src-chroot-helper $(DESTDIR)$(LIBEXECDIR)
 	install -d $(DESTDIR)$(SHAREDIR)/shutils
 	install -m 644 shutils/*.sh $(DESTDIR)$(SHAREDIR)/shutils
@@ -65,7 +67,7 @@ install: install-scripts
 
 uninstall:
 	-rm -f $(DESTDIR)$(SBINDIR)/xbps-src
-	-rm -f $(DESTDIR)$(LIBEXECDIR)/xbps-src-doinst-helper
+	-rm -f $(DESTDIR)$(LIBEXECDIR)/xbps-src-*
 	-rm -rf $(DESTDIR)$(SHAREDIR)/shutils
 	-rm -rf $(DESTDIR)$(SHAREDIR)/helpers
 	-rm -rf $(DESTDIR)$(SHAREDIR)/chroot

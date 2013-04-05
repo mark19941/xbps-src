@@ -1,66 +1,8 @@
 #!/bin/bash
 
-umask 022
-
-exit_func() {
-	[ -z "$KEEP_AUTODEPS" ] && remove_pkg_autodeps
-	[ -z "$KEEP_DESTDIR" ] && remove_pkg_destdir
-	if [ -z "$IN_CHROOT" ]; then
-		msg_red "xbps-src: a failure has ocurred! exiting...\n"
-	fi
-	exit 2
-}
-
-trap 'exit_func' INT TERM HUP
-
-readonly XBPS_SRC_VERSION="@@XBPS_SRC_VERSION@@"
-
-export XBPS_PREFIX=${DESTDIR}@@XBPS_INSTALL_PREFIX@@
-export XBPS_ETCDIR=${DESTDIR}@@XBPS_INSTALL_ETCDIR@@
-export XBPS_SBINDIR=${DESTDIR}@@XBPS_INSTALL_SBINDIR@@
-export XBPS_SHAREDIR=${DESTDIR}@@XBPS_INSTALL_SHAREDIR@@
-export XBPS_LIBEXECDIR=${DESTDIR}@@XBPS_INSTALL_LIBEXECDIR@@
-
-XBPS_CONFIG_FILE=${XBPS_ETCDIR}/xbps-src.conf
-PROGNAME=$(basename $0)
-FAKEROOT_CMD="fakeroot --"
-CHROOT_CMD="${XBPS_LIBEXECDIR}/xbps-src-chroot-helper --unshare-ipc --unshare-pid"
-XBPS_MACHINE=$(uname -m)
-
-# Required utilities in host system for the bootstrap target.
-REQHOST_UTILS_BOOTSTRAP="awk bash bison sed gcc msgfmt patch makeinfo \
-	perl fakeroot tar xz gzip bzip2"
-
-# Required utilities in host system for chroot ops.
-REQHOST_UTILS="xbps-install xbps-query xbps-rindex xbps-uhelper \
-	xbps-reconfigure xbps-remove xbps-create"
-
-check_reqhost_utils() {
-	local broken
-
-	[ -n "$IN_CHROOT" ] && return 0
-
-	for f in ${REQHOST_UTILS}; do
-		if ! command -v ${f} &>/dev/null; then
-			echo "${f} is missing in your system, can't continue!"
-			broken=1
-		fi
-	done
-	[ -n "$broken" ] && exit 1
-	[ -z "$1" ] && return 0
-
-	for f in ${REQHOST_UTILS_BOOTSTRAP}; do
-		if ! command -v ${f} &>/dev/null; then
-			echo "${f} is missing in your system, can't continue!"
-			broken=1
-		fi
-	done
-	[ -n "$broken" ] && exit 1
-}
-
 usage() {
 	cat << _EOF
-$PROGNAME: [-a cross-arch] [-Chk] [-c file] [-m dir] [-o opts] <target> [pkgname]
+$PROGNAME: [-a cross-arch] [-Ch] [-c file] [-m dir] [-o opts] <target> [args]
 
 Targets: (only one may be specified)
 
@@ -83,10 +25,6 @@ Targets: (only one may be specified)
 
  build-pkg [pkgname]
    Build binary package for <pkgname> and all required dependencies.
-
- checkvers
-   Checks installed package versions in <masterdir> against the srcpkgs tree
-   for new available versions.
 
  chroot
    Enter to the chroot in <masterdir>.
@@ -157,7 +95,8 @@ Options:
 	mips		- for MIPS o32 (BE Soft Float) GNU/Linux
 	mipsel		- for MIPS o32 (LE Soft Float) GNU/Linux
 
- -C  Do not remove build directory after successful installation.
+ -C  Do not remove build directory, automatic dependencies and
+     package destdir after successful install.
  -c  <config>
      Path to global configuration file (defaults to 
      ${XBPS_ETCDIR}/xbps-src.conf).
@@ -166,10 +105,9 @@ Options:
  -H  <hostdir>
      Path to XBPS_HOSTDIR, overriding the setting in xbps-src.conf.
  -h  Usage output.
- -K  Do not remove automatic package dependencies not destdir.
  -L  Disable ASCII colors.
  -m  <masterdir>
-     Master directory to install packages and build binary packages,
+     Master directory to install and build binary packages,
      overwritting the value set in configuration file.
  -o opt,~opt2,...
      Enable or disable (prefixed with ~) package build options.
@@ -179,6 +117,29 @@ _EOF
 
 basename_cwd() {
 	echo $(basename $(pwd))
+}
+
+check_reqhost_utils() {
+	local broken
+
+	[ -n "$IN_CHROOT" ] && return 0
+
+	for f in ${REQHOST_UTILS}; do
+		if ! command -v ${f} &>/dev/null; then
+			echo "${f} is missing in your system, can't continue!"
+			broken=1
+		fi
+	done
+	[ -n "$broken" ] && exit 1
+	[ -z "$1" ] && return 0
+
+	for f in ${REQHOST_UTILS_BOOTSTRAP}; do
+		if ! command -v ${f} &>/dev/null; then
+			echo "${f} is missing in your system, can't continue!"
+			broken=1
+		fi
+	done
+	[ -n "$broken" ] && exit 1
 }
 
 check_config_vars() {
@@ -226,9 +187,9 @@ install_bbotstrap() {
 	case "$XBPS_VERSION" in
 		0.[2-9][1-9]*) _args="-S" ;;
 	esac
-	# _pkgname == arch
-	if [ -n "${_pkgname}" ]; then
-		_bootstrap_arch="env XBPS_TARGET_ARCH=${_pkgname}"
+	# XBPS_TARGET_PKG == arch
+	if [ -n "$XBPS_TARGET_PKG" ]; then
+		_bootstrap_arch="env XBPS_TARGET_ARCH=$XBPS_TARGET_PKG"
 	fi
 
 	${_bootstrap_arch} xbps-install ${_args} -r $XBPS_MASTERDIR \
@@ -244,37 +205,135 @@ install_bbotstrap() {
 	chroot_prepare
 }
 
-#
-# main()
-#
-while getopts "a:Cc:D:hH:KLm:o:V" opt; do
-	case $opt in
-	a) export XBPS_CROSS_BUILD="$OPTARG";;
-	C) export KEEP_WRKSRC=1;;
-	c) XBPS_CONFIG_FILE="$OPTARG";;
-	D) _DISTDIR="$OPTARG";;
-	H) _HOSTDIR="$OPTARG";;
-	h) usage && exit 0;;
-	K) export KEEP_AUTODEPS=1; export KEEP_DESTDIR=1;;
-	L) export NOCOLORS=1;;
-	m)
-		_MASTERDIR_FLAG=1
-		_MASTERDIR="$OPTARG"
-		if [ ! -d ${_MASTERDIR} ]; then
-			mkdir -p ${_MASTERDIR}
+show_pkg() {
+	local i=
+
+	echo "pkgname:	$pkgname"
+	echo "version:	$version"
+	echo "revision:	$revision"
+	for i in ${distfiles}; do
+		[ -n "$i" ] && echo "distfiles:	$i"
+	done
+	for i in ${checksum}; do
+		[ -n "$i" ] && echo "checksum:	$i"
+	done
+	[ -n "$noarch" ] && echo "noarch:		yes"
+	echo "maintainer:	$maintainer"
+	[ -n "$homepage" ] && echo "Upstream URL:	$homepage"
+	[ -n "$license" ] && echo "License(s):	$license"
+	[ -n "$build_style" ] && echo "build_style:	$build_style"
+	for i in ${configure_args}; do
+		[ -n "$i" ] && echo "configure_args:	$i"
+	done
+	echo "short_desc:	$short_desc"
+	for i in ${subpackages}; do
+		[ -n "$i" ] && echo "subpackages:	$i"
+	done
+	for i in ${conf_files}; do
+		[ -n "$i" ] && echo "conf_files:	$i"
+	done
+	for i in ${replaces}; do
+		[ -n "$i" ] && echo "replaces:	$i"
+	done
+	for i in ${provides}; do
+		[ -n "$i" ] && echo "provides:	$i"
+	done
+	for i in ${conflicts}; do
+		[ -n "$i" ] && echo "conflicts:	$i"
+	done
+	[ -n "$long_desc" ] && echo "long_desc: $long_desc"
+}
+
+show_pkg_deps() {
+	[ -f "${DESTDIR}/rdeps" ] && cat ${DESTDIR}/rdeps
+}
+
+show_pkg_build_deps() {
+	local f=
+
+	# build time deps
+	for f in ${hostmakedepends} ${makedepends} ${fulldepends}; do
+		echo "$f"
+	done
+}
+
+show_pkg_options() {
+	local f= j= state= desc= enabled=
+
+	if [ -f $XBPS_SRCPKGDIR/$pkgname/template.options ]; then
+		. $XBPS_SRCPKGDIR/$pkgname/template.options
+		for f in ${build_options}; do
+			for j in ${build_options_default}; do
+				if [ "$f" = "$j" ]; then
+					enabled=1
+					break
+				fi
+			done
+			state="OFF"
+			if [ -n "$enabled" ]; then
+				state="ON"
+				unset enabled
+			fi
+			eval desc="\$desc_option_$f"
+			printf "$f: $desc [$state]\n"
+		done
+	fi
+}
+
+masterdir_zap() {
+	for f in bin boot builddir destdir dev etc home lib lib32 lib64 mnt \
+		opt proc root run sbin sys tmp usr var xbps .xbps_chroot_init; do
+		if [ -d "$XBPS_MASTERDIR/$f" ]; then
+			echo "Removing directory $XBPS_MASTERDIR/$f ..."
+			rm -rf $XBPS_MASTERDIR/$f
+		elif [ -h "$XBPS_MASTERDIR/$f" ]; then
+			echo "Removing link $XBPS_MASTERDIR/$f ..."
+			rm -f $XBPS_MASTERDIR/$f
+		elif [ -f "$XBPS_MASTERDIR/$f" ]; then
+			echo "Removing file $XBPS_MASTERDIR/$f ..."
+			rm -f $XBPS_MASTERDIR/$f
 		fi
-		;;
-	o) export XBPS_BUILD_OPTS="$OPTARG";;
-	V) echo $XBPS_SRC_VERSION && exit 0;;
-	--) shift; break;;
-	esac
-done
-shift $(($OPTIND - 1))
+	done
+	echo "$XBPS_MASTERDIR masterdir cleaned up."
+}
 
-[ $# -eq 0 -o $# -gt 3 ] && usage && exit 1
+exit_func() {
+	if [ -z "$XBPS_KEEP_ALL" ]; then
+		remove_pkg_autodeps
+		remove_pkg
+		remove_pkg_wrksrc
+	fi
+	if [ -z "$IN_CHROOT" ]; then
+		msg_red "xbps-src: a failure has ocurred! exiting...\n"
+	fi
+	exit 2
+}
 
-target="$1"
-_pkgname="$2"
+umask 022
+
+trap 'exit_func' INT TERM HUP
+
+readonly XBPS_SRC_VERSION="@@XBPS_SRC_VERSION@@"
+
+export XBPS_PREFIX=${DESTDIR}@@XBPS_INSTALL_PREFIX@@
+export XBPS_ETCDIR=${DESTDIR}@@XBPS_INSTALL_ETCDIR@@
+export XBPS_SBINDIR=${DESTDIR}@@XBPS_INSTALL_SBINDIR@@
+export XBPS_SHAREDIR=${DESTDIR}@@XBPS_INSTALL_SHAREDIR@@
+export XBPS_LIBEXECDIR=${DESTDIR}@@XBPS_INSTALL_LIBEXECDIR@@
+
+XBPS_CONFIG_FILE=${XBPS_ETCDIR}/xbps-src.conf
+PROGNAME=$(basename $0)
+export FAKEROOT_CMD="fakeroot --"
+export CHROOT_CMD="${XBPS_LIBEXECDIR}/xbps-src-chroot-helper --unshare-ipc --unshare-pid"
+export XBPS_MACHINE=$(uname -m)
+
+# Required utilities in host system for the bootstrap target.
+REQHOST_UTILS_BOOTSTRAP="awk bash bison sed gcc msgfmt patch makeinfo \
+	perl fakeroot tar xz gzip bzip2"
+
+# Required utilities in host system for chroot ops.
+REQHOST_UTILS="xbps-install xbps-query xbps-rindex xbps-uhelper \
+	xbps-reconfigure xbps-remove xbps-create"
 
 #
 # Check for required utilities in host system.
@@ -285,22 +344,37 @@ check_reqhost_utils
 # Check configuration vars before anyting else, and set defaults vars.
 #
 check_config_vars
-if [ -n "${_MASTERDIR}" ]; then
-	export XBPS_MASTERDIR="$(realpath ${_MASTERDIR})"
-fi
-if [ -n "${_DISTDIR}" ]; then
-	export XBPS_DISTDIR="$(realpath ${_DISTDIR})"
-fi
-if [ -n "${_HOSTDIR}" ]; then
-	export XBPS_HOSTDIR="$(realpath ${_HOSTDIR})"
-fi
-. ${XBPS_SHAREDIR}/shutils/init_funcs.sh
+
+#
+# main()
+#
+while getopts "a:Cc:D:hH:Lm:o:V" opt; do
+	case $opt in
+	a) export XBPS_CROSS_BUILD="$OPTARG";;
+	c) export XBPS_CONFIG_FILE="$(realpath $OPTARG)";;
+	C) export XBPS_KEEP_ALL=1;;
+	D) export XBPS_DISTDIR="$(realpath $OPTARG)";;
+	H) export XBPS_HOSTDIR="$(realpath $OPTARG)";;
+	h) usage && exit 0;;
+	L) export NOCOLORS=1;;
+	m) export XBPS_MASTERDIR=$(realpath $OPTARG);;
+	o) export XBPS_BUILD_OPTS="$OPTARG";;
+	V) echo $XBPS_SRC_VERSION && exit 0;;
+	--) shift; break;;
+	esac
+done
+shift $(($OPTIND - 1))
+
+[ $# -eq 0 -o $# -gt 3 ] && usage && exit 1
+
+XBPS_TARGET="$1"
+XBPS_TARGET_PKG="$2"
 
 if [ -f $XBPS_MASTERDIR/.xbps_chroot_init ]; then
 	export CHROOT_READY=1
 fi
 
-set_defvars
+. $XBPS_SHAREDIR/shutils/init.sh
 set_cross_defvars
 
 # Check if stdout is a tty; if false disable colors.
@@ -311,15 +385,121 @@ if [ "$(id -u)" -eq 0 ]; then
 	unset FAKEROOT_CMD
 fi
 
+export XBPS_HELPERSDIR=$XBPS_SHAREDIR/helpers
+export XBPS_SHUTILSDIR=$XBPS_SHAREDIR/shutils
+export XBPS_CROSSPFDIR=$XBPS_SHAREDIR/cross-profiles
+
+if [ -n "$IN_CHROOT" ]; then
+	export XBPS_SRCPKGDIR=/xbps/srcpkgs
+	export XBPS_COMMONDIR=/xbps/common
+	export XBPS_DESTDIR=/destdir
+	export XBPS_BUILDDIR=/builddir
+else
+	export XBPS_SRCPKGDIR=$XBPS_DISTDIR/srcpkgs
+	export XBPS_COMMONDIR=$XBPS_DISTDIR/common
+	export XBPS_DESTDIR=$XBPS_MASTERDIR/destdir
+	export XBPS_BUILDDIR=$XBPS_MASTERDIR/builddir
+fi
+if [ -n "$XBPS_HOSTDIR" ]; then
+	export XBPS_PACKAGESDIR=$XBPS_HOSTDIR/binpkgs
+	export XBPS_SRCDISTDIR=$XBPS_HOSTDIR/sources
+else
+	export XBPS_SRCDISTDIR=$XBPS_MASTERDIR/host/sources
+	export XBPS_PACKAGESDIR=$XBPS_MASTERDIR/host/binpkgs
+fi
+export XBPS_TRIGGERSDIR=$XBPS_SRCPKGDIR/xbps-triggers/files
+
+DDIRS="DISTDIR TRIGGERSDIR HELPERSDIR SRCPKGDIR SHUTILSDIR COMMONDIR"
+for i in ${DDIRS}; do
+	eval val="\$XBPS_$i"
+	if [ -z "$val" ]; then
+		echo "ERROR: XBPS_$i not defined!"
+		exit 1
+	elif [ ! -d "$val" ]; then
+		echo "WARNING: cannot find $i at $val."
+	fi
+done
+
+for i in DESTDIR PACKAGESDIR BUILDDIR SRCDISTDIR; do
+	eval val="\$XBPS_$i"
+	if [ ! -d "$val" ]; then
+		mdir=$(dirname $XBPS_MASTERDIR)
+		[ -z "$IN_CHROOT" -a "$mdir" = "/" ] && continue
+		[ -d $XBPS_DISTDIR/.git ] && mkdir -p $val
+	fi
+done
+
+if [ -n "$IN_CHROOT" ]; then
+	XBPS_UHELPER_CMD="xbps-uhelper"
+	XBPS_INSTALL_CMD="xbps-install"
+	XBPS_QUERY_CMD="xbps-query"
+	XBPS_RINDEX_CMD="xbps-rindex"
+	XBPS_RECONFIGURE_CMD="xbps-reconfigure"
+	XBPS_REMOVE_CMD="xbps-remove"
+else
+	XBPS_UHELPER_CMD="xbps-uhelper -r $XBPS_MASTERDIR"
+	XBPS_INSTALL_CMD="xbps-install -C /empty.conf -R $XBPS_PACKAGESDIR -r $XBPS_MASTERDIR"
+	XBPS_QUERY_CMD="xbps-query -C /empty.conf -D $XBPS_PACKAGESDIR -r $XBPS_MASTERDIR"
+	XBPS_RINDEX_CMD="xbps-rindex"
+	XBPS_RECONFIGURE_CMD="xbps-reconfigure -r $XBPS_MASTERDIR"
+	XBPS_REMOVE_CMD="xbps-remove -r $XBPS_MASTERDIR"
+fi
+
+XBPS_DIGEST_CMD="xbps-uhelper digest"
+XBPS_CMPVER_CMD="xbps-uhelper cmpver"
+XBPS_FETCH_CMD="xbps-uhelper fetch"
+XBPS_CREATE_CMD="xbps-create"
+
+XBPS_VERSION=$(xbps-uhelper -V|awk '{print $2}')
+XBPS_APIVER=$(xbps-uhelper -V|awk '{print $4}')
+
+for f in $XBPS_COMMONDIR/*.sh $XBPS_SHUTILSDIR/*.sh; do
+	[ -r $f ] && . $f
+done
+
+if [ -d "${XBPS_DISTDIR}/.git" ]; then
+	if [ -z "$XBPS_SRC_REQ" -o -z "$XBPS_UTILS_REQ" -o \
+		-z "$XBPS_UTILS_API_REQ" -o -z "$BASE_CHROOT_REQ" ]; then
+		echo "ERROR: missing defs from global-defs.sh!"
+		exit 1
+	fi
+	$XBPS_UHELPER_CMD cmpver $(echo "$XBPS_SRC_VERSION"|awk '{print $1}') "$XBPS_SRC_REQ"
+	if [ $? -eq 255 ]; then
+		echo "ERROR: this xbps-src version is outdated! (>=$XBPS_SRC_REQ is required)"
+		exit 1
+	fi
+	$XBPS_UHELPER_CMD cmpver "$XBPS_VERSION" "$XBPS_UTILS_REQ"
+	if [ $? -eq 255 ]; then
+		echo "ERROR: requires xbps-$XBPS_UTILS_REQ API: $XBPS_UTILS_API_REQ"
+		exit 1
+	fi
+	$XBPS_UHELPER_CMD cmpver "$XBPS_APIVER" "$XBPS_UTILS_API_REQ"
+	if [ $? -eq 255 ]; then
+		echo "ERROR: requires xbps-$XBPS_UTILS_REQ API: $XBPS_UTILS_API_REQ"
+		exit 1
+	fi
+fi
+
+if [ -z "$XBPS_CROSSS_BUILD" ]; then
+	export XBPS_TARGET_MACHINE=$XBPS_MACHINE
+	export XBPS_QUERY_XCMD="$XBPS_QUERY_CMD"
+	export XBPS_UHELPER_XCMD="$XBPS_UHELPER_CMD"
+	export XBPS_INSTALL_XCMD="$XBPS_INSTALL_CMD"
+	export XBPS_REMOVE_XCMD="$XBPS_REMOVE_CMD"
+fi
+
+export XBPS_VERSION XBPS_APIVER XBPS_UHELPER_CMD
+export XBPS_INSTALL_CMD XBPS_REMOVE_CMD XBPS_RECONFIGURE_CMD
+export XBPS_QUERY_CMD XBPS_RINDEX_CMD
+export XBPS_DIGEST_CMD XBPS_CMPVER_CMD XBPS_FETCH_CMD
+
 #
 # Sanitize PATH.
 #
 if [ -z "$IN_CHROOT" ]; then
 	# In non chroot case always prefer host tools.
-	MYPATH="$PATH:$XBPS_MASTERDIR/usr/bin:$XBPS_MASTERDIR/usr/sbin"
-	MYPATH="$MYPATH:$XBPS_MASTERDIR/usr/local/bin"
-	MYPATH="$MYPATH:$XBPS_MASTERDIR/usr/local/sbin"
-	export PATH="$MYPATH"
+	MYPATH="$XBPS_MASTERDIR/usr/bin:$XBPS_MASTERDIR/usr/sbin"
+	export PATH="$MYPATH:$PATH"
 else
 	MYPATH="/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
 	MYPATH="$MYPATH:/usr/lib/perl5/core_perl/bin"
@@ -356,7 +536,7 @@ if [ -z "$CHROOT_READY" ]; then
 		check_installed_pkg base-chroot-$BASE_CHROOT_REQ
 		if [ $? -ne 0 ]; then
 			# Missing bootstrap.
-			if [ "$target" != "binary-bootstrap" ]; then
+			if [ "$XBPS_TARGET" != "binary-bootstrap" ]; then
 				msg_error "Bootstrap not installed, use binary-bootstrap.\n"
 			fi
 		else
@@ -373,7 +553,7 @@ export NOCOLORS=$NOCOLORS
 #
 # Main switch.
 #
-case "$target" in
+case "$XBPS_TARGET" in
 binary-bootstrap)
 	install_bbotstrap
 	;;
@@ -383,8 +563,8 @@ bootstrap)
 	check_reqhost_utils bootstrap
 	[ ! -d $XBPS_SRCPKGDIR/base-chroot ] && \
 		msg_error "Cannot find $XBPS_SRCPKGDIR/base-chroot directory!\n"
-	cd $XBPS_SRCPKGDIR/base-chroot && _ORIGINPKG="$(basename_cwd)"
-	setup_tmpl ${_ORIGINPKG} && install_pkg
+	XBPS_TARGET_PKG="base-chroot"
+	setup_pkg $XBPS_TARGET_PKG && install_pkg
 	;;
 bootstrap-update)
 	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
@@ -393,22 +573,19 @@ bootstrap-update)
 		${FAKEROOT_CMD} ${XBPS_INSTALL_CMD} -yu
 	fi
 	;;
-checkvers)
-	check_installed_packages
-	;;
 chroot)
 	chroot_handler chroot dummy
 	;;
 clean)
-	if [ -z "${_pkgname}" ]; then
+	if [ -z "${XBPS_TARGET_PKG}" ]; then
 		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
-		_pkgname=$(basename_cwd)
+		XBPS_TARGET_PKG=$(basename_cwd)
 	fi
-	setup_tmpl ${_pkgname}
+	setup_pkg $XBPS_TARGET_PKG
 	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
-		chroot_handler $target ${_pkgname} || exit $?
+		chroot_handler $target $XBPS_TARGET_PKG || exit $?
 	else
-		remove_tmpl_wrksrc $wrksrc
+		remove_pkg_wrksrc $wrksrc
 		if declare -f do_clean >/dev/null; then
 			run_func do_clean
 		fi
@@ -422,22 +599,6 @@ remove-autodeps)
 		remove_pkg_autodeps
 	fi
 	;;
-extract|fetch)
-	if [ -z "${_pkgname}" ]; then
-		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
-		_pkgname=$(basename_cwd)
-	fi
-	setup_tmpl ${_pkgname}
-	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
-		chroot_handler $target ${_pkgname} || exit $?
-	else
-		if [ "$target" = "fetch" ]; then
-			fetch_distfiles $update_checksum
-		else
-			extract_distfiles
-		fi
-	fi
-	;;
 fetch-srcpkgs)
 	if ! command -v git 2>&1 >/dev/null; then
 		msg_error "git command not found, can't fetch repository."
@@ -446,78 +607,64 @@ fetch-srcpkgs)
 		git clone $XBPS_SRCPKGS_REPOURL $XBPS_DISTDIR
 	fi
 	;;
-build|configure|install-destdir|build-pkg)
+fetch|extract|build|configure|install-destdir|build-pkg)
 	BEGIN_INSTALL=1
-	if [ -z "${_pkgname}" ]; then
+	if [ -z "$XBPS_TARGET_PKG" ]; then
 		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
-		_pkgname=$(basename_cwd)
+		XBPS_TARGET_PKG=$(basename_cwd)
 	fi
-	setup_tmpl ${_pkgname}
-	_ORIGINPKG="${_pkgname}"
+	setup_pkg $XBPS_TARGET_PKG
 	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
-		chroot_handler $target ${_ORIGINPKG}
+		chroot_handler $XBPS_TARGET $XBPS_TARGET_PKG
 	else
-		install_pkg "$target"
+		install_pkg $XBPS_TARGET
 	fi
 	;;
 remove-destdir)
-	if [ -z "${_pkgname}" ]; then
+	if [ -z "$XBPS_TARGET_PKG" ]; then
 		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
-		_pkgname=$(basename_cwd)
+		XBPS_TARGET_PKG=$(basename_cwd)
 	fi
-	setup_tmpl ${_pkgname}
-	remove_pkg $target
+	setup_pkg $XBPS_TARGET_PKG
+	remove_pkg $XBPS_TARGET
 	;;
 list)
 	$XBPS_QUERY_CMD -l
 	;;
 show)
-	if [ -z "${_pkgname}" ]; then
+	if [ -z "$XBPS_TARGET_PKG" ]; then
 		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
-		_pkgname=$(basename_cwd)
+		XBPS_TARGET_PKG=$(basename_cwd)
 	fi
-	setup_subpkg_tmpl ${_pkgname}
-	show_tmpl
+	setup_subpkg $XBPS_TARGET_PKG
+	show_pkg
 	;;
 show-files)
-	if [ -z "${_pkgname}" ]; then
+	if [ -z "$XBPS_TARGET_PKG" ]; then
 		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
-		_pkgname=$(basename_cwd)
+		XBPS_TARGET_PKG=$(basename_cwd)
 	fi
-	setup_subpkg_tmpl ${_pkgname}
+	setup_subpkg $XBPS_TARGET_PKG
 	[ -f "$DESTDIR/flist" ] && cat ${DESTDIR}/flist
 	;;
 show-deps)
-	setup_subpkg_tmpl ${_pkgname}
-	show_tmpl_deps
+	setup_subpkg $XBPS_TARGET_PKG
+	show_pkg_deps
 	;;
 show-build-deps)
-	setup_subpkg_tmpl ${_pkgname}
-	show_tmpl_build_deps
+	setup_subpkg $XBPS_TARGET_PKG
+	show_pkg_build_deps
 	;;
 show-options)
-	if [ -z "${_pkgname}" ]; then
+	if [ -z "$XBPS_TARGET_PKG" ]; then
 		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
-		_pkgname=$(basename_cwd)
+		XBPS_TARGET_PKG=$(basename_cwd)
 	fi
-	setup_tmpl ${_pkgname}
-	show_tmpl_options
+	setup_pkg $XBPS_TARGET_PKG
+	show_pkg_options
 	;;
 zap)
-	for f in bin boot builddir destdir dev etc home lib lib32 lib64 mnt \
-		opt proc root run sbin sys tmp usr var xbps .xbps_chroot_init; do
-		if [ -d "$XBPS_MASTERDIR/$f" ]; then
-			echo "Removing directory $XBPS_MASTERDIR/$f ..."
-			rm -rf $XBPS_MASTERDIR/$f
-		elif [ -h "$XBPS_MASTERDIR/$f" ]; then
-			echo "Removing link $XBPS_MASTERDIR/$f ..."
-			rm -f $XBPS_MASTERDIR/$f
-		elif [ -f "$XBPS_MASTERDIR/$f" ]; then
-			echo "Removing file $XBPS_MASTERDIR/$f ..."
-			rm -f $XBPS_MASTERDIR/$f
-		fi
-	done
-	echo "$XBPS_MASTERDIR masterdir cleaned up."
+	masterdir_zap
 	;;
 *)
 	msg_red "xbps-src: invalid target $target.\n"

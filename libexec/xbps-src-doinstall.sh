@@ -1,4 +1,8 @@
-# -*-* shell *-*-
+#!//bin/bash
+#
+# Passed arguments:
+#	$1 - pkgname [REQUIRED]
+#	$2 - cross target [OPTIONAL]
 
 _add_trigger() {
 	local f= found= name="$1"
@@ -9,7 +13,7 @@ _add_trigger() {
 	[ -z "$found" ] && triggers="$triggers $name"
 }
 
-write_metadata_scripts() {
+process_metadata_scripts() {
 	local action="$1"
 	local action_file="$2"
 	local tmpf=$(mktemp -t xbps-install.XXXXXXXXXX) || exit 1
@@ -40,7 +44,7 @@ write_metadata_scripts() {
 # not possible to chroot(3).
 #
 
-export PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
+export PATH="/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
 
 TRIGGERSDIR="./var/db/xbps/triggers"
 ACTION="\$1"
@@ -314,3 +318,234 @@ _EOF
 		;;
 	esac
 }
+
+prepare_destdir() {
+	local f= i= j= found= dirat= lnkat= newlnk=
+	local TMPFLIST= TMPFPLIST= found= _depname=
+	local fpattern="s|${DESTDIR}||g;s|^\./$||g;/^$/d"
+
+	if [ ! -d "${DESTDIR}" ]; then
+		msg_error "$pkgver: not installed in destdir!\n"
+	fi
+
+	#
+	# Always remove metadata files generated in a previous installation.
+	#
+	for f in INSTALL REMOVE files.plist props.plist flist rdeps; do
+		[ -f ${DESTDIR}/${f} ] && rm -f ${DESTDIR}/${f}
+	done
+
+	#
+	# If package provides virtual packages, create dynamically the
+	# required configuration file.
+	#
+	if [ -n "$provides" ]; then
+		_tmpf=$(mktemp) || msg_error "$pkgver: failed to create tempfile.\n"
+		echo "# Virtual packages provided by '${pkgname}':" >>${_tmpf}
+		for f in ${provides}; do
+			echo "virtual-package ${pkgname} { targets = \"${f}\" }" >>${_tmpf}
+		done
+		install -Dm644 ${_tmpf} \
+			${DESTDIR}/etc/xbps/virtualpkg.d/${pkgname}.conf
+		rm -f ${_tmpf}
+	fi
+
+        #
+        # Find out if this package contains info files and compress
+        # all them with gzip.
+        #
+	if [ -f ${DESTDIR}/usr/share/info/dir ]; then
+		# Always remove this file if curpkg is not texinfo.
+		if [ "$pkgname" != "texinfo" ]; then
+			[ -f ${DESTDIR}/usr/share/info/dir ] && \
+				rm -f ${DESTDIR}/usr/share/info/dir
+		fi
+		# Add info-files trigger.
+		triggers="info-files $triggers"
+		msg_normal "$pkgver: processing info(1) files...\n"
+
+		find ${DESTDIR}/usr/share/info -type f -follow | while read f
+		do
+			j=$(echo "$f"|sed -e "$fpattern")
+			[ "$j" = "" ] && continue
+			[ "$j" = "/usr/share/info/dir" ] && continue
+			# Ignore compressed files.
+			if $(echo "$j"|grep -q '.*.gz$'); then
+				continue
+			fi
+			# Ignore non info files.
+			if ! $(echo "$j"|grep -q '.*.info$') && \
+			   ! $(echo "$j"|grep -q '.*.info-[0-9]*$'); then
+				continue
+			fi
+			if [ -h ${DESTDIR}/"$j" ]; then
+				dirat=$(dirname "$j")
+				lnkat=$(readlink ${DESTDIR}/"$j")
+				newlnk=$(basename "$j")
+				rm -f ${DESTDIR}/"$j"
+				cd ${DESTDIR}/"$dirat"
+				ln -s "${lnkat}".gz "${newlnk}".gz
+				continue
+			fi
+			echo "   Compressing info file: $j..."
+			gzip -nfq9 ${DESTDIR}/"$j"
+		done
+	fi
+
+	#
+	# Find out if this package contains manual pages and
+	# compress all them with gzip.
+	#
+	if [ -d "${DESTDIR}/usr/share/man" ]; then
+		msg_normal "$pkgver: processing manual pages...\n"
+		find ${DESTDIR}/usr/share/man -type f -follow | while read f
+		do
+			j=$(echo "$f"|sed -e "$fpattern")
+			[ "$j" = "" ] && continue
+			if $(echo "$j"|grep -q '.*.gz$'); then
+				continue
+			fi
+			if [ -h ${DESTDIR}/"$j" ]; then
+				dirat=$(dirname "$j")
+				lnkat=$(readlink ${DESTDIR}/"$j")
+				newlnk=$(basename "$j")
+				rm -f ${DESTDIR}/"$j"
+				cd ${DESTDIR}/"$dirat"
+				ln -s "${lnkat}".gz "${newlnk}".gz
+				continue
+			fi
+			echo "   Compressing manpage: $j..."
+			gzip -nfq9 ${DESTDIR}/"$j"
+		done
+	fi
+
+	#
+	# Create package's flist for bootstrap packages.
+	#
+	find ${DESTDIR} -print > ${DESTDIR}/flist
+	sed -i -e "s|${DESTDIR}||g;s|/flist||g;/^$/d" ${DESTDIR}/flist
+
+	#
+	# Create the INSTALL/REMOVE scripts if package uses them
+	# or uses any available trigger.
+	#
+	local meta_install meta_remove
+	if [ -n "${sourcepkg}" -a "${sourcepkg}" != "${pkgname}" ]; then
+		meta_install=${XBPS_SRCPKGDIR}/${pkgname}/${pkgname}.INSTALL
+		meta_remove=${XBPS_SRCPKGDIR}/${pkgname}/${pkgname}.REMOVE
+	else
+		meta_install=${XBPS_SRCPKGDIR}/${pkgname}/INSTALL
+		meta_remove=${XBPS_SRCPKGDIR}/${pkgname}/REMOVE
+	fi
+	process_metadata_scripts install ${meta_install} || \
+		msg_error "$pkgver: failed to write INSTALL metadata file!\n"
+
+	process_metadata_scripts remove ${meta_remove} || \
+		msg_error "$pkgver: failed to write REMOVE metadata file!\n"
+
+	msg_normal "$pkgver: installed successfully to destdir.\n"
+}
+
+if [ $# -lt 1 -o $# -gt 2 ]; then
+	echo "$(basename $0): invalid number of arguments: pkgname [cross-target]"
+	exit 1
+fi
+
+PKGNAME="$1"
+CROSS_BUILD="$2"
+
+. $XBPS_CONFIG_FILE
+. $XBPS_SHUTILSDIR/common.sh
+. $XBPS_SHUTILSDIR/install_files.sh
+
+for f in $XBPS_COMMONDIR/*.sh; do
+	. $f
+done
+
+setup_subpkg "$PKGNAME"
+
+if [ -z "$pkgname" -o -z "$version" ]; then
+	msg_error "$1: pkgname/version not set in pkg template!\n"
+fi
+
+XBPS_INSTALL_DONE="$wrksrc/.xbps_${pkgname}_${CROSS_BUILD}_install_done"
+XBPS_PRE_INSTALL_DONE="$wrksrc/.xbps_${pkgname}_${CROSS_BUILD}_pre_install_done"
+XBPS_POST_INSTALL_DONE="$wrksrc/.xbps_${pkgname}_${CROSS_BUILD}_post_install_done"
+
+if [ -f $XBPS_INSTALL_DONE ]; then
+	exit 0
+fi
+#
+# There's nothing we can do if it is a meta template.
+# Just creating the dir is enough.
+#
+if [ "$build_style" = "meta-template" ]; then
+	mkdir -p $XBPS_DESTDIR/$pkgname-$version
+	exit 0
+fi
+
+cd $wrksrc || msg_error "$pkgver: cannot access to wrksrc [$wrksrc]\n"
+if [ -n "$build_wrksrc" ]; then
+	cd $build_wrksrc \
+		|| msg_error "$pkgver: cannot access to build_wrksrc [$build_wrksrc]\n"
+fi
+
+# Run pre_install()
+if [ -z "$SUBPKG" -a ! -f $XBPS_PRE_INSTALL_DONE ]; then
+	if declare -f pre_install >/dev/null; then
+		run_func pre_install
+		touch -f $XBPS_PRE_INSTALL_DONE
+	fi
+fi
+
+# Run do_install()
+cd $wrksrc
+[ -n "$build_wrksrc" ] && cd $build_wrksrc
+if declare -f do_install >/dev/null; then
+	run_func do_install
+else
+	if [ ! -r $XBPS_HELPERSDIR/${build_style}.sh ]; then
+		msg_error "$pkgver: cannot find build helper $XBPS_HELPERSDIR/${build_style}.sh!\n"
+	fi
+	. $XBPS_HELPERSDIR/${build_style}.sh
+	run_func do_install
+fi
+
+# Run post_install()
+if [ -z "$SUBPKG" -a ! -f $XBPS_POST_INSTALL_DONE ]; then
+	cd $wrksrc
+	[ -n "$build_wrksrc" ] && cd $build_wrksrc
+	if declare -f post_install >/dev/null; then
+		run_func post_install
+		touch -f $XBPS_POST_INSTALL_DONE
+	fi
+fi
+
+# Remove libtool archives by default.
+if [ -z "$keep_libtool_archives" ]; then
+	msg_normal "$pkgver: removing libtool archives...\n"
+	find ${DESTDIR} -type f -name \*.la -delete
+fi
+
+# Remove bytecode python generated files.
+msg_normal "$pkgver: removing python bytecode archives...\n"
+find ${DESTDIR} -type f -name \*.py[co] -delete
+
+# Always remove perllocal.pod and .packlist files.
+if [ "$pkgname" != "perl" ]; then
+	find ${DESTDIR} -type f -name perllocal.pod -delete
+	find ${DESTDIR} -type f -name .packlist -delete
+fi
+
+# Remove empty directories by default.
+for f in $(find ${DESTDIR} -depth -type d); do
+	rmdir $f 2>/dev/null && \
+		msg_warn "$pkgver: removed empty dir: ${f##${DESTDIR}}\n"
+done
+
+# Prepare pkg destdir and install/remove scripts.
+prepare_destdir
+
+touch -f $XBPS_INSTALL_DONE
+
+exit 0

@@ -82,7 +82,7 @@ install_pkg_deps() {
 
 	[ -z "$pkgname" ] && return 2
 	[ -z "$build_depends" -a -z "$host_build_depends" ] && return 0
-	[ -n "$ORIGIN_PKGDEPS_DONE" ] && return 0
+	[ -n "$TARGETPKG_PKGDEPS_DONE" ] && return 0
 
 	msg_normal "$pkgver: required dependencies:\n"
 
@@ -148,16 +148,16 @@ install_pkg_deps() {
 	for i in ${missing_deps}; do
 		# packages not found in repos, install from source.
 		curpkgdepname=$($XBPS_UHELPER_CMD getpkgdepname "$i")
-		setup_subpkg_tmpl ${curpkgdepname}
+		setup_subpkg ${curpkgdepname}
 		# Check if version in srcpkg satisfied required dependency,
 		# and bail out if doesn't.
 		${XBPS_UHELPER_CMD} pkgmatch "$pkgver" "$i"
 		if [ $? -eq 0 ]; then
-			setup_subpkg_tmpl ${_ORIGINPKG}
+			setup_subpkg $XBPS_TARGET_PKG
 			msg_error_nochroot "$pkgver: required dependency '$i' cannot be resolved!\n"
 		fi
 		install_pkg
-		setup_subpkg_tmpl ${_ORIGINPKG}
+		setup_subpkg $XBPS_TARGET_PKG
 		cd ${XBPS_MASTERDIR}
 		install_pkg_deps
 	done
@@ -228,16 +228,16 @@ install_pkg_deps() {
 	for i in ${missing_crossdeps}; do
 		# packages not found in repos, install from source.
 		curpkgdepname=$($XBPS_UHELPER_CMD getpkgdepname "$i")
-		setup_subpkg_tmpl ${curpkgdepname}
+		setup_subpkg ${curpkgdepname}
 		# Check if version in srcpkg satisfied required dependency,
 		# and bail out if doesn't.
 		${XBPS_UHELPER_CMD} pkgmatch "$pkgver" "$i"
 		if [ $? -eq 0 ]; then
-			setup_subpkg_tmpl ${_ORIGINPKG}
+			setup_subpkg $XBPS_TARGET_PKG
 			msg_error_nochroot "$pkgver: required dependency '$i' cannot be resolved!\n"
 		fi
 		install_pkg
-		setup_subpkg_tmpl ${_ORIGINPKG}
+		setup_subpkg $XBPS_TARGET_PKG
 		cd ${XBPS_MASTERDIR}
 		install_pkg_deps
 	done
@@ -245,8 +245,8 @@ install_pkg_deps() {
 		msg_normal "$pkgver: installing '$i' ...\n"
 		install_pkg_from_repos "${i}" cross
 	done
-	if [ "$pkgname" = "${_ORIGINPKG}" ]; then
-		ORIGIN_PKGDEPS_DONE=1
+	if [ "$pkgname" = "$XBPS_TARGET_PKG" ]; then
+		TARGETPKG_PKGDEPS_DONE=1
 		return 0
 	fi
 }

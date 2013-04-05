@@ -1,4 +1,8 @@
-# -*-* shell *-*-
+#!/bin/bash
+#
+# Passed arguments:
+# 	$1 - pkgname [REQUIRED]
+# 	$2 - cross-target [OPTIONAL]
 
 git_revs() {
 	local _revs= _out= f= _filerev= _files=
@@ -30,76 +34,6 @@ git_revs() {
 	done
 }
 
-unset_pkg_vars() {
-	unset nonfree conf_files noarch triggers replaces softreplace \
-		system_accounts system_groups preserve \
-		xml_entries sgml_entries xml_catalogs sgml_catalogs \
-		font_dirs dkms_modules provides kernel_hooks_version \
-		conflicts pycompile_dirs pycompile_module \
-		systemd_services make_dirs \
-		depends fulldepends run_depends mutable_files
-}
-
-make_binpkg() {
-	local subpkg= rval= _destdir=
-
-	[ -z "$pkgname" ] && return 1
-
-	if [ -n "$XBPS_USE_GIT_REVS" ]; then
-		msg_normal "$pkgver: fetching source git revisions, please wait...\n"
-		git_revs $pkgname
-	fi
-
-	for subpkg in ${subpackages}; do
-		unset_pkg_vars
-		. $XBPS_SRCPKGDIR/$pkgname/$subpkg.template
-		pkgname=${subpkg}
-		set_tmpl_common_vars
-		make_binpkg_real
-		# Generate -dbg pkg automagically.
-		if [ -n "$XBPS_CROSS_BUILD" ]; then
-			_destdir="$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET"
-		else
-			_destdir="$XBPS_DESTDIR"
-		fi
-		if [ -d "${_destdir}/${subpkg}-dbg-${version}" ]; then
-			unset_pkg_vars
-			pkgname="${subpkg}-dbg"
-			pkgver="${pkgname}-${version}_${revision}"
-			short_desc="${short_desc} (debug files)"
-			DESTDIR="${_destdir}/${pkgname}-${version}"
-			make_binpkg_real
-		fi
-		setup_tmpl ${sourcepkg}
-	done
-
-	if [ -n "${subpackages}" ]; then
-		setup_tmpl ${sourcepkg}
-	fi
-	make_binpkg_real
-	rval=$?
-	# Generate -dbg pkg automagically.
-	if [ -n "$XBPS_CROSS_BUILD" ]; then
-		_destdir="$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET"
-	else
-		_destdir="$XBPS_DESTDIR"
-	fi
-	if [ -d "${_destdir}/${pkgname}-dbg-${version}" ]; then
-		unset_pkg_vars
-		pkgname="${pkgname}-dbg"
-		pkgver="${pkgname}-${version}_${revision}"
-		short_desc="${short_desc} (debug files)"
-		DESTDIR="${_destdir}/${pkgname}-${version}"
-		make_binpkg_real
-		setup_tmpl ${sourcepkg}
-	fi
-
-	rm -f ${SRCPKG_GITREVS_FILE}
-	unset SRCPKG_GITREVS_FILE
-
-	return $rval
-}
-
 register_pkg() {
 	local rval= _pkgdir="$1" _binpkg="$2"
 
@@ -123,7 +57,7 @@ register_pkg() {
 # This function builds a binary package from an installed xbps
 # package in destdir.
 #
-make_binpkg_real() {
+genbinpkg() {
 	local binpkg= pkgdir= arch= _deps= f=
 
 	if [ ! -d "${DESTDIR}" ]; then
@@ -195,7 +129,7 @@ make_binpkg_real() {
 	#
 	# Create the XBPS binary package.
 	#
-	${XBPS_CREATE_CMD} \
+	xbps-create \
 		--architecture ${arch} \
 		--provides "${_provides}" \
 		--conflicts "${_conflicts}" \
@@ -223,3 +157,58 @@ make_binpkg_real() {
 
 	return $rval
 }
+
+if [ $# -lt 1 -o $# -gt 2 ]; then
+	echo "$(basename $0): invalid number of arguments: pkgname [cross-target]"
+	exit 1
+fi
+
+PKGNAME="$1"
+CROSS_BUILD="$2"
+
+. $XBPS_CONFIG_FILE
+
+if [ -n "$CROSS_BUILD" ]; then
+	XBPS_CROSS_BUILD="$CROSS_BUILD"
+	set_cross_defvars
+fi
+
+. $XBPS_SHUTILSDIR/common.sh
+
+for f in $XBPS_COMMONDIR/*.sh; do
+	. $f
+done
+
+setup_subpkg "$PKGNAME"
+
+if [ -z "$pkgname" -o -z "$version" ]; then
+	msg_error "$PKGNAME: pkgname/version not set in pkg template!\n"
+fi
+
+if [ -n "$XBPS_USE_GIT_REVS" ]; then
+	msg_normal "$pkgver: fetching source git revisions, please wait...\n"
+	git_revs $pkgname
+fi
+
+genbinpkg
+rval=$?
+
+# Generate -dbg pkg automagically.
+if [ -n "$XBPS_CROSS_BUILD" ]; then
+	_destdir="$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET"
+else
+	_destdir="$XBPS_DESTDIR"
+fi
+if [ -d "${_destdir}/${pkgname}-dbg-${version}" ]; then
+	reset_subpkg_vars
+	pkgname="${pkgname}-dbg"
+	pkgver="${pkgname}-${version}_${revision}"
+	short_desc="${short_desc} (debug files)"
+	DESTDIR="${_destdir}/${pkgname}-${version}"
+	genbinpkg
+fi
+
+rm -f ${SRCPKG_GITREVS_FILE}
+unset SRCPKG_GITREVS_FILE
+
+exit $rval

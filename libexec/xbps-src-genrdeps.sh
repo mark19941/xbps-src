@@ -1,7 +1,7 @@
-# -*-* shell *-*-
+#!/bin/bash
 #
-# Finds all required shlibs for a package, by looking at its
-# executables/shlibs and skipping duplicated matches.
+# Passed arguments:
+#	$1 - pkgname [REQUIRED]
 
 add_rundep() {
 	local dep="$1" i= rpkgdep= _depname= _rdeps= found=
@@ -32,18 +32,20 @@ add_rundep() {
 	fi
 }
 
-verify_rundeps() {
-	local j= f= nlib= verify_deps= maplib= found_dup= igndir=
-	local broken= rdep= found= tmplf=
-	local _pkgname= _rdepver= _subpkg= _sdep=
+pkg_genrdeps() {
+	local depsftmp f j igndir tmplf
 
-	maplib=$XBPS_COMMONDIR/shlibs
+	MAPLIB=$XBPS_COMMONDIR/shlibs
 
-	[ -n "$noarch" -o -n "$noverifyrdeps" ] && return 0
+	if [ -n "$noarch" -o -n "$noverifyrdeps" ]; then
+		echo "$run_depends" > ${DESTDIR}/rdeps
+		return 0
+	fi
+
 	msg_normal "$pkgver: verifying required shlibs...\n"
 
 	depsftmp=$(mktemp -t xbps_src_depstmp.XXXXXXXXXX) || exit 1
-	find ${1} -type f -perm -u+w > $depsftmp 2>/dev/null
+	find ${DESTDIR} -type f -perm -u+w > $depsftmp 2>/dev/null
 
 	exec 3<&0 # save stdin
 	exec < $depsftmp
@@ -59,23 +61,23 @@ verify_rundeps() {
 		unset igndir
 
 		case "$(file -bi "$f")" in
-		application/x-executable*|application/x-sharedlib*)
-			for nlib in $($OBJDUMP -p "$f"|grep NEEDED|awk '{print $2}'); do
-				if [ -z "$verify_deps" ]; then
-					verify_deps="$nlib"
-					continue
-				fi
-				for j in ${verify_deps}; do
-					[ "$j" != "$nlib" ] && continue
-					found_dup=1
-					break
+			application/x-executable*|application/x-sharedlib*)
+				for nlib in $($OBJDUMP -p "$f"|grep NEEDED|awk '{print $2}'); do
+					if [ -z "$verify_deps" ]; then
+						verify_deps="$nlib"
+						continue
+					fi
+					for j in ${verify_deps}; do
+						[ "$j" != "$nlib" ] && continue
+						found_dup=1
+						break
+					done
+					if [ -z "$found_dup" ]; then
+						verify_deps="$verify_deps $nlib"
+					fi
+					unset found_dup
 				done
-				if [ -z "$found_dup" ]; then
-					verify_deps="$verify_deps $nlib"
-				fi
-				unset found_dup
-			done
-			;;
+				;;
 		esac
 	done
 	exec 0<&3 # restore stdin
@@ -92,9 +94,9 @@ verify_rundeps() {
 	#
 	for f in ${verify_deps}; do
 		unset _f j rdep _rdep rdepcnt soname _pkgname _rdepver found
-		local _f=$(echo "$f"|sed 's|\+|\\+|g')
-		rdep="$(grep -E "^${_f}[[:blank:]]+.*$" $maplib|awk '{print $2}')"
-		rdepcnt="$(grep -E "^${_f}[[:blank:]]+.*$" $maplib|awk '{print $2}'|wc -l)"
+		_f=$(echo "$f"|sed 's|\+|\\+|g')
+		rdep="$(grep -E "^${_f}[[:blank:]]+.*$" $MAPLIB|awk '{print $2}')"
+		rdepcnt="$(grep -E "^${_f}[[:blank:]]+.*$" $MAPLIB|awk '{print $2}'|wc -l)"
 		if [ -z "$rdep" ]; then
 			# Ignore libs by current pkg
 			soname=$(find ${DESTDIR} -name "$f")
@@ -158,4 +160,29 @@ verify_rundeps() {
 	if [ -n "$broken" ]; then
 		msg_error "$pkgver: cannot guess required shlibs, aborting!\n"
 	fi
+
+	if [ -n "$run_depends" ]; then
+		echo "$run_depends" > ${DESTDIR}/rdeps
+	fi
 }
+
+if [ $# -ne 1 ]; then
+	echo "$(basename $0): invalid number of arguments: pkgname"
+	exit 1
+fi
+
+PKGNAME="$1"
+
+. $XBPS_CONFIG_FILE
+. $XBPS_SHUTILSDIR/common.sh
+
+for f in $XBPS_COMMONDIR/*.sh; do
+	. $f
+done
+
+setup_subpkg "$PKGNAME"
+setup_pkg_build_vars
+
+pkg_genrdeps
+
+exit 0

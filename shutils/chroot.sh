@@ -61,13 +61,6 @@ _EOF
 XBPS_SRC_VERSION="$XBPS_SRC_VERSION"
 
 . /etc/xbps/xbps-src.conf
-. /usr/share/xbps-src/shutils/init_funcs.sh
-
-export XBPS_ETCDIR=/etc/xbps
-export XBPS_SHAREDIR=/usr/share/xbps-src
-export XBPS_LIBEXECDIR=/usr/libexec/xbps-src
-
-set_defvars
 
 PATH=/usr/bin:/usr/sbin:/usr/lib/perl5/core_perl/bin
 
@@ -80,6 +73,8 @@ exec env -i PATH="\$PATH" XBPS_ETCDIR="\$XBPS_ETCDIR" \
 
 _EOF
 	chmod 755 $XBPS_MASTERDIR/bin/xbps-shell
+
+	cp -f /etc/resolv.conf $XBPS_MASTERDIR/etc
 }
 
 chroot_prepare() {
@@ -92,7 +87,6 @@ chroot_prepare() {
 	fi
 
 	# Create some required files.
-	cp -f /etc/resolv.conf $XBPS_MASTERDIR/etc
 	cp -f /etc/services $XBPS_MASTERDIR/etc
 	[ -f /etc/localtime ] && cp -f /etc/localtime $XBPS_MASTERDIR/etc
 

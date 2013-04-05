@@ -1,19 +1,8 @@
-# -*-* shell *-*-
-
-strip_files()
-{
-	local subpkg=
-
-	for subpkg in ${subpackages}; do
-		. $XBPS_SRCPKGDIR/${sourcepkg}/${subpkg}.template
-		pkgname=${subpkg}
-		set_tmpl_common_vars
-		strip_files_real
-		setup_tmpl ${sourcepkg}
-	done
-
-	strip_files_real
-}
+#!/bin/bash
+#
+# Passed arguments:
+#	$1 - pkgname [REQUIRED]
+#	$2 - cross target [OPTIONAL]
 
 make_debug() {
 	local dname= fname= dbgfile=
@@ -69,12 +58,7 @@ create_debug_pkg() {
 	return 0
 }
 
-strip_files_real()
-{
-	local f= x= found= fname=
-
-	[ -n "$nostrip" -o -n "$noarch" ] && return 0
-
+pkg_strip() {
 	msg_normal "$pkgver: creating debug files and stripping, please wait...\n"
 	find ${DESTDIR} -type f | while read f; do
 		fname=$(basename "$f")
@@ -117,3 +101,38 @@ strip_files_real()
 	# Create a subpkg with debug files.
 	create_debug_pkg
 }
+
+if [ $# -lt 1 -o $# -gt 2 ]; then
+	echo "$(basename $0): invalid number of arguments: pkgname [cross-target]"
+	exit 1
+fi
+
+PKGNAME="$1"
+CROSS_BUILD="$2"
+
+. $XBPS_CONFIG_FILE
+. $XBPS_SHUTILSDIR/common.sh
+. $XBPS_SHUTILSDIR/install_files.sh
+
+for f in $XBPS_COMMONDIR/*.sh; do
+	. $f
+done
+
+setup_subpkg "$PKGNAME"
+
+if [ -n "$nostrip" -o -n "$noarch" ]; then
+	exit 0
+fi
+
+XBPS_STRIP_DONE="$wrksrc/.xbps_${pkgname}_${CROSS_BUILD}_strip_done"
+
+if [ -f "$XBPS_STRIP_DONE" ]; then
+	exit 0
+fi
+
+setup_pkg_build_vars
+pkg_strip
+
+touch -f $XBPS_STRIP_DONE
+
+exit 0
