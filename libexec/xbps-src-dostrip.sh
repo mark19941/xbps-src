@@ -118,6 +118,10 @@ for f in $XBPS_COMMONDIR/*.sh; do
 	. $f
 done
 
+if [ -z "$XBPS_DEBUG_PKGS" ]; then
+	disable_debug=yes
+fi
+
 setup_subpkg "$PKGNAME"
 
 if [ -n "$nostrip" -o -n "$noarch" ]; then

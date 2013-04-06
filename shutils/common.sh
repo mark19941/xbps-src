@@ -258,7 +258,7 @@ setup_subpkg() {
 
 setup_pkg_build_vars() {
 	# For nonfree/bootstrap pkgs there's no point in building -dbg pkgs, disable them.
-	if [ -n "$nonfree" -o -n "$bootstrap" ]; then
+	if [ -z "$XBPS_DEBUG_PKGS" -o -n "$nonfree" -o -n "$bootstrap" ]; then
 		disable_debug=yes
 	fi
 
