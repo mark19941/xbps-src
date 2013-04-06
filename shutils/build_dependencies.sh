@@ -158,6 +158,9 @@ install_pkg_deps() {
 		setup_pkg $XBPS_TARGET_PKG
 		install_pkg_deps
 	done
+	if [ "$TARGETPKG_PKGDEPS_DONE" ]; then
+		return 0
+	fi
 	for i in ${binpkg_deps[@]}; do
 		msg_normal "$pkgver: installing '$i' (native)...\n"
 		install_pkg_from_repos "${i}"
