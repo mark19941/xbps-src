@@ -374,9 +374,6 @@ if [ -f $XBPS_MASTERDIR/.xbps_chroot_init ]; then
 	export CHROOT_READY=1
 fi
 
-. $XBPS_SHAREDIR/shutils/init.sh
-set_cross_defvars
-
 # Check if stdout is a tty; if false disable colors.
 test -t 1 || export NOCOLORS=1
 
@@ -492,6 +489,9 @@ export XBPS_VERSION XBPS_APIVER XBPS_UHELPER_CMD
 export XBPS_INSTALL_CMD XBPS_REMOVE_CMD XBPS_RECONFIGURE_CMD
 export XBPS_QUERY_CMD XBPS_RINDEX_CMD
 export XBPS_DIGEST_CMD XBPS_CMPVER_CMD XBPS_FETCH_CMD
+
+. $XBPS_SHAREDIR/shutils/init.sh
+set_cross_defvars
 
 #
 # Sanitize PATH.
