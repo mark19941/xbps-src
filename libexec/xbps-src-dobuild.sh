@@ -68,7 +68,9 @@ else
 			msg_error "$pkgver: cannot find build helper $XBPS_HELPERSDIR/${build_style}.sh!\n"
 		fi
 		. $XBPS_HELPERSDIR/${build_style}.sh
-		run_func do_build
+		if declare -f do_build >/dev/null; then
+			run_func do_build
+		fi
 	fi
 fi
 

@@ -182,6 +182,7 @@ done
 
 setup_subpkg "$PKGNAME"
 setup_pkg_build_vars
+setup_pkg_depends
 
 pkg_genrdeps
 

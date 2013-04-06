@@ -77,15 +77,20 @@ remove_pkg_autodeps() {
 # Installs all dependencies required by a package.
 #
 install_pkg_deps() {
-	local i= pkgn= iver= missing_deps= missing_crossdeps=
-	local binpkg_deps= binpkg_crossdeps= _props= _exact=
+	local pkg="$1" curpkgdepname pkgn iver _props _exact
+
+	local -a binpkg_deps
+	local -a missing_deps
 
 	[ -z "$pkgname" ] && return 2
-	[ -z "$build_depends" -a -z "$host_build_depends" ] && return 0
-	[ -n "$TARGETPKG_PKGDEPS_DONE" ] && return 0
+
+	setup_pkg_depends
+
+	if [ -z "$build_depends" -a -z "$host_build_depends" ]; then
+		return 0
+	fi
 
 	msg_normal "$pkgver: required dependencies:\n"
-
 	#
 	# Native build dependencies.
 	#
@@ -124,11 +129,7 @@ install_pkg_deps() {
 				$XBPS_UHELPER_CMD pkgmatch ${1} "${i}"
 				if [ $? -eq 1 ]; then
 					echo "   ${i}: found $1 in $2."
-					if [ -z "$binpkg_deps" ]; then
-						binpkg_deps="${1}"
-					else
-						binpkg_deps="${binpkg_deps} ${1}"
-					fi
+					binpkg_deps+=("$1")
 					shift 2
 					continue
 				else
@@ -139,13 +140,10 @@ install_pkg_deps() {
 				echo "   ${i}: not found."
 			fi
 		fi
-		if [ -z "$missing_deps" ]; then
-			missing_deps="${i}"
-		else
-			missing_deps="${missing_deps} ${i}"
-		fi
+		missing_deps+=("$i")
 	done
-	for i in ${missing_deps}; do
+
+	for i in ${missing_deps[@]}; do
 		# packages not found in repos, install from source.
 		curpkgdepname=$($XBPS_UHELPER_CMD getpkgdepname "$i")
 		setup_subpkg ${curpkgdepname}
@@ -157,14 +155,17 @@ install_pkg_deps() {
 			msg_error_nochroot "$pkgver: required dependency '$i' cannot be resolved!\n"
 		fi
 		install_pkg
-		setup_subpkg $XBPS_TARGET_PKG
-		cd ${XBPS_MASTERDIR}
+		setup_pkg $XBPS_TARGET_PKG
 		install_pkg_deps
 	done
-	for i in ${binpkg_deps}; do
+	for i in ${binpkg_deps[@]}; do
 		msg_normal "$pkgver: installing '$i' (native)...\n"
 		install_pkg_from_repos "${i}"
 	done
+
+	unset binpkg_deps missing_deps
+	local -a binpkg_deps
+	local -a missing_deps
 
 	#
 	# Cross or library build dependencies.
@@ -204,11 +205,7 @@ install_pkg_deps() {
 				$XBPS_UHELPER_CMD pkgmatch ${1} "${i}"
 				if [ $? -eq 1 ]; then
 					echo "   ${i}: found $1 in $2."
-					if [ -z "$binpkg_crossdeps" ]; then
-						binpkg_crossdeps="${1}"
-					else
-						binpkg_crossdeps="${binpkg_crossdeps} ${1}"
-					fi
+					binpkg_deps+=("$1")
 					shift 2
 					continue
 				else
@@ -219,13 +216,10 @@ install_pkg_deps() {
 				echo "   ${i}: not found."
 			fi
 		fi
-		if [ -z "$missing_crossdeps" ]; then
-			missing_crossdeps="${i}"
-		else
-			missing_crossdeps="${missing_crossdeps} ${i}"
-		fi
+		missing_deps+=("$i")
 	done
-	for i in ${missing_crossdeps}; do
+
+	for i in ${missing_deps[@]}; do
 		# packages not found in repos, install from source.
 		curpkgdepname=$($XBPS_UHELPER_CMD getpkgdepname "$i")
 		setup_subpkg ${curpkgdepname}
@@ -237,17 +231,18 @@ install_pkg_deps() {
 			msg_error_nochroot "$pkgver: required dependency '$i' cannot be resolved!\n"
 		fi
 		install_pkg
-		setup_subpkg $XBPS_TARGET_PKG
-		cd ${XBPS_MASTERDIR}
+		setup_pkg $XBPS_TARGET_PKG
 		install_pkg_deps
 	done
-	for i in ${binpkg_crossdeps}; do
-		msg_normal "$pkgver: installing '$i' ...\n"
-		install_pkg_from_repos "${i}" cross
-	done
-	if [ "$pkgname" = "$XBPS_TARGET_PKG" ]; then
-		TARGETPKG_PKGDEPS_DONE=1
+	if [ "$TARGETPKG_PKGDEPS_DONE" ]; then
 		return 0
+	fi
+	for i in ${binpkg_deps[@]}; do
+		msg_normal "$pkgver: installing '$i' ...\n"
+		install_pkg_from_repos "$i" cross
+	done
+	if [ "$XBPS_TARGET_PKG" = "$sourcepkg" ]; then
+		TARGETPKG_PKGDEPS_DONE=1
 	fi
 }
 

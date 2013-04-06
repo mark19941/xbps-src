@@ -36,12 +36,10 @@ install_pkg() {
 	show_build_options
 	check_pkg_arch
 
-	# Install dependencies required by this package.
-	install_pkg_deps || return 1
-	if [ -n "$TARGETPKG_PKGDEPS_DONE" ]; then
-		unset TARGETPKG_PKGDEPS_DONE
-		remove_pkg_autodeps
+	install_pkg_deps $sourcepkg || return 1
+	if [ "$TARGETPKG_PKGDEPS_DONE" ]; then
 		setup_pkg $XBPS_TARGET_PKG
+		unset TARGETPKG_PKGDEPS_DONE
 	fi
 
 	# Fetch distfiles after installing required dependencies,
@@ -81,9 +79,6 @@ install_pkg() {
 
 		# Generate run-time dependecies.
 		$XBPS_LIBEXECDIR/xbps-src-genrdeps $subpkg || exit 1
-
-		# Generate binpkg.
-		$XBPS_LIBEXECDIR/xbps-src-genpkg $subpkg || exit 1
 	done
 
 	# Strip binaries/libraries.
@@ -92,29 +87,27 @@ install_pkg() {
 	# Generate run-time dependecies.
 	$XBPS_LIBEXECDIR/xbps-src-genrdeps $sourcepkg || exit 1
 
-	# Generate binpkg.
-	$XBPS_LIBEXECDIR/xbps-src-genpkg $sourcepkg || exit 1
+	if [ "$XBPS_TARGET_PKG" = "$sourcepkg" ]; then
+		[ "$target" = "install-destdir" ] && return 0
+	fi
 
-	# Remove pkg and its subpkgs from destdir.
-	remove_pkg $sourcepkg
+	# If install went ok generate the binpkgs.
+	for subpkg in ${subpackages}; do
+		$XBPS_LIBEXECDIR/xbps-src-genpkg $subpkg || exit 1
+	done
+
+	$XBPS_LIBEXECDIR/xbps-src-genpkg $sourcepkg || exit 1
 
 	# pkg cleanup
 	if declare -f do_clean >/dev/null; then
 		run_func do_clean
 	fi
 
-	# Remove autodeps if current pkg is the target pkg.
-	if [ "$sourcepkg" = "$XBPS_TARGET_PKG" ]; then
-		if [ -z "$XBPS_KEEP_ALL" ]; then
-			remove_pkg_autodeps
-			remove_pkg_wrksrc
-		fi
-		if [ -n "$CHROOT_READY" ]; then
-			exit 0
-		fi
-	else
+	if [ -z "$XBPS_KEEP_ALL" ]; then
 		remove_pkg_autodeps
 		remove_pkg_wrksrc
+		setup_pkg $sourcepkg
+		remove_pkg
 	fi
 
 	# If base-chroot not installed, install binpkg into masterdir
@@ -130,6 +123,12 @@ install_pkg() {
 			msg_error "Cannot continue!"
 		fi
 		rm -f ${_log}
+	fi
+
+	if [ "$XBPS_TARGET_PKG" = "$sourcepkg" ]; then
+		# Package built successfully. Exit directly due to nested install_pkg
+		# and install_pkg_deps functions.
+		exit 0
 	fi
 }
 
@@ -153,7 +152,7 @@ remove_pkg() {
 
 	for subpkg in ${subpackages}; do
 		. ${XBPS_SRCPKGDIR}/${sourcepkg}/${subpkg}.template
-		set_pkg_common_vars
+		setup_pkg_common_vars
 		pkg="${subpkg}-${version}"
 		if [ -n "$revision" ]; then
 			local _pkg="${pkg}_${revision}"

@@ -215,16 +215,16 @@ setup_pkg() {
 
 	[ -z "$pkg" ] && return 1
 
-	if [ -f $XBPS_SRCPKGDIR/${pkg}/template ]; then
-		reset_pkg_vars
-		. $XBPS_SRCPKGDIR/${pkg}/template
-		sourcepkg=$pkgname
-		pkgver="${pkgname}-${version}_${revision}"
-		set_build_options
-		set_pkg_common_vars
-	else
+	if [ ! -f $XBPS_SRCPKGDIR/${pkg}/template ]; then
 		msg_error "Cannot find $pkg build template file.\n"
 	fi
+
+	reset_pkg_vars
+	. $XBPS_SRCPKGDIR/${pkg}/template
+	sourcepkg=$pkgname
+	pkgver="${pkgname}-${version}_${revision}"
+	set_build_options
+	setup_pkg_common_vars
 
 	if [ -z "$wrksrc" ]; then
 		wrksrc="$XBPS_BUILDDIR/${pkgname}-${version}"
@@ -241,7 +241,6 @@ setup_subpkg() {
 
 	if [ -r "$XBPS_SRCPKGDIR/$1/$1.template" ]; then
 		setup_pkg $1
-		unset build_depends host_build_depends
 		reset_subpkg_vars
 		. $XBPS_SRCPKGDIR/$1/$1.template
 		for f in ${subpackages}; do
@@ -249,7 +248,7 @@ setup_subpkg() {
 			pkgname=$f
 			pkgver="${pkgname}-${version}_${revision}"
 			SUBPKG=1
-			set_pkg_common_vars
+			setup_pkg_common_vars
 			break
 		done
 	else
@@ -308,36 +307,8 @@ setup_pkg_build_vars() {
 	fi
 }
 
-set_pkg_common_vars() {
-	local i= _pkgdep= _pkgdepname= _deps= REQ_VARS=
-
-	[ -z "$pkgname" ] && return 1
-
-	REQ_VARS="pkgname version short_desc revision homepage license"
-
-	if [ -n "$build_style" -a "$build_style" = "meta-template" ]; then
-		nofetch=yes
-		noextract=yes
-	fi
-
-	# Check if required vars weren't set.
-	for i in ${REQ_VARS}; do
-		eval val="\$$i"
-		if [ -z "$val" -o -z "$i" ]; then
-			msg_error "\"$i\" not set on $pkgname template.\n"
-		fi
-	done
-
-	FILESDIR=$XBPS_SRCPKGDIR/$pkgname/files
-	PATCHESDIR=$XBPS_SRCPKGDIR/$pkgname/patches
-
-	if [ -n "$XBPS_CROSS_BUILD" ]; then
-		DESTDIR=${XBPS_DESTDIR}/${XBPS_CROSS_TRIPLET}/${pkgname}-${version}
-		SRCPKGDESTDIR=${XBPS_DESTDIR}/${XBPS_CROSS_TRIPLET}/${sourcepkg}-${version}
-	else
-		DESTDIR=${XBPS_DESTDIR}/${pkgname}-${version}
-		SRCPKGDESTDIR=${XBPS_DESTDIR}/${sourcepkg}-${version}
-	fi
+setup_pkg_depends() {
+	local j _deps _pkgdepname _pkgdep
 
 	if [ -z "$SUBPKG" ]; then
 		_deps="${depends} ${fulldepends}"
@@ -381,4 +352,36 @@ set_pkg_common_vars() {
 		fi
 		build_depends="${build_depends} ${_pkgdep}"
 	done
+}
+
+setup_pkg_common_vars() {
+	local i REQ_VARS
+
+	[ -z "$pkgname" ] && return 1
+
+	REQ_VARS="pkgname version short_desc revision homepage license"
+
+	if [ -n "$build_style" -a "$build_style" = "meta-template" ]; then
+		nofetch=yes
+		noextract=yes
+	fi
+
+	# Check if required vars weren't set.
+	for i in ${REQ_VARS}; do
+		eval val="\$$i"
+		if [ -z "$val" -o -z "$i" ]; then
+			msg_error "\"$i\" not set on $pkgname template.\n"
+		fi
+	done
+
+	FILESDIR=$XBPS_SRCPKGDIR/$pkgname/files
+	PATCHESDIR=$XBPS_SRCPKGDIR/$pkgname/patches
+
+	if [ -n "$XBPS_CROSS_BUILD" ]; then
+		DESTDIR=${XBPS_DESTDIR}/${XBPS_CROSS_TRIPLET}/${pkgname}-${version}
+		SRCPKGDESTDIR=${XBPS_DESTDIR}/${XBPS_CROSS_TRIPLET}/${sourcepkg}-${version}
+	else
+		DESTDIR=${XBPS_DESTDIR}/${pkgname}-${version}
+		SRCPKGDESTDIR=${XBPS_DESTDIR}/${sourcepkg}-${version}
+	fi
 }
