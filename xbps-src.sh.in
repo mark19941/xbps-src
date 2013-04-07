@@ -300,7 +300,7 @@ masterdir_zap() {
 exit_func() {
 	if [ -z "$XBPS_KEEP_ALL" ]; then
 		remove_pkg_autodeps
-		remove_pkg
+		remove_pkg $XBPS_CROSS_BUILD
 		remove_pkg_wrksrc
 	fi
 	if [ -z "$IN_CHROOT" ]; then
@@ -315,6 +315,7 @@ trap 'exit_func' INT TERM HUP
 
 readonly XBPS_SRC_VERSION="@@XBPS_SRC_VERSION@@"
 
+export XBPS_SRC_VERSION
 export XBPS_PREFIX=${DESTDIR}@@XBPS_INSTALL_PREFIX@@
 export XBPS_ETCDIR=${DESTDIR}@@XBPS_INSTALL_ETCDIR@@
 export XBPS_SBINDIR=${DESTDIR}@@XBPS_INSTALL_SBINDIR@@
@@ -581,7 +582,7 @@ clean)
 		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
 		XBPS_TARGET_PKG=$(basename_cwd)
 	fi
-	setup_pkg $XBPS_TARGET_PKG
+	setup_pkg $XBPS_TARGET_PKG $XBPS_CROSS_BUILD
 	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
 		chroot_handler $target $XBPS_TARGET_PKG || exit $?
 	else
@@ -613,7 +614,7 @@ fetch|extract|build|configure|install-destdir|build-pkg)
 		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
 		XBPS_TARGET_PKG=$(basename_cwd)
 	fi
-	setup_pkg $XBPS_TARGET_PKG
+	setup_pkg $XBPS_TARGET_PKG $XBPS_CROSS_BUILD
 	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
 		chroot_handler $XBPS_TARGET $XBPS_TARGET_PKG
 	else
@@ -625,8 +626,8 @@ remove-destdir)
 		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
 		XBPS_TARGET_PKG=$(basename_cwd)
 	fi
-	setup_pkg $XBPS_TARGET_PKG
-	remove_pkg $XBPS_TARGET
+	setup_pkg $XBPS_TARGET_PKG $XBPS_CROSS_BUILD
+	remove_pkg $XBPS_TARGET $XBPS_CROSS_BUILD
 	;;
 list)
 	$XBPS_QUERY_CMD -l
@@ -660,7 +661,7 @@ show-options)
 		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
 		XBPS_TARGET_PKG=$(basename_cwd)
 	fi
-	setup_pkg $XBPS_TARGET_PKG
+	setup_pkg $XBPS_TARGET_PKG $XBPS_CROSS_BUILD
 	show_pkg_options
 	;;
 zap)

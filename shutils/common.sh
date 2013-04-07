@@ -4,11 +4,11 @@ run_func() {
 	local func="$1" restoretrap= logpipe= logfile= teepid=
 
 	if [ -d "${wrksrc}" ]; then
-		logpipe=$(mktemp -u --tmpdir=${wrksrc} .xbps_${XBPS_CROSS_TRIPLET}_XXXXXXXX.logpipe)
-		logfile=${wrksrc}/.xbps_${XBPS_CROSS_TRIPLET}_${func}.log
+		logpipe=$(mktemp -u --tmpdir=${wrksrc} .xbps_${XBPS_CROSS_BUILD}_XXXXXXXX.logpipe)
+		logfile=${wrksrc}/.xbps_${XBPS_CROSS_BUILD}_${func}.log
 	else
-		logpipe=$(mktemp -u .xbps_${XBPS_CROSS_TRIPLET}_${func}_${pkgname}_logpipe.XXXXXXX)
-		logfile=$(mktemp -t .xbps_${XBPS_CROSS_TRIPLET}_${func}_${pkgname}.log.XXXXXXXX)
+		logpipe=$(mktemp -u .xbps_${XBPS_CROSS_BUILD}_${func}_${pkgname}_logpipe.XXXXXXX)
+		logfile=$(mktemp -t .xbps_${XBPS_CROSS_BUILD}_${func}_${pkgname}.log.XXXXXXXX)
 	fi
 
 	msg_normal "$pkgver: running $func ...\n"
@@ -189,6 +189,8 @@ reset_pkg_vars() {
 			SUBPKG XBPS_EXTRACT_DONE XBPS_CONFIGURE_DONE \
 			XBPS_BUILD_DONE XBPS_INSTALL_DONE FILESDIR DESTDIR \
 			SRCPKGDESTDIR PATCHESDIR CFLAGS CXXFLAGS CPPFLAGS \
+			XBPS_CROSS_CFLAGS XBPS_CROSS_CXXFLAGS \
+			XBPS_CROSS_CPPFLAGS XBPS_CROSS_LDFLAGS \
 			CC CXX LDFLAGS LD_LIBRARY_PATH PKG_BUILD_OPTIONS"
 
 	local TMPL_FUNCS="pre_configure pre_build pre_install do_build \
@@ -210,8 +212,16 @@ reset_subpkg_vars() {
 	eval unset -v "$VARS"
 }
 
+source_pkg() {
+	local pkg="$1" pkgtmpl="$2"
+
+	if ! source "$pkgtmpl"; then
+		msg_error "$pkg: failed to read $pkgtmpl!\n"
+	fi
+}
+
 setup_pkg() {
-	local pkg="$1"
+	local pkg="$1" cross="$2" restorecross
 
 	[ -z "$pkg" ] && return 1
 
@@ -220,11 +230,21 @@ setup_pkg() {
 	fi
 
 	reset_pkg_vars
-	. $XBPS_SRCPKGDIR/${pkg}/template
+
+	if [ -n "$cross" ]; then
+		export XBPS_CROSS_BUILD="$cross"
+		source_pkg $pkg $XBPS_SRCPKGDIR/${pkg}/template
+	else
+		cross="$XBPS_CROSS_BUILD"
+		unset XBPS_CROSS_BUILD
+		source_pkg $pkg $XBPS_SRCPKGDIR/${pkg}/template
+		[ -n "$cross" -a "$cross" != "" ] && export XBPS_CROSS_BUILD="$cross"
+	fi
+
 	sourcepkg=$pkgname
 	pkgver="${pkgname}-${version}_${revision}"
 	set_build_options
-	setup_pkg_common_vars
+	setup_pkg_common_vars $cross
 
 	if [ -z "$wrksrc" ]; then
 		wrksrc="$XBPS_BUILDDIR/${pkgname}-${version}"
@@ -235,28 +255,30 @@ setup_pkg() {
 }
 
 setup_subpkg() {
-	local f=
+	local f= pkg="$1" cross="$2"
 
 	[ -z "$1" ] && return 1
 
 	if [ -r "$XBPS_SRCPKGDIR/$1/$1.template" ]; then
-		setup_pkg $1
+		setup_pkg $pkg $cross
 		reset_subpkg_vars
-		. $XBPS_SRCPKGDIR/$1/$1.template
+		source_pkg $pkg $XBPS_SRCPKGDIR/$pkg/${pkg}.template
 		for f in ${subpackages}; do
 			[ "$f" != "$1" ] && continue
 			pkgname=$f
 			pkgver="${pkgname}-${version}_${revision}"
 			SUBPKG=1
-			setup_pkg_common_vars
+			setup_pkg_common_vars $cross
 			break
 		done
 	else
-		setup_pkg $1
+		setup_pkg $pkg $cross
 	fi
 }
 
 setup_pkg_build_vars() {
+	local cross="$1"
+
 	# For nonfree/bootstrap pkgs there's no point in building -dbg pkgs, disable them.
 	if [ -z "$XBPS_DEBUG_PKGS" -o -n "$nonfree" -o -n "$bootstrap" ]; then
 		disable_debug=yes
@@ -276,7 +298,7 @@ setup_pkg_build_vars() {
 	export CPPFLAGS="$XBPS_CPPFLAGS $XBPS_CROSS_CPPFLAGS $CPPFLAGS"
 	export LDFLAGS="$LDFLAGS $XBPS_LDFLAGS $XBPS_CROSS_LDFLAGS"
 
-	if [ -n "$XBPS_CROSS_BUILD" ]; then
+	if [ -n "$cross" ]; then
 		export CC="${XBPS_CROSS_TRIPLET}-gcc"
 		export CXX="${XBPS_CROSS_TRIPLET}-c++"
 		export CPP="${XBPS_CROSS_TRIPLET}-cpp"
@@ -355,7 +377,7 @@ setup_pkg_depends() {
 }
 
 setup_pkg_common_vars() {
-	local i REQ_VARS
+	local i REQ_VARS cross="$1"
 
 	[ -z "$pkgname" ] && return 1
 
@@ -377,11 +399,107 @@ setup_pkg_common_vars() {
 	FILESDIR=$XBPS_SRCPKGDIR/$pkgname/files
 	PATCHESDIR=$XBPS_SRCPKGDIR/$pkgname/patches
 
-	if [ -n "$XBPS_CROSS_BUILD" ]; then
+	if [ -n "$cross" ]; then
 		DESTDIR=${XBPS_DESTDIR}/${XBPS_CROSS_TRIPLET}/${pkgname}-${version}
 		SRCPKGDESTDIR=${XBPS_DESTDIR}/${XBPS_CROSS_TRIPLET}/${sourcepkg}-${version}
 	else
 		DESTDIR=${XBPS_DESTDIR}/${pkgname}-${version}
 		SRCPKGDESTDIR=${XBPS_DESTDIR}/${sourcepkg}-${version}
 	fi
+}
+
+_remove_pkg_cross_deps() {
+	local rval= tmplogf=
+	[ -z "$XBPS_CROSS_BUILD" ] && return 0
+
+	cd $XBPS_MASTERDIR || return 1
+	msg_normal "$pkgver: removing autocrossdeps, please wait...\n"
+	tmplogf=$(mktemp)
+	$FAKEROOT_CMD $XBPS_REMOVE_XCMD -Ryo > $tmplogf 2>&1
+	if [ $? -ne 0 ]; then
+		msg_red "$pkgver: failed to remove autocrossdeps:\n"
+		cat $tmplogf && rm -f $tmplogf
+		msg_error "$pkgver: cannot continue!\n"
+	fi
+	rm -f $tmplogf
+}
+
+
+remove_pkg_autodeps() {
+	local rval= tmplogf=
+
+	[ -z "$CHROOT_READY" ] && return 0
+
+	cd $XBPS_MASTERDIR || return 1
+	msg_normal "$pkgver: removing autodeps, please wait...\n"
+	tmplogf=$(mktemp)
+	( $FAKEROOT_CMD $XBPS_RECONFIGURE_CMD -a;
+	  $FAKEROOT_CMD $XBPS_REMOVE_CMD -Ryo; ) >> $tmplogf 2>&1
+	if [ $? -ne 0 ]; then
+		msg_red "$pkgver: failed to remove autodeps:\n"
+		cat $tmplogf && rm -f $tmplogf
+		msg_error "$pkgver: cannot continue!\n"
+	fi
+	rm -f $tmplogf
+
+	_remove_pkg_cross_deps
+}
+
+#
+# Returns 0 if pkgpattern in $1 is matched against current installed
+# package, 1 if no match and 2 if not installed.
+#
+check_pkgdep_matched() {
+	local pkg="$1" cross="$2" uhelper= pkgn= iver=
+
+	[ -z "$pkg" ] && return 255
+
+	pkgn="$($XBPS_UHELPER_CMD getpkgdepname ${pkg})"
+	if [ -z "$pkgn" ]; then
+		pkgn="$($XBPS_UHELPER_CMD getpkgname ${pkg})"
+	fi
+	[ -z "$pkgn" ] && return 255
+
+	if [ -n "$cross" ]; then
+		uhelper=$XBPS_UHELPER_XCMD
+	else
+		uhelper=$XBPS_UHELPER_CMD
+	fi
+
+	iver="$($uhelper version $pkgn)"
+	if [ $? -eq 0 -a -n "$iver" ]; then
+		$XBPS_UHELPER_CMD pkgmatch "${pkgn}-${iver}" "${pkg}"
+		[ $? -eq 1 ] && return 0
+	else
+		return 2
+	fi
+
+	return 1
+}
+
+#
+# Returns 0 if pkgpattern in $1 is installed and greater than current
+# installed package, otherwise 1.
+#
+check_installed_pkg() {
+	local pkg="$1" cross="$2" uhelper= pkgn= iver=
+
+	[ -z "$pkg" ] && return 2
+
+	pkgn="$($XBPS_UHELPER_CMD getpkgname ${pkg})"
+	[ -z "$pkgn" ] && return 2
+
+	if [ -n "$cross" ]; then
+		uhelper=$XBPS_UHELPER_XCMD
+	else
+		uhelper=$XBPS_UHELPER_CMD
+	fi
+
+	iver="$($uhelper version $pkgn)"
+	if [ $? -eq 0 -a -n "$iver" ]; then
+		$XBPS_CMPVER_CMD "${pkgn}-${iver}" "${pkg}"
+		[ $? -eq 0 -o $? -eq 1 ] && return 0
+	fi
+
+	return 1
 }

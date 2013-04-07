@@ -8,13 +8,13 @@
 # Any other error number otherwise.
 #
 install_pkg_from_repos() {
-	local rval= tmplogf=
+	local pkg="$1" cross="$2" rval= tmplogf=
 
 	tmplogf=$(mktemp)
-	if [ -n "$2" ]; then
-		$FAKEROOT_CMD $XBPS_INSTALL_XCMD -Ayd "$1" >$tmplogf 2>&1
+	if [ -n "$cross" ]; then
+		$FAKEROOT_CMD $XBPS_INSTALL_XCMD -Ayd "$pkg" >$tmplogf 2>&1
 	else
-		$FAKEROOT_CMD $XBPS_INSTALL_CMD -Ayd "$1" >$tmplogf 2>&1
+		$FAKEROOT_CMD $XBPS_INSTALL_CMD -Ayd "$pkg" >$tmplogf 2>&1
 	fi
 	rval=$?
 	if [ $rval -ne 0 -a $rval -ne 17 ]; then
@@ -36,48 +36,11 @@ install_pkg_from_repos() {
 	return $rval
 }
 
-_remove_pkg_cross_deps() {
-	local rval= tmplogf=
-	[ -z "$XBPS_CROSS_BUILD" ] && return 0
-
-	cd $XBPS_MASTERDIR || return 1
-	msg_normal "$pkgver: removing autocrossdeps, please wait...\n"
-	tmplogf=$(mktemp)
-	$FAKEROOT_CMD $XBPS_REMOVE_XCMD -Ryo > $tmplogf 2>&1
-	if [ $? -ne 0 ]; then
-		msg_red "$pkgver: failed to remove autocrossdeps:\n"
-		cat $tmplogf && rm -f $tmplogf
-		msg_error "$pkgver: cannot continue!\n"
-	fi
-	rm -f $tmplogf
-}
-
-
-remove_pkg_autodeps() {
-	local rval= tmplogf=
-
-	[ -z "$CHROOT_READY" ] && return 0
-
-	cd $XBPS_MASTERDIR || return 1
-	msg_normal "$pkgver: removing autodeps, please wait...\n"
-	tmplogf=$(mktemp)
-	( $FAKEROOT_CMD $XBPS_RECONFIGURE_CMD -a;
-	  $FAKEROOT_CMD $XBPS_REMOVE_CMD -Ryo; ) >> $tmplogf 2>&1
-	if [ $? -ne 0 ]; then
-		msg_red "$pkgver: failed to remove autodeps:\n"
-		cat $tmplogf && rm -f $tmplogf
-		msg_error "$pkgver: cannot continue!\n"
-	fi
-	rm -f $tmplogf
-
-	_remove_pkg_cross_deps
-}
-
 #
 # Installs all dependencies required by a package.
 #
 install_pkg_deps() {
-	local pkg="$1" curpkgdepname pkgn iver _props _exact
+	local pkg="$1" cross="$2" curpkgdepname pkgn iver _props _exact
 
 	local -a binpkg_deps
 	local -a missing_deps
@@ -146,7 +109,7 @@ install_pkg_deps() {
 	for i in ${missing_deps[@]}; do
 		# packages not found in repos, install from source.
 		curpkgdepname=$($XBPS_UHELPER_CMD getpkgdepname "$i")
-		setup_subpkg ${curpkgdepname}
+		setup_subpkg $curpkgdepname
 		# Check if version in srcpkg satisfied required dependency,
 		# and bail out if doesn't.
 		${XBPS_UHELPER_CMD} pkgmatch "$pkgver" "$i"
@@ -154,9 +117,9 @@ install_pkg_deps() {
 			setup_subpkg $XBPS_TARGET_PKG
 			msg_error_nochroot "$pkgver: required dependency '$i' cannot be resolved!\n"
 		fi
-		install_pkg
+		install_pkg full
 		setup_pkg $XBPS_TARGET_PKG
-		install_pkg_deps
+		install_pkg_deps $sourcepkg
 	done
 	if [ "$TARGETPKG_PKGDEPS_DONE" ]; then
 		return 0
@@ -182,7 +145,7 @@ install_pkg_deps() {
 			fi
 			_exact=1
 		fi
-		check_pkgdep_matched "${i}" CROSS
+		check_pkgdep_matched "${i}" $XBPS_CROSS_BUILD
 		local rval=$?
 		if [ $rval -eq 0 ]; then
 			iver=$($XBPS_UHELPER_XCMD version "${pkgn}")
@@ -225,79 +188,26 @@ install_pkg_deps() {
 	for i in ${missing_deps[@]}; do
 		# packages not found in repos, install from source.
 		curpkgdepname=$($XBPS_UHELPER_CMD getpkgdepname "$i")
-		setup_subpkg ${curpkgdepname}
+		setup_subpkg $curpkgdepname $cross
 		# Check if version in srcpkg satisfied required dependency,
 		# and bail out if doesn't.
-		${XBPS_UHELPER_CMD} pkgmatch "$pkgver" "$i"
+		$XBPS_UHELPER_CMD pkgmatch "$pkgver" "$i"
 		if [ $? -eq 0 ]; then
-			setup_subpkg $XBPS_TARGET_PKG
+			setup_subpkg $XBPS_TARGET_PKG $cross
 			msg_error_nochroot "$pkgver: required dependency '$i' cannot be resolved!\n"
 		fi
-		install_pkg
-		setup_pkg $XBPS_TARGET_PKG
-		install_pkg_deps
+		install_pkg full $cross
+		setup_pkg $XBPS_TARGET_PKG $cross
+		install_pkg_deps $sourcepkg $cross
 	done
 	if [ "$TARGETPKG_PKGDEPS_DONE" ]; then
 		return 0
 	fi
 	for i in ${binpkg_deps[@]}; do
 		msg_normal "$pkgver: installing '$i' ...\n"
-		install_pkg_from_repos "$i" cross
+		install_pkg_from_repos "$i" $cross
 	done
 	if [ "$XBPS_TARGET_PKG" = "$sourcepkg" ]; then
 		TARGETPKG_PKGDEPS_DONE=1
 	fi
-}
-
-#
-# Returns 0 if pkgpattern in $1 is matched against current installed
-# package, 1 if no match and 2 if not installed.
-#
-check_pkgdep_matched() {
-	local pkg="$1" uhelper= pkgn= iver=
-
-	[ -z "$pkg" ] && return 255
-
-	pkgn="$($XBPS_UHELPER_CMD getpkgdepname ${pkg})"
-	if [ -z "$pkgn" ]; then
-		pkgn="$($XBPS_UHELPER_CMD getpkgname ${pkg})"
-	fi
-	[ -z "$pkgn" ] && return 255
-
-	if [ -n "$2" ]; then
-		uhelper=$XBPS_UHELPER_XCMD
-	else
-		uhelper=$XBPS_UHELPER_CMD
-	fi
-
-	iver="$($uhelper version $pkgn)"
-	if [ $? -eq 0 -a -n "$iver" ]; then
-		$uhelper pkgmatch "${pkgn}-${iver}" "${pkg}"
-		[ $? -eq 1 ] && return 0
-	else
-		return 2
-	fi
-
-	return 1
-}
-
-#
-# Returns 0 if pkgpattern in $1 is installed and greater than current
-# installed package, otherwise 1.
-#
-check_installed_pkg() {
-	local pkg="$1" pkgn= iver=
-
-	[ -z "$pkg" ] && return 2
-
-	pkgn="$($XBPS_UHELPER_CMD getpkgname ${pkg})"
-	[ -z "$pkgn" ] && return 2
-
-	iver="$($XBPS_UHELPER_CMD version $pkgn)"
-	if [ $? -eq 0 -a -n "$iver" ]; then
-		${XBPS_CMPVER_CMD} "${pkgn}-${iver}" "${pkg}"
-		[ $? -eq 0 -o $? -eq 1 ] && return 0
-	fi
-
-	return 1
 }

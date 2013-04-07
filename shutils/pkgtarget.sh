@@ -29,14 +29,14 @@ check_pkg_arch() {
 }
 
 install_pkg() {
-	local target="$1" lrepo=
+	local target="$1" cross="$2" lrepo=
 
 	[ -z "$pkgname" ] && return 1
 
 	show_build_options
 	check_pkg_arch
 
-	install_pkg_deps $sourcepkg || return 1
+	install_pkg_deps $sourcepkg $cross || return 1
 	if [ "$TARGETPKG_PKGDEPS_DONE" ]; then
 		setup_pkg $XBPS_TARGET_PKG
 		unset TARGETPKG_PKGDEPS_DONE
@@ -55,15 +55,15 @@ install_pkg() {
 	$XBPS_LIBEXECDIR/xbps-src-dopatch $sourcepkg || exit 1
 
 	# Run configure phase
-	$XBPS_LIBEXECDIR/xbps-src-doconfigure $sourcepkg $XBPS_CROSS_BUILD || exit 1
+	$XBPS_LIBEXECDIR/xbps-src-doconfigure $sourcepkg $cross || exit 1
 	[ "$target" = "configure" ] && return 0
 
 	# Run build phase
-	$XBPS_LIBEXECDIR/xbps-src-dobuild $sourcepkg $XBPS_CROSS_BUILD || exit 1
+	$XBPS_LIBEXECDIR/xbps-src-dobuild $sourcepkg $cross || exit 1
 	[ "$target" = "build" ] && return 0
 
 	# Install pkg into destdir.
-	$FAKEROOT_CMD $XBPS_LIBEXECDIR/xbps-src-doinstall $sourcepkg || exit 1
+	$FAKEROOT_CMD $XBPS_LIBEXECDIR/xbps-src-doinstall $sourcepkg $cross || exit 1
 
 	# Install subpkgs into destdir.
 	for subpkg in ${subpackages}; do
@@ -72,20 +72,20 @@ install_pkg() {
 		fi
 		. $XBPS_SRCPKGDIR/$subpkg/${subpkg}.template
 
-		$FAKEROOT_CMD $XBPS_LIBEXECDIR/xbps-src-doinstall $subpkg || exit 1
+		$FAKEROOT_CMD $XBPS_LIBEXECDIR/xbps-src-doinstall $subpkg $cross || exit 1
 
 		# Strip binaries/libraries.
-		$XBPS_LIBEXECDIR/xbps-src-dostrip $subpkg $XBPS_CROSS_BUILD || exit 1
+		$XBPS_LIBEXECDIR/xbps-src-dostrip $subpkg $cross || exit 1
 
 		# Generate run-time dependecies.
-		$XBPS_LIBEXECDIR/xbps-src-genrdeps $subpkg || exit 1
+		$XBPS_LIBEXECDIR/xbps-src-genrdeps $subpkg $cross || exit 1
 	done
 
 	# Strip binaries/libraries.
-	$XBPS_LIBEXECDIR/xbps-src-dostrip $sourcepkg $XBPS_CROSS_BUILD || exit 1
+	$XBPS_LIBEXECDIR/xbps-src-dostrip $sourcepkg $cross || exit 1
 
 	# Generate run-time dependecies.
-	$XBPS_LIBEXECDIR/xbps-src-genrdeps $sourcepkg || exit 1
+	$XBPS_LIBEXECDIR/xbps-src-genrdeps $sourcepkg $cross || exit 1
 
 	if [ "$XBPS_TARGET_PKG" = "$sourcepkg" ]; then
 		[ "$target" = "install-destdir" ] && return 0
@@ -93,10 +93,10 @@ install_pkg() {
 
 	# If install went ok generate the binpkgs.
 	for subpkg in ${subpackages}; do
-		$XBPS_LIBEXECDIR/xbps-src-genpkg $subpkg || exit 1
+		$XBPS_LIBEXECDIR/xbps-src-genpkg $subpkg $cross || exit 1
 	done
 
-	$XBPS_LIBEXECDIR/xbps-src-genpkg $sourcepkg || exit 1
+	$XBPS_LIBEXECDIR/xbps-src-genpkg $sourcepkg $cross || exit 1
 
 	# pkg cleanup
 	if declare -f do_clean >/dev/null; then
@@ -106,8 +106,8 @@ install_pkg() {
 	if [ -z "$XBPS_KEEP_ALL" ]; then
 		remove_pkg_autodeps
 		remove_pkg_wrksrc
-		setup_pkg $sourcepkg
-		remove_pkg
+		setup_pkg $sourcepkg $cross
+		remove_pkg $cross
 	fi
 
 	# If base-chroot not installed, install binpkg into masterdir
@@ -140,11 +140,11 @@ remove_pkg_wrksrc() {
 }
 
 remove_pkg() {
-	local subpkg= pkg= _destdir=
+	local cross="$1" subpkg= pkg= _destdir=
 
 	[ -z $pkgname ] && msg_error "unexistent package, aborting.\n"
 
-	if [ -n "$XBPS_CROSS_BUILD" ]; then
+	if [ -n "$cross" ]; then
 		_destdir="$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET"
 	else
 		_destdir="$XBPS_DESTDIR"
@@ -152,7 +152,7 @@ remove_pkg() {
 
 	for subpkg in ${subpackages}; do
 		. ${XBPS_SRCPKGDIR}/${sourcepkg}/${subpkg}.template
-		setup_pkg_common_vars
+		setup_pkg_common_vars $cross
 		pkg="${subpkg}-${version}"
 		if [ -n "$revision" ]; then
 			local _pkg="${pkg}_${revision}"

@@ -64,12 +64,9 @@ XBPS_SRC_VERSION="$XBPS_SRC_VERSION"
 
 PATH=/usr/bin:/usr/sbin:/usr/lib/perl5/core_perl/bin
 
-exec env -i PATH="\$PATH" XBPS_ETCDIR="\$XBPS_ETCDIR" \
-	XBPS_SHAREDIR="\$XBPS_SHAREDIR" XBPS_LIBEXECDIR="\$XBPS_LIBEXECDIR" \
-	XBPS_FETCH_CMD="\$XBPS_FETCH_CMD" XBPS_CMPVER_CMD="\$XBPS_CMPVER_CMD" \
-	XBPS_DIGEST_CMD="\$XBPS_DIGEST_CMD" \
-	DISTCC_HOSTS="\$XBPS_DISTCC_HOSTS" DISTCC_DIR="/distcc" CCACHE_DIR="/ccache" \
-	IN_CHROOT=1 LANG=C TERM=linux PS1="[\u@$XBPS_MASTERDIR \W]$ " /bin/bash +h
+exec env -i PATH="\$PATH" DISTCC_HOSTS="\$XBPS_DISTCC_HOSTS" DISTCC_DIR="/distcc" \
+	CCACHE_DIR="/ccache" IN_CHROOT=1 LANG=C TERM=linux \
+	PS1="[\u@$XBPS_MASTERDIR \W]$ " /bin/bash +h
 
 _EOF
 	chmod 755 $XBPS_MASTERDIR/bin/xbps-shell
@@ -147,7 +144,7 @@ chroot_handler() {
 	chroot_sync_repos || return $?
 
 	if [ "$action" = "chroot" ]; then
-		$CHROOT_CMD ${_chargs} $XBPS_MASTERDIR /bin/xbps-shell || rv=$?
+		env -i $CHROOT_CMD ${_chargs} $XBPS_MASTERDIR /bin/xbps-shell || rv=$?
 	else
 		[ -n "$XBPS_BUILD_OPTS" ] && arg="$arg -o $XBPS_BUILD_OPTS"
 		[ -n "$XBPS_CROSS_BUILD" ] && arg="$arg -a $XBPS_CROSS_BUILD"
@@ -156,7 +153,7 @@ chroot_handler() {
 		[ -n "$NOCOLORS" ] && arg="$arg -L"
 
 		action="$arg $action"
-		env IN_CHROOT=1 LANG=C \
+		env -i IN_CHROOT=1 LANG=C \
 			$CHROOT_CMD ${_chargs} $XBPS_MASTERDIR sh -c \
 			"xbps-src $action $pkg" || rv=$?
 	fi

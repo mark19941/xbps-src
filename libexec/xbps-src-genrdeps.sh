@@ -166,22 +166,25 @@ pkg_genrdeps() {
 	fi
 }
 
-if [ $# -ne 1 ]; then
-	echo "$(basename $0): invalid number of arguments: pkgname"
+if [ $# -lt 1 -o $# -gt 2 ]; then
+	echo "$(basename $0): invalid number of arguments: pkgname [cross-target]"
 	exit 1
 fi
 
 PKGNAME="$1"
+XBPS_CROSS_BUILD="$2"
 
 . $XBPS_CONFIG_FILE
 . $XBPS_SHUTILSDIR/common.sh
+. $XBPS_SHUTILSDIR/init.sh
 
 for f in $XBPS_COMMONDIR/*.sh; do
 	. $f
 done
 
-setup_subpkg "$PKGNAME"
-setup_pkg_build_vars
+set_cross_defvars
+setup_subpkg "$PKGNAME" $XBPS_CROSS_BUILD
+setup_pkg_build_vars $XBPS_CROSS_BUILD
 setup_pkg_depends
 
 pkg_genrdeps

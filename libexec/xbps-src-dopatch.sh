@@ -61,7 +61,7 @@ done
 
 setup_pkg "$PKGNAME"
 
-XBPS_APPLYPATCHES_DONE="$wrksrc/.xbps_${CROSS_BUILD}_applypatches_done"
+XBPS_APPLYPATCHES_DONE="$wrksrc/.xbps_applypatches_done"
 
 if [ -f $XBPS_APPLYPATCHES_DONE ]; then
 	exit 0

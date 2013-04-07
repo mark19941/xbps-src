@@ -10,24 +10,26 @@ if [ $# -lt 1 -o $# -gt 2 ]; then
 fi
 
 PKGNAME="$1"
-CROSS_BUILD="$2"
+XBPS_CROSS_BUILD="$2"
 
 . $XBPS_CONFIG_FILE
 . $XBPS_SHUTILSDIR/common.sh
+. $XBPS_SHUTILSDIR/init.sh
 
 for f in $XBPS_COMMONDIR/*.sh; do
 	. $f
 done
 
-setup_pkg "$PKGNAME"
+set_cross_defvars
+setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 
 if [ -z $pkgname -o -z $version ]; then
 	msg_error "$1: pkgname or version not set in pkg template!\n"
 fi
 
-XBPS_CONFIGURE_DONE="$wrksrc/.xbps_${CROSS_BUILD}_configure_done"
-XBPS_PRECONFIGURE_DONE="$wrksrc/.xbps_${CROSS_BUILD}_pre_configure_done"
-XBPS_POSTCONFIGURE_DONE="$wrksrc/.xbps_${CROSS_BUILD}_post_configure_done"
+XBPS_CONFIGURE_DONE="$wrksrc/.xbps_${XBPS_CROSS_BUILD}_configure_done"
+XBPS_PRECONFIGURE_DONE="$wrksrc/.xbps_${XBPS_CROSS_BUILD}_pre_configure_done"
+XBPS_POSTCONFIGURE_DONE="$wrksrc/.xbps_${XBPS_CROSS_BUILD}_post_configure_done"
 
 if [ -f "$XBPS_CONFIGURE_DONE" ]; then
 	exit 0
@@ -38,7 +40,7 @@ if [ -n "$build_style" -a "$build_style" = "meta-template" ]; then
 	exit 0
 fi
 
-setup_pkg_build_vars
+setup_pkg_build_vars $XBPS_CROSS_BUILD
 
 cd $wrksrc || msg_error "$pkgver: cannot access wrksrc directory [$wrksrc].\n"
 if [ -n "$build_wrksrc" ]; then
@@ -48,7 +50,7 @@ fi
 
 CONFIGURE_SHARED_ARGS="--prefix=/usr --sysconfdir=/etc --infodir=/usr/share/info --mandir=/usr/share/man --localstatedir=/var"
 
-if [ -n "$XBPS_CROSS_BUILD" ]; then
+if [ "$XBPS_CROSS_BUILD" ]; then
 	XBPS_PKGCONFIG_ARGS="
 		PKG_CONFIG_SYSROOT_DIR=$XBPS_CROSS_BASE
 		PKG_CONFIG_LIBDIR=$XBPS_CROSS_BASE/lib/pkgconfig"

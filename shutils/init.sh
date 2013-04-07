@@ -20,20 +20,22 @@ set_cross_defvars() {
 	fi
 
 	# Install required pkgs for cross building.
-	check_installed_pkg cross-${XBPS_CROSS_TRIPLET}-0.1_1
-	if [ $? -ne 0 ]; then
-		echo "Installing required cross pkg: cross-${XBPS_CROSS_TRIPLET}"
-		$XBPS_INSTALL_CMD -Ay cross-${XBPS_CROSS_TRIPLET} 2>&1 >/dev/null
+	if [ "$XBPS_TARGET" != "remove-autodeps" ]; then
+		check_installed_pkg cross-${XBPS_CROSS_TRIPLET}-0.1_1
 		if [ $? -ne 0 ]; then
-			echo "ERROR: failed to install cross-${XBPS_CROSS_TRIPLET}"
+			echo "Installing required cross pkg: cross-${XBPS_CROSS_TRIPLET}"
+			$XBPS_INSTALL_CMD -Ay cross-${XBPS_CROSS_TRIPLET} 2>&1 >/dev/null
+			if [ $? -ne 0 ]; then
+				echo "ERROR: failed to install cross-${XBPS_CROSS_TRIPLET}"
+				exit 1
+			fi
+		fi
+		$XBPS_INSTALL_CMD -r /usr/${XBPS_CROSS_TRIPLET} \
+			-Sy cross-vpkg-dummy 2>&1 >/dev/null
+		if [ $? -ne 0 -a $? -ne 6 ]; then
+			echo "ERROR: failed to install cross-vpkg-dummy"
 			exit 1
 		fi
-	fi
-	$XBPS_INSTALL_CMD -r /usr/${XBPS_CROSS_TRIPLET} \
-		-Sy cross-vpkg-dummy 2>&1 >/dev/null
-	if [ $? -ne 0 -a $? -ne 6 ]; then
-		echo "ERROR: failed to install cross-vpkg-dummy"
-		exit 1
 	fi
 
 	CROSSVARS="TARGET_ARCH CROSS_TRIPLET CROSS_CFLAGS CROSS_CXXFLAGS"
@@ -45,7 +47,7 @@ set_cross_defvars() {
 		fi
 	done
 
-	XBPS_UHELPER_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_UHELPER -r /usr/${XBPS_CROSS_TRIPLET}"
+	XBPS_UHELPER_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH xbps-uhelper -r /usr/${XBPS_CROSS_TRIPLET}"
 	XBPS_INSTALL_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_INSTALL_CMD -c /host/repocache -r /usr/${XBPS_CROSS_TRIPLET}"
 	XBPS_QUERY_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_QUERY_CMD -c /host/repocache -r /usr/${XBPS_CROSS_TRIPLET}"
 	XBPS_RINDEX_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_RINDEX_CMD"
@@ -57,4 +59,5 @@ set_cross_defvars() {
 	export XBPS_RINDEX_XCMD XBPS_RECONFIGURE_XCMD XBPS_REMOVE_XCMD
 	export XBPS_TARGET_MACHINE=$XBPS_TARGET_ARCH
 	export XBPS_CROSS_BASE=/usr/$XBPS_CROSS_TRIPLET
+	export XBPS_CROSS_TRIPLET
 }

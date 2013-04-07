@@ -164,22 +164,18 @@ if [ $# -lt 1 -o $# -gt 2 ]; then
 fi
 
 PKGNAME="$1"
-CROSS_BUILD="$2"
+XBPS_CROSS_BUILD="$2"
 
 . $XBPS_CONFIG_FILE
-
-if [ -n "$CROSS_BUILD" ]; then
-	XBPS_CROSS_BUILD="$CROSS_BUILD"
-	set_cross_defvars
-fi
-
 . $XBPS_SHUTILSDIR/common.sh
+. $XBPS_SHUTILSDIR/init.sh
 
 for f in $XBPS_COMMONDIR/*.sh; do
 	. $f
 done
 
-setup_subpkg "$PKGNAME"
+set_cross_defvars
+setup_subpkg "$PKGNAME" $XBPS_CROSS_BUILD
 
 if [ -z "$pkgname" -o -z "$version" ]; then
 	msg_error "$PKGNAME: pkgname/version not set in pkg template!\n"
@@ -188,6 +184,10 @@ fi
 if [ -n "$XBPS_USE_GIT_REVS" ]; then
 	msg_normal "$pkgver: fetching source git revisions, please wait...\n"
 	git_revs $pkgname
+fi
+
+if [ -z "$XBPS_CROSS_BUILD" ]; then
+	export XBPS_TARGET_MACHINE=$XBPS_MACHINE
 fi
 
 genbinpkg
