@@ -564,11 +564,11 @@ bootstrap)
 	[ ! -d $XBPS_SRCPKGDIR/base-chroot ] && \
 		msg_error "Cannot find $XBPS_SRCPKGDIR/base-chroot directory!\n"
 	XBPS_TARGET_PKG="base-chroot"
-	setup_pkg $XBPS_TARGET_PKG && install_pkg
+	setup_pkg $XBPS_TARGET_PKG && install_pkg $XBPS_TARGET
 	;;
 bootstrap-update)
 	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
-		chroot_handler ${target} dummy
+		chroot_handler ${XBPS_TARGET} dummy
 	else
 		${FAKEROOT_CMD} ${XBPS_INSTALL_CMD} -yu
 	fi
@@ -617,7 +617,7 @@ fetch|extract|build|configure|install-destdir|build-pkg)
 	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
 		chroot_handler $XBPS_TARGET $XBPS_TARGET_PKG
 	else
-		install_pkg $XBPS_TARGET
+		install_pkg $XBPS_TARGET $XBPS_CROSS_BUILD
 	fi
 	;;
 remove-destdir)
