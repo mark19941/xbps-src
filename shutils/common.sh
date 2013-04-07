@@ -413,13 +413,13 @@ _remove_pkg_cross_deps() {
 	[ -z "$XBPS_CROSS_BUILD" ] && return 0
 
 	cd $XBPS_MASTERDIR || return 1
-	msg_normal "$pkgver: removing autocrossdeps, please wait...\n"
+	msg_normal "${pkgver:-xbps-src}: removing autocrossdeps, please wait...\n"
 	tmplogf=$(mktemp)
 	$FAKEROOT_CMD $XBPS_REMOVE_XCMD -Ryo > $tmplogf 2>&1
 	if [ $? -ne 0 ]; then
-		msg_red "$pkgver: failed to remove autocrossdeps:\n"
+		msg_red "${pkgver:-xbps-src}: failed to remove autocrossdeps:\n"
 		cat $tmplogf && rm -f $tmplogf
-		msg_error "$pkgver: cannot continue!\n"
+		msg_error "${pkgver:-xbps-src}: cannot continue!\n"
 	fi
 	rm -f $tmplogf
 }
@@ -431,14 +431,14 @@ remove_pkg_autodeps() {
 	[ -z "$CHROOT_READY" ] && return 0
 
 	cd $XBPS_MASTERDIR || return 1
-	msg_normal "$pkgver: removing autodeps, please wait...\n"
+	msg_normal "${pkgver:-xbps-src}: removing autodeps, please wait...\n"
 	tmplogf=$(mktemp)
 	( $FAKEROOT_CMD $XBPS_RECONFIGURE_CMD -a;
 	  $FAKEROOT_CMD $XBPS_REMOVE_CMD -Ryo; ) >> $tmplogf 2>&1
 	if [ $? -ne 0 ]; then
-		msg_red "$pkgver: failed to remove autodeps:\n"
+		msg_red "${pkgver:-xbps-src}: failed to remove autodeps:\n"
 		cat $tmplogf && rm -f $tmplogf
-		msg_error "$pkgver: cannot continue!\n"
+		msg_error "${pkgver:-xbps-src}: cannot continue!\n"
 	fi
 	rm -f $tmplogf
 
