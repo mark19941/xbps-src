@@ -145,7 +145,7 @@ install_pkg_deps() {
 			fi
 			_exact=1
 		fi
-		check_pkgdep_matched "${i}" $XBPS_CROSS_BUILD
+		check_pkgdep_matched "${i}" $cross
 		local rval=$?
 		if [ $rval -eq 0 ]; then
 			iver=$($XBPS_UHELPER_XCMD version "${pkgn}")
