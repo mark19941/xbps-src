@@ -440,6 +440,12 @@ _remove_pkg_cross_deps() {
 	cd $XBPS_MASTERDIR || return 1
 	msg_normal "${pkgver:-xbps-src}: removing autocrossdeps, please wait...\n"
 	tmplogf=$(mktemp)
+
+	if [ -z "$XBPS_REMOVE_XCMD" ]; then
+		source_file $XBPS_CROSSPFDIR/${XBPS_CROSS_BUILD}.sh
+		XBPS_REMOVE_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH xbps-remove -r /usr/$XBPS_CROSS_TRIPLET"
+	fi
+
 	$FAKEROOT_CMD $XBPS_REMOVE_XCMD -Ryo > $tmplogf 2>&1
 	if [ $? -ne 0 ]; then
 		msg_red "${pkgver:-xbps-src}: failed to remove autocrossdeps:\n"
@@ -458,8 +464,10 @@ remove_pkg_autodeps() {
 	cd $XBPS_MASTERDIR || return 1
 	msg_normal "${pkgver:-xbps-src}: removing autodeps, please wait...\n"
 	tmplogf=$(mktemp)
-	( $FAKEROOT_CMD $XBPS_RECONFIGURE_CMD -a;
-	  $FAKEROOT_CMD $XBPS_REMOVE_CMD -Ryo; ) >> $tmplogf 2>&1
+
+	( $FAKEROOT_CMD xbps-reconfigure -a;
+	  $FAKEROOT_CMD xbps-remove -Ryo; ) >> $tmplogf 2>&1
+
 	if [ $? -ne 0 ]; then
 		msg_red "${pkgver:-xbps-src}: failed to remove autodeps:\n"
 		cat $tmplogf && rm -f $tmplogf
