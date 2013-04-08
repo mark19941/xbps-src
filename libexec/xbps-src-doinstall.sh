@@ -455,7 +455,6 @@ PKGNAME="$1"
 XBPS_CROSS_BUILD="$2"
 
 . $XBPS_CONFIG_FILE
-. $XBPS_SHUTILSDIR/init.sh
 . $XBPS_SHUTILSDIR/common.sh
 . $XBPS_SHUTILSDIR/install_files.sh
 
@@ -463,8 +462,7 @@ for f in $XBPS_COMMONDIR/*.sh; do
 	. $f
 done
 
-set_cross_defvars
-setup_subpkg "$PKGNAME" $XBPS_CROSS_BUILD
+setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 
 if [ -z "$pkgname" -o -z "$version" ]; then
 	msg_error "$1: pkgname/version not set in pkg template!\n"
@@ -485,8 +483,6 @@ if [ "$build_style" = "meta-template" ]; then
 	mkdir -p $XBPS_DESTDIR/$pkgname-$version
 	exit 0
 fi
-
-setup_pkg_build_vars $XBPS_CROSS_BUILD
 
 cd $wrksrc || msg_error "$pkgver: cannot access to wrksrc [$wrksrc]\n"
 if [ -n "$build_wrksrc" ]; then

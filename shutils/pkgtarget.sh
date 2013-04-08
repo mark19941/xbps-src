@@ -11,8 +11,10 @@ show_build_options() {
 }
 
 check_pkg_arch() {
+	local cross="$1"
+
 	if [ -n "$BEGIN_INSTALL" -a -n "$only_for_archs" ]; then
-		if [ -n "$XBPS_CROSS_BUILD" ]; then
+		if [ -n "$cross" ]; then
 			if $(echo "$only_for_archs"|grep -q "$XBPS_TARGET_MACHINE"); then
 				found=1
 			fi
@@ -34,11 +36,11 @@ install_pkg() {
 	[ -z "$pkgname" ] && return 1
 
 	show_build_options
-	check_pkg_arch
+	check_pkg_arch $cross
 
 	install_pkg_deps $sourcepkg $cross || return 1
 	if [ "$TARGETPKG_PKGDEPS_DONE" ]; then
-		setup_pkg $XBPS_TARGET_PKG
+		setup_pkg $XBPS_TARGET_PKG $cross
 		unset TARGETPKG_PKGDEPS_DONE
 	fi
 
@@ -67,10 +69,7 @@ install_pkg() {
 
 	# Install subpkgs into destdir.
 	for subpkg in ${subpackages}; do
-		if [ ! -r $XBPS_SRCPKGDIR/$subpkg/${subpkg}.template ]; then
-			msg_error "$pkgver: cannot read ${subpkg}.template!\n"
-		fi
-		. $XBPS_SRCPKGDIR/$subpkg/${subpkg}.template
+		source_file $XBPS_SRCPKGDIR/$subpkg/${subpkg}.template
 
 		$FAKEROOT_CMD $XBPS_LIBEXECDIR/xbps-src-doinstall $subpkg $cross || exit 1
 
@@ -164,7 +163,7 @@ remove_pkg() {
 			msg_warn "${_pkg}: not installed in destdir!\n"
 		fi
 		for f in install pre_install post_install strip; do
-			rm -f $wrksrc/.xbps_${subpkg}_${XBPS_CROSS_BUILD}_${f}_done
+			rm -f $wrksrc/.xbps_${subpkg}_${cross}_${f}_done
 		done
 		# Remove -dbg packages.
 		if [ -d "${_destdir}/${subpkg}-dbg-${version}" ]; then
@@ -185,6 +184,6 @@ remove_pkg() {
 	fi
 
 	for f in install pre_install post_install strip; do
-		rm -f $wrksrc/.xbps_${sourcepkg}_${XBPS_CROSS_BUILD}_${f}_done
+		rm -f $wrksrc/.xbps_${sourcepkg}_${cross}_${f}_done
 	done
 }

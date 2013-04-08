@@ -14,13 +14,11 @@ XBPS_CROSS_BUILD="$2"
 
 . $XBPS_CONFIG_FILE
 . $XBPS_SHUTILSDIR/common.sh
-. $XBPS_SHUTILSDIR/init.sh
 
 for f in $XBPS_COMMONDIR/*.sh; do
 	. $f
 done
 
-set_cross_defvars
 setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 
 if [ -z $pkgname -o -z $version ]; then
@@ -39,8 +37,6 @@ fi
 if [ -n "$build_style" -a "$build_style" = "meta-template" ]; then
 	exit 0
 fi
-
-setup_pkg_build_vars $XBPS_CROSS_BUILD
 
 cd $wrksrc || msg_error "$pkgver: cannot access wrksrc directory [$wrksrc].\n"
 if [ -n "$build_wrksrc" ]; then

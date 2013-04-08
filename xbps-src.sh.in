@@ -314,26 +314,27 @@ umask 022
 trap 'exit_func' INT TERM HUP
 
 readonly XBPS_SRC_VERSION="@@XBPS_SRC_VERSION@@"
+readonly XBPS_PREFIX=${DESTDIR}@@XBPS_INSTALL_PREFIX@@
+readonly XBPS_ETCDIR=${DESTDIR}@@XBPS_INSTALL_ETCDIR@@
+readonly XBPS_SBINDIR=${DESTDIR}@@XBPS_INSTALL_SBINDIR@@
+readonly XBPS_SHAREDIR=${DESTDIR}@@XBPS_INSTALL_SHAREDIR@@
+readonly XBPS_LIBEXECDIR=${DESTDIR}@@XBPS_INSTALL_LIBEXECDIR@@
 
-export XBPS_SRC_VERSION
-export XBPS_PREFIX=${DESTDIR}@@XBPS_INSTALL_PREFIX@@
-export XBPS_ETCDIR=${DESTDIR}@@XBPS_INSTALL_ETCDIR@@
-export XBPS_SBINDIR=${DESTDIR}@@XBPS_INSTALL_SBINDIR@@
-export XBPS_SHAREDIR=${DESTDIR}@@XBPS_INSTALL_SHAREDIR@@
-export XBPS_LIBEXECDIR=${DESTDIR}@@XBPS_INSTALL_LIBEXECDIR@@
+export XBPS_SRC_VERSION XBPS_PREFIX XBPS_ETCDIR \
+	XBPS_SBINDIR XBPS_SHAREDIR XBPS_LIBEXECDIR
 
 XBPS_CONFIG_FILE=${XBPS_ETCDIR}/xbps-src.conf
-PROGNAME=$(basename $0)
+readonly PROGNAME=$(basename $0)
 export FAKEROOT_CMD="fakeroot --"
 export CHROOT_CMD="${XBPS_LIBEXECDIR}/xbps-src-chroot-helper --unshare-ipc --unshare-pid"
 export XBPS_MACHINE=$(uname -m)
 
 # Required utilities in host system for the bootstrap target.
-REQHOST_UTILS_BOOTSTRAP="awk bash bison sed gcc msgfmt patch makeinfo \
+readonly REQHOST_UTILS_BOOTSTRAP="awk bash bison sed gcc msgfmt patch makeinfo \
 	perl fakeroot tar xz gzip bzip2"
 
 # Required utilities in host system for chroot ops.
-REQHOST_UTILS="xbps-install xbps-query xbps-rindex xbps-uhelper \
+readonly REQHOST_UTILS="xbps-install xbps-query xbps-rindex xbps-uhelper \
 	xbps-reconfigure xbps-remove xbps-create"
 
 #
@@ -383,29 +384,29 @@ if [ "$(id -u)" -eq 0 ]; then
 	unset FAKEROOT_CMD
 fi
 
-export XBPS_HELPERSDIR=$XBPS_SHAREDIR/helpers
-export XBPS_SHUTILSDIR=$XBPS_SHAREDIR/shutils
-export XBPS_CROSSPFDIR=$XBPS_SHAREDIR/cross-profiles
+readonly XBPS_HELPERSDIR=$XBPS_SHAREDIR/helpers
+readonly XBPS_SHUTILSDIR=$XBPS_SHAREDIR/shutils
+readonly XBPS_CROSSPFDIR=$XBPS_SHAREDIR/cross-profiles
 
 if [ -n "$IN_CHROOT" ]; then
-	export XBPS_SRCPKGDIR=/xbps/srcpkgs
-	export XBPS_COMMONDIR=/xbps/common
-	export XBPS_DESTDIR=/destdir
-	export XBPS_BUILDDIR=/builddir
+	readonly XBPS_SRCPKGDIR=/xbps/srcpkgs
+	readonly XBPS_COMMONDIR=/xbps/common
+	readonly XBPS_DESTDIR=/destdir
+	readonly XBPS_BUILDDIR=/builddir
 else
-	export XBPS_SRCPKGDIR=$XBPS_DISTDIR/srcpkgs
-	export XBPS_COMMONDIR=$XBPS_DISTDIR/common
-	export XBPS_DESTDIR=$XBPS_MASTERDIR/destdir
-	export XBPS_BUILDDIR=$XBPS_MASTERDIR/builddir
+	readonly XBPS_SRCPKGDIR=$XBPS_DISTDIR/srcpkgs
+	readonly XBPS_COMMONDIR=$XBPS_DISTDIR/common
+	readonly XBPS_DESTDIR=$XBPS_MASTERDIR/destdir
+	readonly XBPS_BUILDDIR=$XBPS_MASTERDIR/builddir
 fi
 if [ -n "$XBPS_HOSTDIR" ]; then
-	export XBPS_PACKAGESDIR=$XBPS_HOSTDIR/binpkgs
-	export XBPS_SRCDISTDIR=$XBPS_HOSTDIR/sources
+	readonly XBPS_PACKAGESDIR=$XBPS_HOSTDIR/binpkgs
+	readonly XBPS_SRCDISTDIR=$XBPS_HOSTDIR/sources
 else
-	export XBPS_SRCDISTDIR=$XBPS_MASTERDIR/host/sources
-	export XBPS_PACKAGESDIR=$XBPS_MASTERDIR/host/binpkgs
+	readonly XBPS_SRCDISTDIR=$XBPS_MASTERDIR/host/sources
+	readonly XBPS_PACKAGESDIR=$XBPS_MASTERDIR/host/binpkgs
 fi
-export XBPS_TRIGGERSDIR=$XBPS_SRCPKGDIR/xbps-triggers/files
+readonly XBPS_TRIGGERSDIR=$XBPS_SRCPKGDIR/xbps-triggers/files
 
 DDIRS="DISTDIR TRIGGERSDIR HELPERSDIR SRCPKGDIR SHUTILSDIR COMMONDIR"
 for i in ${DDIRS}; do
@@ -428,28 +429,33 @@ for i in DESTDIR PACKAGESDIR BUILDDIR SRCDISTDIR; do
 done
 
 if [ -n "$IN_CHROOT" ]; then
-	XBPS_UHELPER_CMD="xbps-uhelper"
-	XBPS_INSTALL_CMD="xbps-install"
-	XBPS_QUERY_CMD="xbps-query"
-	XBPS_RINDEX_CMD="xbps-rindex"
-	XBPS_RECONFIGURE_CMD="xbps-reconfigure"
-	XBPS_REMOVE_CMD="xbps-remove"
+	readonly XBPS_UHELPER_CMD="xbps-uhelper"
+	readonly XBPS_INSTALL_CMD="xbps-install"
+	readonly XBPS_QUERY_CMD="xbps-query"
+	readonly XBPS_RINDEX_CMD="xbps-rindex"
+	readonly XBPS_RECONFIGURE_CMD="xbps-reconfigure"
+	readonly XBPS_REMOVE_CMD="xbps-remove"
 else
-	XBPS_UHELPER_CMD="xbps-uhelper -r $XBPS_MASTERDIR"
-	XBPS_INSTALL_CMD="xbps-install -C /empty.conf -R $XBPS_PACKAGESDIR -r $XBPS_MASTERDIR"
-	XBPS_QUERY_CMD="xbps-query -C /empty.conf -D $XBPS_PACKAGESDIR -r $XBPS_MASTERDIR"
-	XBPS_RINDEX_CMD="xbps-rindex"
-	XBPS_RECONFIGURE_CMD="xbps-reconfigure -r $XBPS_MASTERDIR"
-	XBPS_REMOVE_CMD="xbps-remove -r $XBPS_MASTERDIR"
+	readonly XBPS_UHELPER_CMD="xbps-uhelper -r $XBPS_MASTERDIR"
+	readonly XBPS_INSTALL_CMD="xbps-install -C /empty.conf -R $XBPS_PACKAGESDIR -r $XBPS_MASTERDIR"
+	readonly XBPS_QUERY_CMD="xbps-query -C /empty.conf -D $XBPS_PACKAGESDIR -r $XBPS_MASTERDIR"
+	readonly XBPS_RINDEX_CMD="xbps-rindex"
+	readonly XBPS_RECONFIGURE_CMD="xbps-reconfigure -r $XBPS_MASTERDIR"
+	readonly XBPS_REMOVE_CMD="xbps-remove -r $XBPS_MASTERDIR"
 fi
 
-XBPS_DIGEST_CMD="xbps-uhelper digest"
-XBPS_CMPVER_CMD="xbps-uhelper cmpver"
-XBPS_FETCH_CMD="xbps-uhelper fetch"
-XBPS_CREATE_CMD="xbps-create"
+readonly XBPS_DIGEST_CMD="xbps-uhelper digest"
+readonly XBPS_CMPVER_CMD="xbps-uhelper cmpver"
+readonly XBPS_FETCH_CMD="xbps-uhelper fetch"
+readonly XBPS_VERSION=$(xbps-uhelper -V|awk '{print $2}')
+readonly XBPS_APIVER=$(xbps-uhelper -V|awk '{print $4}')
 
-XBPS_VERSION=$(xbps-uhelper -V|awk '{print $2}')
-XBPS_APIVER=$(xbps-uhelper -V|awk '{print $4}')
+export XBPS_HELPERSDIR XBPS_SHUTILSDIR XBPS_CROSSPFDIR XBPS_TRIGGERSDIR \
+	XBPS_SRCPKGDIR XBPS_COMMONDIR XBPS_DESTDIR XBPS_BUILDDIR \
+	XBPS_PACKAGESDIR XBPS_SRCDISTDIR XBPS_DIGEST_CMD \
+	XBPS_UHELPER_CMD XBPS_INSTALL_CMD XBPS_QUERY_CMD \
+	XBPS_RINDEX_CMD XBPS_RECONFIGURE_CMD XBPS_REMOVE_CMD \
+	XBPS_CMPVER_CMD XBPS_FETCH_CMD XBPS_VERSION XBPS_APIVER
 
 for f in $XBPS_COMMONDIR/*.sh $XBPS_SHUTILSDIR/*.sh; do
 	[ -r $f ] && . $f
@@ -461,38 +467,22 @@ if [ -d "${XBPS_DISTDIR}/.git" ]; then
 		echo "ERROR: missing defs from global-defs.sh!"
 		exit 1
 	fi
-	$XBPS_UHELPER_CMD cmpver $(echo "$XBPS_SRC_VERSION"|awk '{print $1}') "$XBPS_SRC_REQ"
+	xbps-uhelper cmpver $(echo "$XBPS_SRC_VERSION"|awk '{print $1}') "$XBPS_SRC_REQ"
 	if [ $? -eq 255 ]; then
 		echo "ERROR: this xbps-src version is outdated! (>=$XBPS_SRC_REQ is required)"
 		exit 1
 	fi
-	$XBPS_UHELPER_CMD cmpver "$XBPS_VERSION" "$XBPS_UTILS_REQ"
+	xbps-uhelper cmpver "$XBPS_VERSION" "$XBPS_UTILS_REQ"
 	if [ $? -eq 255 ]; then
 		echo "ERROR: requires xbps-$XBPS_UTILS_REQ API: $XBPS_UTILS_API_REQ"
 		exit 1
 	fi
-	$XBPS_UHELPER_CMD cmpver "$XBPS_APIVER" "$XBPS_UTILS_API_REQ"
+	xbps-uhelper cmpver "$XBPS_APIVER" "$XBPS_UTILS_API_REQ"
 	if [ $? -eq 255 ]; then
 		echo "ERROR: requires xbps-$XBPS_UTILS_REQ API: $XBPS_UTILS_API_REQ"
 		exit 1
 	fi
 fi
-
-if [ -z "$XBPS_CROSSS_BUILD" ]; then
-	export XBPS_TARGET_MACHINE=$XBPS_MACHINE
-	export XBPS_QUERY_XCMD="$XBPS_QUERY_CMD"
-	export XBPS_UHELPER_XCMD="$XBPS_UHELPER_CMD"
-	export XBPS_INSTALL_XCMD="$XBPS_INSTALL_CMD"
-	export XBPS_REMOVE_XCMD="$XBPS_REMOVE_CMD"
-fi
-
-export XBPS_VERSION XBPS_APIVER XBPS_UHELPER_CMD
-export XBPS_INSTALL_CMD XBPS_REMOVE_CMD XBPS_RECONFIGURE_CMD
-export XBPS_QUERY_CMD XBPS_RINDEX_CMD
-export XBPS_DIGEST_CMD XBPS_CMPVER_CMD XBPS_FETCH_CMD
-
-. $XBPS_SHAREDIR/shutils/init.sh
-set_cross_defvars
 
 #
 # Sanitize PATH.
@@ -637,7 +627,7 @@ show)
 		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
 		XBPS_TARGET_PKG=$(basename_cwd)
 	fi
-	setup_subpkg $XBPS_TARGET_PKG
+	setup_pkg $XBPS_TARGET_PKG
 	show_pkg
 	;;
 show-files)
@@ -645,15 +635,15 @@ show-files)
 		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
 		XBPS_TARGET_PKG=$(basename_cwd)
 	fi
-	setup_subpkg $XBPS_TARGET_PKG
+	setup_pkg $XBPS_TARGET_PKG
 	[ -f "$DESTDIR/flist" ] && cat ${DESTDIR}/flist
 	;;
 show-deps)
-	setup_subpkg $XBPS_TARGET_PKG
+	setup_pkg $XBPS_TARGET_PKG
 	show_pkg_deps
 	;;
 show-build-deps)
-	setup_subpkg $XBPS_TARGET_PKG
+	setup_pkg $XBPS_TARGET_PKG
 	show_pkg_build_deps
 	;;
 show-options)

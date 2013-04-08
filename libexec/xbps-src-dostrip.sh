@@ -113,19 +113,12 @@ XBPS_CROSS_BUILD="$2"
 . $XBPS_CONFIG_FILE
 . $XBPS_SHUTILSDIR/common.sh
 . $XBPS_SHUTILSDIR/install_files.sh
-. $XBPS_SHUTILSDIR/init.sh
 
 for f in $XBPS_COMMONDIR/*.sh; do
 	. $f
 done
 
-set_cross_defvars
-
-if [ -z "$XBPS_DEBUG_PKGS" ]; then
-	disable_debug=yes
-fi
-
-setup_subpkg "$PKGNAME" $XBPS_CROSS_BUILD
+setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 
 if [ -n "$nostrip" -o -n "$noarch" ]; then
 	exit 0
@@ -137,7 +130,6 @@ if [ -f "$XBPS_STRIP_DONE" ]; then
 	exit 0
 fi
 
-setup_pkg_build_vars $XBPS_CROSS_BUILD
 pkg_strip
 
 touch -f $XBPS_STRIP_DONE

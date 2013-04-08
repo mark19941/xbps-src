@@ -14,13 +14,11 @@ XBPS_CROSS_BUILD="$2"
 
 . $XBPS_CONFIG_FILE
 . $XBPS_SHUTILSDIR/common.sh
-. $XBPS_SHUTILSDIR/init.sh
 
 for f in $XBPS_COMMONDIR/*.sh; do
 	. $f
 done
 
-set_cross_defvars
 setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 
 if [ -z $pkgname -o -z $version ]; then
@@ -35,8 +33,6 @@ XBPS_POST_BUILD_DONE="$wrksrc/.xbps_${XBPS_CROSS_BUILD}_post_build_done"
 if [ -f "$XBPS_BUILD_DONE" ]; then
 	exit 0
 fi
-
-setup_pkg_build_vars $XBPS_CROSS_BUILD
 
 # Skip this phase for meta-template style builds.
 if [ -n "$build_style" -a "$build_style" = "meta-template" ]; then

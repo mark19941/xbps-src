@@ -209,14 +209,19 @@ reset_subpkg_vars() {
 			conflicts pycompile_dirs pycompile_module \
 			systemd_services make_dirs depends run_depends"
 
+	local FUNCS="pre_configure pre_build pre_install do_build \
+			  do_configure do_fetch post_configure \
+			  post_build post_install post_extract"
+
 	eval unset -v "$VARS"
+	eval unset -f "$FUNCS"
 }
 
-source_pkg() {
-	local pkg="$1" pkgtmpl="$2"
+source_file() {
+	local f="$1"
 
-	if ! source "$pkgtmpl"; then
-		msg_error "$pkg: failed to read $pkgtmpl!\n"
+	if ! source "$f"; then
+		msg_error "xbps-src: failed to read $f!\n"
 	fi
 }
 
@@ -232,100 +237,32 @@ setup_pkg() {
 	reset_pkg_vars
 
 	if [ -n "$cross" ]; then
-		export XBPS_CROSS_BUILD="$cross"
-		source_pkg $pkg $XBPS_SRCPKGDIR/${pkg}/template
+		export CROSS_BUILD="$cross"
+		source_file $XBPS_SRCPKGDIR/${pkg}/template
+		install_cross_pkg $cross || return 1
 	else
-		cross="$XBPS_CROSS_BUILD"
-		unset XBPS_CROSS_BUILD
-		source_pkg $pkg $XBPS_SRCPKGDIR/${pkg}/template
-		[ -n "$cross" -a "$cross" != "" ] && export XBPS_CROSS_BUILD="$cross"
+		unset CROSS_BUILD
+		source_file $XBPS_SRCPKGDIR/${pkg}/template
 	fi
 
 	sourcepkg=$pkgname
+
+	# Check if it's a subpkg and set its vars.
+	if [ -r $XBPS_SRCPKGDIR/$pkg/${pkg}.template ]; then
+		reset_subpkg_vars
+		source_file $XBPS_SRCPKGDIR/$pkg/${pkg}.template
+		pkgname=$pkg
+		export SUBPKG=1
+	fi
+
 	pkgver="${pkgname}-${version}_${revision}"
 	set_build_options
 	setup_pkg_common_vars $cross
 
 	if [ -z "$wrksrc" ]; then
-		wrksrc="$XBPS_BUILDDIR/${pkgname}-${version}"
+		wrksrc="$XBPS_BUILDDIR/${sourcepkg}-${version}"
 	else
 		wrksrc="$XBPS_BUILDDIR/$wrksrc"
-	fi
-
-}
-
-setup_subpkg() {
-	local f= pkg="$1" cross="$2"
-
-	[ -z "$1" ] && return 1
-
-	if [ -r "$XBPS_SRCPKGDIR/$1/$1.template" ]; then
-		setup_pkg $pkg $cross
-		reset_subpkg_vars
-		source_pkg $pkg $XBPS_SRCPKGDIR/$pkg/${pkg}.template
-		for f in ${subpackages}; do
-			[ "$f" != "$1" ] && continue
-			pkgname=$f
-			pkgver="${pkgname}-${version}_${revision}"
-			SUBPKG=1
-			setup_pkg_common_vars $cross
-			break
-		done
-	else
-		setup_pkg $pkg $cross
-	fi
-}
-
-setup_pkg_build_vars() {
-	local cross="$1"
-
-	# For nonfree/bootstrap pkgs there's no point in building -dbg pkgs, disable them.
-	if [ -z "$XBPS_DEBUG_PKGS" -o -n "$nonfree" -o -n "$bootstrap" ]; then
-		disable_debug=yes
-	fi
-
-	# -g is required to build -dbg packages.
-	if [ -z "$disable_debug" ]; then
-		DEBUG_CFLAGS="-g"
-	fi
-
-	if [ -n "$XBPS_MAKEJOBS" -a -z "$disable_parallel_build" ]; then
-		makejobs="-j$XBPS_MAKEJOBS"
-	fi
-
-	export CFLAGS="$XBPS_CFLAGS $XBPS_CROSS_CFLAGS $CFLAGS $DEBUG_CFLAGS"
-	export CXXFLAGS="$XBPS_CXXFLAGS $XBPS_CROSS_CXXFLAGS $CXXFLAGS $DEBUG_CFLAGS"
-	export CPPFLAGS="$XBPS_CPPFLAGS $XBPS_CROSS_CPPFLAGS $CPPFLAGS"
-	export LDFLAGS="$LDFLAGS $XBPS_LDFLAGS $XBPS_CROSS_LDFLAGS"
-
-	if [ -n "$cross" ]; then
-		export CC="${XBPS_CROSS_TRIPLET}-gcc"
-		export CXX="${XBPS_CROSS_TRIPLET}-c++"
-		export CPP="${XBPS_CROSS_TRIPLET}-cpp"
-		export GCC="$CC"
-		export LD="${XBPS_CROSS_TRIPLET}-ld"
-		export AR="${XBPS_CROSS_TRIPLET}-ar"
-		export AS="${XBPS_CROSS_TRIPLET}-as"
-		export RANLIB="${XBPS_CROSS_TRIPLET}-ranlib"
-		export STRIP="${XBPS_CROSS_TRIPLET}-strip"
-		export OBJDUMP="${XBPS_CROSS_TRIPLET}-objdump"
-		export OBJCOPY="${XBPS_CROSS_TRIPLET}-objcopy"
-		export NM="${XBPS_CROSS_TRIPLET}-nm"
-		export READELF="${XBPS_CROSS_TRIPLET}-readelf"
-	else
-		export CC="cc"
-		export CXX="g++"
-		export CPP="cpp"
-		export GCC="$CC"
-		export LD="ld"
-		export AR="ar"
-		export AS="as"
-		export RANLIB="ranlib"
-		export STRIP="strip"
-		export OBJDUMP="objdump"
-		export OBJCOPY="objcopy"
-		export NM="nm"
-		export READELF="readelf"
 	fi
 }
 
@@ -377,7 +314,7 @@ setup_pkg_depends() {
 }
 
 setup_pkg_common_vars() {
-	local i REQ_VARS cross="$1"
+	local cross="$1" val i REQ_VARS dbgflags
 
 	[ -z "$pkgname" ] && return 1
 
@@ -396,8 +333,8 @@ setup_pkg_common_vars() {
 		fi
 	done
 
-	FILESDIR=$XBPS_SRCPKGDIR/$pkgname/files
-	PATCHESDIR=$XBPS_SRCPKGDIR/$pkgname/patches
+	FILESDIR=$XBPS_SRCPKGDIR/$sourcepkg/files
+	PATCHESDIR=$XBPS_SRCPKGDIR/$sourcepkg/patches
 
 	if [ -n "$cross" ]; then
 		DESTDIR=${XBPS_DESTDIR}/${XBPS_CROSS_TRIPLET}/${pkgname}-${version}
@@ -405,6 +342,94 @@ setup_pkg_common_vars() {
 	else
 		DESTDIR=${XBPS_DESTDIR}/${pkgname}-${version}
 		SRCPKGDESTDIR=${XBPS_DESTDIR}/${sourcepkg}-${version}
+	fi
+
+	if [ -n "$XBPS_MAKEJOBS" -a -z "$disable_parallel_build" ]; then
+		makejobs="-j$XBPS_MAKEJOBS"
+	fi
+
+	if [ -n "$cross" ]; then
+		source_file $XBPS_CROSSPFDIR/${cross}.sh
+
+		REQ_VARS="TARGET_ARCH CROSS_TRIPLET CROSS_CFLAGS CROSS_CXXFLAGS"
+		for i in ${REQ_VARS}; do
+			eval val="\$XBPS_$i"
+			if [ -z "$val" ]; then
+				echo "ERROR: XBPS_$i is not defined!"
+				exit 1
+			fi
+		done
+
+		export XBPS_CROSS_BASE=/usr/$XBPS_CROSS_TRIPLET
+
+		XBPS_INSTALL_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_INSTALL_CMD -c /host/repocache -r $XBPS_CROSS_BASE"
+		XBPS_QUERY_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_QUERY_CMD -c /host/repocache -r $XBPS_CROSS_BASE"
+		XBPS_RECONFIGURE_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_RECONFIGURE_CMD -r $XBPS_CROSS_BASE"
+		XBPS_REMOVE_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_REMOVE_CMD -r $XBPS_CROSS_BASE"
+		XBPS_RINDEX_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_RINDEX_CMD"
+		XBPS_UHELPER_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH xbps-uhelper -r $XBPS_CROSS_BASE"
+
+		export XBPS_TARGET_MACHINE=$XBPS_TARGET_ARCH
+	else
+		XBPS_INSTALL_XCMD="$XBPS_INSTALL_CMD"
+		XBPS_QUERY_XCMD="$XBPS_QUERY_CMD"
+		XBPS_RECONFIGURE_XCMD="$XBPS_RECONFIGURE_CMD"
+		XBPS_REMOVE_XCMD="$XBPS_REMOVE_CMD"
+		XBPS_RINDEX_XCMD="$XBPS_RINDEX_CMD"
+		XBPS_UHELPER_XCMD="$XBPS_UHELPER_CMD"
+
+		export XBPS_TARGET_MACHINE=$XBPS_MACHINE
+
+		unset XBPS_CROSS_BASE XBPS_CROSS_LDFLAGS
+		unset XBPS_CROSS_CFLAGS XBPS_CROSS_CXXFLAGS XBPS_CROSS_CPPFLAGS
+	fi
+
+	export XBPS_INSTALL_XCMD XBPS_QUERY_XCMD XBPS_RECONFIGURE_XCMD \
+		XBPS_REMOVE_XCMD XBPS_RINDEX_XCMD XBPS_UHELPER_XCMD
+
+	# For nonfree/bootstrap pkgs there's no point in building -dbg pkgs, disable them.
+	if [ -z "$XBPS_DEBUG_PKGS" -o -n "$nonfree" -o -n "$bootstrap" ]; then
+		disable_debug=yes
+	fi
+
+	# -g is required to build -dbg packages.
+	if [ -z "$disable_debug" ]; then
+		dbgflags="-g"
+	fi
+
+	export CFLAGS="$XBPS_CFLAGS $XBPS_CROSS_CFLAGS $CFLAGS $dbgflags"
+	export CXXFLAGS="$XBPS_CXXFLAGS $XBPS_CROSS_CXXFLAGS $CXXFLAGS $dbgflags"
+	export CPPFLAGS="$XBPS_CPPFLAGS $XBPS_CROSS_CPPFLAGS $CPPFLAGS"
+	export LDFLAGS="$LDFLAGS $XBPS_LDFLAGS $XBPS_CROSS_LDFLAGS"
+
+	if [ -n "$cross" ]; then
+		export CC="${XBPS_CROSS_TRIPLET}-gcc"
+		export CXX="${XBPS_CROSS_TRIPLET}-c++"
+		export CPP="${XBPS_CROSS_TRIPLET}-cpp"
+		export GCC="$CC"
+		export LD="${XBPS_CROSS_TRIPLET}-ld"
+		export AR="${XBPS_CROSS_TRIPLET}-ar"
+		export AS="${XBPS_CROSS_TRIPLET}-as"
+		export RANLIB="${XBPS_CROSS_TRIPLET}-ranlib"
+		export STRIP="${XBPS_CROSS_TRIPLET}-strip"
+		export OBJDUMP="${XBPS_CROSS_TRIPLET}-objdump"
+		export OBJCOPY="${XBPS_CROSS_TRIPLET}-objcopy"
+		export NM="${XBPS_CROSS_TRIPLET}-nm"
+		export READELF="${XBPS_CROSS_TRIPLET}-readelf"
+	else
+		export CC="cc"
+		export CXX="g++"
+		export CPP="cpp"
+		export GCC="$CC"
+		export LD="ld"
+		export AR="ar"
+		export AS="as"
+		export RANLIB="ranlib"
+		export STRIP="strip"
+		export OBJDUMP="objdump"
+		export OBJCOPY="objcopy"
+		export NM="nm"
+		export READELF="readelf"
 	fi
 }
 
@@ -445,36 +470,43 @@ remove_pkg_autodeps() {
 	_remove_pkg_cross_deps
 }
 
-#
-# Returns 0 if pkgpattern in $1 is matched against current installed
-# package, 1 if no match and 2 if not installed.
-#
-check_pkgdep_matched() {
-	local pkg="$1" cross="$2" uhelper= pkgn= iver=
+install_cross_pkg() {
+	local cross="$1"
 
-	[ -z "$pkg" ] && return 255
+	[ -z "$cross" -o "$cross" = "" ] && return 0
 
-	pkgn="$($XBPS_UHELPER_CMD getpkgdepname ${pkg})"
-	if [ -z "$pkgn" ]; then
-		pkgn="$($XBPS_UHELPER_CMD getpkgname ${pkg})"
-	fi
-	[ -z "$pkgn" ] && return 255
-
-	if [ -n "$cross" ]; then
-		uhelper=$XBPS_UHELPER_XCMD
-	else
-		uhelper=$XBPS_UHELPER_CMD
+	if [ ! -r ${XBPS_CROSSPFDIR}/${cross}.sh ]; then
+		echo "ERROR: missing cross build profile for ${cross}, exiting."
+		exit 1
 	fi
 
-	iver="$($uhelper version $pkgn)"
-	if [ $? -eq 0 -a -n "$iver" ]; then
-		$XBPS_UHELPER_CMD pkgmatch "${pkgn}-${iver}" "${pkg}"
-		[ $? -eq 1 ] && return 0
-	else
-		return 2
+	source_file ${XBPS_CROSSPFDIR}/${cross}.sh
+
+	if [ -z "$CHROOT_READY" ]; then
+		echo "ERROR: chroot mode not activated (install a bootstrap)."
+		exit 1
+	elif [ -z "$IN_CHROOT" ]; then
+		return 0
 	fi
 
-	return 1
+	# Install required pkgs for cross building.
+	if [ "$XBPS_TARGET" != "remove-autodeps" ]; then
+		check_installed_pkg cross-${XBPS_CROSS_TRIPLET}-0.1_1
+		if [ $? -ne 0 ]; then
+			echo "Installing required cross pkg: cross-${XBPS_CROSS_TRIPLET}"
+			$XBPS_INSTALL_CMD -Ay cross-${XBPS_CROSS_TRIPLET} 2>&1 >/dev/null
+			if [ $? -ne 0 ]; then
+				echo "ERROR: failed to install cross-${XBPS_CROSS_TRIPLET}"
+				exit 1
+			fi
+		fi
+		$XBPS_INSTALL_CMD -r /usr/${XBPS_CROSS_TRIPLET} \
+			-Sy cross-vpkg-dummy 2>&1 >/dev/null
+		if [ $? -ne 0 -a $? -ne 6 ]; then
+			echo "ERROR: failed to install cross-vpkg-dummy"
+			exit 1
+		fi
+	fi
 }
 
 #
@@ -490,9 +522,9 @@ check_installed_pkg() {
 	[ -z "$pkgn" ] && return 2
 
 	if [ -n "$cross" ]; then
-		uhelper=$XBPS_UHELPER_XCMD
+		uhelper="$XBPS_UHELPER_XCMD"
 	else
-		uhelper=$XBPS_UHELPER_CMD
+		uhelper="$XBPS_UHELPER_CMD"
 	fi
 
 	iver="$($uhelper version $pkgn)"

@@ -4,7 +4,7 @@
 XBPS_PYVER="2.7" # currently 2.7 is the default python
 
 do_build() {
-	if [ -n "$XBPS_CROSS_BUILD" ]; then
+	if [ -n "$CROSS_BUILD" ]; then
 		CC="${XBPS_CROSS_TRIPLET}-gcc -pthread"
 		LDSHARED="${CC} -shared"
 		PYPREFIX="$XBPS_CROSS_BASE"
@@ -22,7 +22,7 @@ do_install() {
 	if [ -z "$make_install_args" ]; then
 		make_install_args="--prefix=/usr --root=$DESTDIR"
 	fi
-	if [ -n "$XBPS_CROSS_BUILD" ]; then
+	if [ -n "$CROSS_BUILD" ]; then
 		CC="${XBPS_CROSS_TRIPLET}-gcc -pthread"
 		LDSHARED="${CC} -shared"
 		PYPREFIX="$XBPS_CROSS_BASE"

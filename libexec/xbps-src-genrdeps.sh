@@ -176,15 +176,12 @@ XBPS_CROSS_BUILD="$2"
 
 . $XBPS_CONFIG_FILE
 . $XBPS_SHUTILSDIR/common.sh
-. $XBPS_SHUTILSDIR/init.sh
 
 for f in $XBPS_COMMONDIR/*.sh; do
 	. $f
 done
 
-set_cross_defvars
-setup_subpkg "$PKGNAME" $XBPS_CROSS_BUILD
-setup_pkg_build_vars $XBPS_CROSS_BUILD
+setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 setup_pkg_depends
 
 pkg_genrdeps
