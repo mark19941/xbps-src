@@ -46,6 +46,9 @@ _EOF
 	if [ -n "$XBPS_USE_GIT_REVS" ]; then
 		echo "XBPS_USE_GIT_REVS=yes" >> $XBPSSRC_CF
 	fi
+	if [ -n "$XBPS_DEBUG_PKGS" ]; then
+		echo "XBPS_DEBUG_PKGS=yes" >> $XBPSSRC_CF
+	fi
 
 	echo "# End of configuration file." >> $XBPSSRC_CF
 
