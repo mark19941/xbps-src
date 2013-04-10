@@ -148,6 +148,9 @@ remove_pkg() {
 		if [ -d "${_destdir}/pkg-${f}-${version}" ]; then
 			rm -rf ${_destdir}/pkg-${f}-${version}
 		fi
+		if [ -d "${_destdir}/pkg-${f}-dbg-${version}" ]; then
+			rm -rf ${_destdir}/pkg-${f}-dbg-${version}
+		fi
 		rm -f $wrksrc/.xbps_${f}_${cross}_install_done
 		rm -f $wrksrc/.xbps_${f}_${cross}_pkg_done
 	done
