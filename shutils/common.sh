@@ -266,7 +266,7 @@ setup_pkg() {
 
 	# Check that there's a ${pkgname}_pkg function matching $pkgname.
 	if ! declare -f ${sourcepkg}_package >/dev/null; then
-		msg_error "$sourcepkg: ${sourcepkg}_pkg() function not defined!\n"
+		msg_error "$sourcepkg: ${sourcepkg}_package() function not defined!\n"
 	fi
 
 	set_build_options
