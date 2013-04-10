@@ -183,6 +183,11 @@ done
 
 setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 setup_pkg_depends $PKGNAME
+
+if [ ! -d "$PKGDESTDIR" ]; then
+	msg_error "$pkgver: cannot access $PKGDESTDIR!\n"
+fi
+
 pkg_genrdeps
 
 exit 0
