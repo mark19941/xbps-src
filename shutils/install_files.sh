@@ -2,6 +2,7 @@
 
 vinstall() {
 	local file="$1" mode="$2" targetdir="$3" targetfile="$4"
+	local _destdir=
 
 	if [ -z "$DESTDIR" ]; then
 		msg_red "$pkgver: vinstall: DESTDIR unset, can't continue...\n"
@@ -18,10 +19,16 @@ vinstall() {
 		return 1
 	fi
 
-	if [ -z "$targetfile" ]; then
-		install -Dm${mode} ${file} "${DESTDIR}/${targetdir}/$(basename ${file})"
+	if [ -n "$XBPS_PKGDESTDIR" ]; then
+		_destdir="$PKGDESTDIR"
 	else
-		install -Dm${mode} ${file} "${DESTDIR}/${targetdir}/$(basename ${targetfile})"
+		_destdir="$DESTDIR"
+	fi
+
+	if [ -z "$targetfile" ]; then
+		install -Dm${mode} ${file} "${_destdir}/${targetdir}/$(basename ${file})"
+	else
+		install -Dm${mode} ${file} "${_destdir}/${targetdir}/$(basename ${targetfile})"
 	fi
 }
 

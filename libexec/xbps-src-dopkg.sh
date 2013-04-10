@@ -476,6 +476,7 @@ fi
 
 # Run the pkg installfunction.
 ${PKGNAME}_package
+export XBPS_PKGDESTDIR=1
 run_func pkg_install
 
 # Prepare pkg destdir and install/remove scripts.
