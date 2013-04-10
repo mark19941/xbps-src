@@ -41,7 +41,7 @@ vcopy() {
 }
 
 vmove() {
-	local files="$1" targetdir="$2"
+	local files="$1" _targetdir
 
 	if [ -z "$DESTDIR" ]; then
 		msg_red "$pkgver: vmove: DESTDIR unset, can't continue...\n"
@@ -50,18 +50,23 @@ vmove() {
 		msg_red "$pkgver: vmove: PKGDESTDIR unset, can't continue...\n"
 		return 1
 	fi
-	if [ $# -lt 1 ]; then
+	if [ $# -ne 1 ]; then
 		msg_red "$pkgver: vmove: 1 argument expected: <files>\n"
 		return 1
 	fi
-	if [ -z "${targetdir}" ]; then
+	for f in ${files}; do
+		_targetdir=$(dirname $f)
+		break
+	done
+
+	if [ -z "${_targetdir}" ]; then
 		[ ! -d ${PKGDESTDIR} ] && install -d ${PKGDESTDIR}
 		mv ${DESTDIR}/$files ${PKGDESTDIR}
 	else
-		if [ ! -d ${PKGDESTDIR}/${targetdir} ]; then
-			install -d ${PKGDESTDIR}/${targetdir}
+		if [ ! -d ${PKGDESTDIR}/${_targetdir} ]; then
+			install -d ${PKGDESTDIR}/${_targetdir}
 		fi
-		mv ${DESTDIR}/$files ${PKGDESTDIR}/${targetdir}
+		mv ${DESTDIR}/$files ${PKGDESTDIR}/${_targetdir}
 	fi
 }
 
