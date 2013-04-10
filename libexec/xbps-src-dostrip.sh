@@ -13,7 +13,7 @@ make_debug() {
 	fname="$(basename $1)"
 	dbgfile="${dname}/${fname}"
 
-	vmkdir "usr/lib/debug/${dname}"
+	mkdir -p "${PKGDESTDIR}/usr/lib/debug/${dname}"
 	$OBJCOPY --only-keep-debug --compress-debug-sections \
 		"$1" "${PKGDESTDIR}/usr/lib/debug/${dbgfile}"
 	if [ $? -ne 0 ]; then
@@ -43,14 +43,9 @@ create_debug_pkg() {
 	[ -n "$disable_debug" ] && return 0
 	[ ! -d "${PKGDESTDIR}/usr/lib/debug" ] && return 0
 
-	if [ -n "$XBPS_CROSS_BUILD" ]; then
-		_pkgname="${pkgname}-dbg"
-		_destdir="${XBPS_DESTDIR}/${XBPS_CROSS_TRIPLET}/pkg-${_pkgname}"
-	else
-		_pkgname="${pkgname}-dbg"
-		_destdir="${XBPS_DESTDIR}/pkg-${_pkgname}"
-	fi
-	mkdir -p "${_destdir}"
+	_pkgname="pkg-${pkgname}-dbg-${version}"
+	_destdir="${XBPS_DESTDIR}/${XBPS_CROSS_TRIPLET}/${_pkgname}"
+	mkdir -p "${_destdir}/usr/lib"
 	mv ${PKGDESTDIR}/usr/lib/debug ${_destdir}/usr/lib
 	if [ $? -ne 0 ]; then
 		msg_error "$pkgver: failed to create debug pkg\n"

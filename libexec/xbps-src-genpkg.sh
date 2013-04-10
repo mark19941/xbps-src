@@ -191,9 +191,9 @@ rval=$?
 if [ -d "$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET/pkg-${PKGNAME}-dbg-${version}" ]; then
 	reset_subpkg_vars
 	pkgname="${PKGNAME}-dbg"
-	pkgver="${PKGNAME}-${version}_${revision}"
+	pkgver="${PKGNAME}-dbg-${version}_${revision}"
 	short_desc="${short_desc} (debug files)"
-	PKGDESTDIR="$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET/pkg-${pkgname}-${version}"
+	PKGDESTDIR="$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET/pkg-${PKGNAME}-dbg-${version}"
 	genbinpkg
 fi
 
