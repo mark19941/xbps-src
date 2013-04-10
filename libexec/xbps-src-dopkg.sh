@@ -476,8 +476,13 @@ fi
 
 # Run the pkg installfunction.
 ${PKGNAME}_package
-export XBPS_PKGDESTDIR=1
-run_func pkg_install
+
+if [ "$build_style" = "meta-template" ]; then
+	install -d $PKGDESTDIR
+else
+	export XBPS_PKGDESTDIR=1
+	run_func pkg_install
+fi
 
 # Prepare pkg destdir and install/remove scripts.
 prepare_destdir
