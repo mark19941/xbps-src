@@ -126,6 +126,10 @@ if [ -f "$XBPS_STRIP_DONE" ]; then
 	exit 0
 fi
 
+if [ ! -d "$PKGDESTDIR" ]; then
+	msg_error "$pkgver: cannot access $PKGDESTDIR!\n"
+fi
+
 pkg_strip
 
 touch -f $XBPS_STRIP_DONE
