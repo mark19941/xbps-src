@@ -60,8 +60,8 @@ register_pkg() {
 genbinpkg() {
 	local binpkg= pkgdir= arch= _deps= f=
 
-	if [ ! -d "${DESTDIR}" ]; then
-		msg_warn "$pkgver: cannot find destdir... skipping!\n"
+	if [ ! -d "${PKGDESTDIR}" ]; then
+		msg_warn "$pkgver: cannot find pkg destdir... skipping!\n"
 		return 0
 	fi
 
@@ -92,7 +92,7 @@ genbinpkg() {
 	cd $pkgdir
 
 	[ -n "$preserve" ] && _preserve="-p"
-	[ -s ${DESTDIR}/rdeps ] && _deps="$(cat ${DESTDIR}/rdeps)"
+	[ -s ${PKGDESTDIR}/rdeps ] && _deps="$(cat ${PKGDESTDIR}/rdeps)"
 	if [ -n "$provides" ]; then
 		local _provides=
 		for f in ${provides}; do
@@ -145,7 +145,7 @@ genbinpkg() {
 		--build-options "${PKG_BUILD_OPTIONS}" \
 		--pkgver "${pkgver}" --quiet \
 		--source-revisions "$(cat ${SRCPKG_GITREVS_FILE:-/dev/null} 2>/dev/null)" \
-		${_preserve} ${_sourcerevs} ${DESTDIR}
+		${_preserve} ${_sourcerevs} ${PKGDESTDIR}
 	rval=$?
 	if [ $rval -eq 0 ]; then
 		register_pkg "$pkgdir" "$binpkg"
@@ -188,17 +188,12 @@ genbinpkg
 rval=$?
 
 # Generate -dbg pkg automagically.
-if [ -n "$XBPS_CROSS_BUILD" ]; then
-	_destdir="$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET"
-else
-	_destdir="$XBPS_DESTDIR"
-fi
-if [ -d "${_destdir}/${pkgname}-dbg-${version}" ]; then
+if [ -d "$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET/pkg-${PKGNAME}-dbg-${version}" ]; then
 	reset_subpkg_vars
-	pkgname="${pkgname}-dbg"
-	pkgver="${pkgname}-${version}_${revision}"
+	pkgname="${PKGNAME}-dbg"
+	pkgver="${PKGNAME}-${version}_${revision}"
 	short_desc="${short_desc} (debug files)"
-	DESTDIR="${_destdir}/${pkgname}-${version}"
+	PKGDESTDIR="$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET/pkg-${pkgname}-${version}"
 	genbinpkg
 fi
 

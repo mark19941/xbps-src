@@ -245,7 +245,7 @@ show_pkg() {
 }
 
 show_pkg_deps() {
-	[ -f "${DESTDIR}/rdeps" ] && cat ${DESTDIR}/rdeps
+	[ -f "${PKGDESTDIR}/rdeps" ] && cat ${PKGDESTDIR}/rdeps
 }
 
 show_pkg_build_deps() {
@@ -260,24 +260,21 @@ show_pkg_build_deps() {
 show_pkg_options() {
 	local f= j= state= desc= enabled=
 
-	if [ -f $XBPS_SRCPKGDIR/$pkgname/template.options ]; then
-		. $XBPS_SRCPKGDIR/$pkgname/template.options
-		for f in ${build_options}; do
-			for j in ${build_options_default}; do
-				if [ "$f" = "$j" ]; then
-					enabled=1
-					break
-				fi
-			done
-			state="OFF"
-			if [ -n "$enabled" ]; then
-				state="ON"
-				unset enabled
+	for f in ${build_options}; do
+		for j in ${build_options_default}; do
+			if [ "$f" = "$j" ]; then
+				enabled=1
+				break
 			fi
-			eval desc="\$desc_option_$f"
-			printf "$f: $desc [$state]\n"
 		done
-	fi
+		state="OFF"
+		if [ -n "$enabled" ]; then
+			state="ON"
+			unset enabled
+		fi
+		eval desc="\$desc_option_$f"
+		printf "$f: $desc [$state]\n"
+	done
 }
 
 masterdir_zap() {
@@ -617,7 +614,7 @@ remove-destdir)
 		XBPS_TARGET_PKG=$(basename_cwd)
 	fi
 	setup_pkg $XBPS_TARGET_PKG $XBPS_CROSS_BUILD
-	remove_pkg $XBPS_TARGET $XBPS_CROSS_BUILD
+	remove_pkg $XBPS_CROSS_BUILD
 	;;
 list)
 	$XBPS_QUERY_CMD -l
@@ -636,7 +633,7 @@ show-files)
 		XBPS_TARGET_PKG=$(basename_cwd)
 	fi
 	setup_pkg $XBPS_TARGET_PKG
-	[ -f "$DESTDIR/flist" ] && cat ${DESTDIR}/flist
+	[ -f "$PKGDESTDIR/flist" ] && cat ${PKGDESTDIR}/flist
 	;;
 show-deps)
 	setup_pkg $XBPS_TARGET_PKG

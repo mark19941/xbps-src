@@ -105,9 +105,9 @@ set_build_options() {
 	local f j opt optval _optsset
 	local -A options
 
-	[ ! -f $XBPS_SRCPKGDIR/$pkgname/template.options ] && return 0
-
-	. $XBPS_SRCPKGDIR/$pkgname/template.options
+	if [ -z "$build_options" ]; then
+		return 0
+	fi
 
 	for f in ${build_options}; do
 		OIFS="$IFS"; IFS=','
@@ -137,10 +137,6 @@ set_build_options() {
 		optval=${options[$f]}
 		[[ $optval -eq 1 ]] && eval build_option_${f}=1
 	done
-
-	if declare -f do_options >/dev/null; then
-		do_options
-	fi
 
 	for f in ${build_options}; do
 		optval=${options[$f]}
@@ -188,7 +184,7 @@ reset_pkg_vars() {
 			build_options build_options_default \
 			SUBPKG XBPS_EXTRACT_DONE XBPS_CONFIGURE_DONE \
 			XBPS_BUILD_DONE XBPS_INSTALL_DONE FILESDIR DESTDIR \
-			SRCPKGDESTDIR PATCHESDIR CFLAGS CXXFLAGS CPPFLAGS \
+			PKGDESTDIR PATCHESDIR CFLAGS CXXFLAGS CPPFLAGS \
 			XBPS_CROSS_CFLAGS XBPS_CROSS_CXXFLAGS \
 			XBPS_CROSS_CPPFLAGS XBPS_CROSS_LDFLAGS \
 			CC CXX LDFLAGS LD_LIBRARY_PATH PKG_BUILD_OPTIONS"
@@ -196,6 +192,10 @@ reset_pkg_vars() {
 	local TMPL_FUNCS="pre_configure pre_build pre_install do_build \
 			  do_install do_configure do_fetch post_configure \
 			  post_build post_install post_extract"
+
+	for f in ${subpackages}; do
+		eval unset -f ${f}_package
+	done
 
 	eval unset -v "$TMPL_VARS"
 	eval unset -f "$TMPL_FUNCS"
@@ -207,14 +207,10 @@ reset_subpkg_vars() {
 			xml_entries sgml_entries xml_catalogs sgml_catalogs \
 			font_dirs dkms_modules provides kernel_hooks_version \
 			conflicts pycompile_dirs pycompile_module \
-			systemd_services make_dirs depends run_depends"
-
-	local FUNCS="pre_configure pre_build pre_install do_build \
-			  do_configure do_fetch post_configure \
-			  post_build post_install post_extract"
+			systemd_services make_dirs depends run_depends \
+			pkg_install"
 
 	eval unset -v "$VARS"
-	eval unset -f "$FUNCS"
 }
 
 source_file() {
@@ -223,6 +219,16 @@ source_file() {
 	if ! source "$f"; then
 		msg_error "xbps-src: failed to read $f!\n"
 	fi
+}
+
+get_subpkgs() {
+	local args
+
+	args="$(typeset -F|grep -E '_package$')"
+	set -- ${args}
+	while [ $# -gt 0 ]; do
+		echo "${3%_package}"; shift 3
+	done
 }
 
 setup_pkg() {
@@ -246,18 +252,25 @@ setup_pkg() {
 	fi
 
 	sourcepkg=$pkgname
+	subpackages="$(get_subpkgs)"
 
-	# Check if it's a subpkg and set its vars.
-	if [ -r $XBPS_SRCPKGDIR/$pkg/${pkg}.template ]; then
+	if [ -h $XBPS_SRCPKGDIR/$pkg ]; then
+		# subpkg
 		reset_subpkg_vars
-		source_file $XBPS_SRCPKGDIR/$pkg/${pkg}.template
 		pkgname=$pkg
-		export SUBPKG=1
+		${pkg}_package
+		SUBPKG=1
 	fi
 
-	pkgver="${pkgname}-${version}_${revision}"
+	pkgver="${pkg}-${version}_${revision}"
+
+	# Check that there's a ${pkgname}_pkg function matching $pkgname.
+	if ! declare -f ${sourcepkg}_package >/dev/null; then
+		msg_error "$sourcepkg: ${sourcepkg}_pkg() function not defined!\n"
+	fi
+
 	set_build_options
-	setup_pkg_common_vars $cross
+	setup_pkg_common_vars $pkg $cross
 
 	if [ -z "$wrksrc" ]; then
 		wrksrc="$XBPS_BUILDDIR/${sourcepkg}-${version}"
@@ -267,14 +280,16 @@ setup_pkg() {
 }
 
 setup_pkg_depends() {
-	local j _deps _pkgdepname _pkgdep
+	local pkg="$1" j _pkgdepname _pkgdep
 
-	if [ -z "$SUBPKG" ]; then
-		_deps="${depends} ${fulldepends}"
-	else
-		_deps="${depends}"
+	if [ -n "$pkg" ]; then
+		# subpkg
+		if declare -f ${pkg}_package >/dev/null; then
+			${pkg}_package
+		fi
 	fi
-	for j in ${_deps}; do
+
+	for j in ${depends}; do
 		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${j} 2>/dev/null)"
 		if [ -z "${_pkgdepname}" ]; then
 			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${j} 2>/dev/null)"
@@ -285,9 +300,9 @@ setup_pkg_depends() {
 		else
 			_pkgdep="$j"
 		fi
-		run_depends="${run_depends} ${_pkgdep}"
+		run_depends+=" ${_pkgdep}"
 	done
-	for j in ${hostmakedepends} ${fulldepends}; do
+	for j in ${hostmakedepends}; do
 		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${j} 2>/dev/null)"
 		if [ -z "${_pkgdepname}" ]; then
 			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${j} 2>/dev/null)"
@@ -297,7 +312,7 @@ setup_pkg_depends() {
 		else
 			_pkgdep="$j"
 		fi
-		host_build_depends="${host_build_depends} ${_pkgdep}"
+		host_build_depends+=" ${_pkgdep}"
 	done
 	for j in ${makedepends}; do
 		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${j} 2>/dev/null)"
@@ -309,12 +324,12 @@ setup_pkg_depends() {
 		else
 			_pkgdep="$j"
 		fi
-		build_depends="${build_depends} ${_pkgdep}"
+		build_depends+=" ${_pkgdep}"
 	done
 }
 
 setup_pkg_common_vars() {
-	local cross="$1" val i REQ_VARS dbgflags
+	local pkg="$1" cross="$2" val i REQ_VARS dbgflags
 
 	[ -z "$pkgname" ] && return 1
 
@@ -335,14 +350,8 @@ setup_pkg_common_vars() {
 
 	FILESDIR=$XBPS_SRCPKGDIR/$sourcepkg/files
 	PATCHESDIR=$XBPS_SRCPKGDIR/$sourcepkg/patches
-
-	if [ -n "$cross" ]; then
-		DESTDIR=${XBPS_DESTDIR}/${XBPS_CROSS_TRIPLET}/${pkgname}-${version}
-		SRCPKGDESTDIR=${XBPS_DESTDIR}/${XBPS_CROSS_TRIPLET}/${sourcepkg}-${version}
-	else
-		DESTDIR=${XBPS_DESTDIR}/${pkgname}-${version}
-		SRCPKGDESTDIR=${XBPS_DESTDIR}/${sourcepkg}-${version}
-	fi
+	DESTDIR=$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET/${sourcepkg}-${version}
+	PKGDESTDIR=$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET/pkg-${pkg}-${version}
 
 	if [ -n "$XBPS_MAKEJOBS" -a -z "$disable_parallel_build" ]; then
 		makejobs="-j$XBPS_MAKEJOBS"

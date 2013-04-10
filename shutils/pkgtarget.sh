@@ -31,7 +31,7 @@ check_pkg_arch() {
 }
 
 install_pkg() {
-	local target="$1" cross="$2" lrepo=
+	local target="$1" cross="$2" lrepo subpkg
 
 	[ -z "$pkgname" ] && return 1
 
@@ -69,9 +69,8 @@ install_pkg() {
 
 	# Install subpkgs into destdir.
 	for subpkg in ${subpackages}; do
-		source_file $XBPS_SRCPKGDIR/$subpkg/${subpkg}.template
-
-		$FAKEROOT_CMD $XBPS_LIBEXECDIR/xbps-src-doinstall $subpkg $cross || exit 1
+		# Exec pkg install func.
+		$FAKEROOT_CMD $XBPS_LIBEXECDIR/xbps-src-dopkg $subpkg $cross || exit 1
 
 		# Strip binaries/libraries.
 		$XBPS_LIBEXECDIR/xbps-src-dostrip $subpkg $cross || exit 1
@@ -79,12 +78,6 @@ install_pkg() {
 		# Generate run-time dependecies.
 		$XBPS_LIBEXECDIR/xbps-src-genrdeps $subpkg $cross || exit 1
 	done
-
-	# Strip binaries/libraries.
-	$XBPS_LIBEXECDIR/xbps-src-dostrip $sourcepkg $cross || exit 1
-
-	# Generate run-time dependecies.
-	$XBPS_LIBEXECDIR/xbps-src-genrdeps $sourcepkg $cross || exit 1
 
 	if [ "$XBPS_TARGET_PKG" = "$sourcepkg" ]; then
 		[ "$target" = "install-destdir" ] && return 0
@@ -94,8 +87,6 @@ install_pkg() {
 	for subpkg in ${subpackages}; do
 		$XBPS_LIBEXECDIR/xbps-src-genpkg $subpkg $cross || exit 1
 	done
-
-	$XBPS_LIBEXECDIR/xbps-src-genpkg $sourcepkg $cross || exit 1
 
 	# pkg cleanup
 	if declare -f do_clean >/dev/null; then
@@ -139,7 +130,7 @@ remove_pkg_wrksrc() {
 }
 
 remove_pkg() {
-	local cross="$1" subpkg= pkg= _destdir=
+	local cross="$1" _destdir f
 
 	[ -z $pkgname ] && msg_error "unexistent package, aborting.\n"
 
@@ -149,41 +140,22 @@ remove_pkg() {
 		_destdir="$XBPS_DESTDIR"
 	fi
 
-	for subpkg in ${subpackages}; do
-		. ${XBPS_SRCPKGDIR}/${sourcepkg}/${subpkg}.template
-		setup_pkg_common_vars $cross
-		pkg="${subpkg}-${version}"
-		if [ -n "$revision" ]; then
-			local _pkg="${pkg}_${revision}"
-		fi
-		if [ -d "${_destdir}/${pkg}" ]; then
-			msg_normal "${_pkg}: removing files from destdir...\n"
-			rm -rf "${_destdir}/${pkg}"
-		else
-			msg_warn "${_pkg}: not installed in destdir!\n"
-		fi
-		for f in install pre_install post_install strip; do
-			rm -f $wrksrc/.xbps_${subpkg}_${cross}_${f}_done
-		done
-		# Remove -dbg packages.
-		if [ -d "${_destdir}/${subpkg}-dbg-${version}" ]; then
-			msg_normal "${_pkg}: removing debug pkg...\n"
-			rm -rf ${_destdir}/${subpkg}-dbg-${version}
-		fi
-	done
-
-	pkg="${pkgname}-${version}"
-	if [ -d "${_destdir}/${pkg}" ]; then
-		msg_normal "${pkgver}: removing files from destdir...\n"
-		rm -rf "${_destdir}/${pkg}"
-	fi
-	# Remove -dbg pkg.
-	if [ -d "${_destdir}/${pkgname}-dbg-${version}" ]; then
-		msg_normal "${pkgver}: removing debug pkg...\n"
-		rm -rf ${_destdir}/${pkgname}-dbg-${version}
-	fi
-
 	for f in install pre_install post_install strip; do
 		rm -f $wrksrc/.xbps_${sourcepkg}_${cross}_${f}_done
 	done
+
+	for f in ${subpackages}; do
+		if [ -d "${_destdir}/pkg-${f}-${version}" ]; then
+			rm -rf ${_destdir}/pkg-${f}-${version}
+		fi
+		rm -f $wrksrc/.xbps_${f}_${cross}_install_done
+		rm -f $wrksrc/.xbps_${f}_${cross}_pkg_done
+	done
+
+	if [ -d "${_destdir}/${sourcepkg}-${version}" ]; then
+		msg_normal "$sourcepkg: removing files from destdir...\n"
+		rm -rf "${_destdir}/${sourcepkg}-${version}"
+	else
+		msg_warn "$sourcepkg: not installed in destdir!\n"
+	fi
 }

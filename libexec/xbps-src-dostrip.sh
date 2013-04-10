@@ -9,17 +9,17 @@ make_debug() {
 
 	[ -n "$disable_debug" ] && return 0
 
-	dname=$(echo "$(dirname $1)"|sed -e "s|${DESTDIR}||g")
+	dname=$(echo "$(dirname $1)"|sed -e "s|${PKGDESTDIR}||g")
 	fname="$(basename $1)"
 	dbgfile="${dname}/${fname}"
 
 	vmkdir "usr/lib/debug/${dname}"
 	$OBJCOPY --only-keep-debug --compress-debug-sections \
-		"$1" "${DESTDIR}/usr/lib/debug/${dbgfile}"
+		"$1" "${PKGDESTDIR}/usr/lib/debug/${dbgfile}"
 	if [ $? -ne 0 ]; then
 		msg_error "${pkgver}: failed to create dbg file: ${dbgfile}\n"
 	fi
-	chmod 644 "${DESTDIR}/usr/lib/debug/${dbgfile}"
+	chmod 644 "${PKGDESTDIR}/usr/lib/debug/${dbgfile}"
 }
 
 attach_debug() {
@@ -27,40 +27,41 @@ attach_debug() {
 
 	[ -n "$disable_debug" ] && return 0
 
-	dname=$(echo "$(dirname $1)"|sed -e "s|${DESTDIR}||g")
+	dname=$(echo "$(dirname $1)"|sed -e "s|${PKGDESTDIR}||g")
 	fname="$(basename $1)"
 	dbgfile="${dname}/${fname}"
 
-	$OBJCOPY --add-gnu-debuglink="${DESTDIR}/usr/lib/debug/${dbgfile}" "$1"
+	$OBJCOPY --add-gnu-debuglink="${PKGDESTDIR}/usr/lib/debug/${dbgfile}" "$1"
 	if [ $? -ne 0 ]; then
 		msg_error "${pkgver}: failed to attach dbg to ${dbgfile}\n"
 	fi
 }
 
 create_debug_pkg() {
-	local _pkgname=
+	local _pkgname= _destdir=
 
 	[ -n "$disable_debug" ] && return 0
-	[ ! -d "${DESTDIR}/usr/lib/debug" ] && return 0
+	[ ! -d "${PKGDESTDIR}/usr/lib/debug" ] && return 0
 
 	if [ -n "$XBPS_CROSS_BUILD" ]; then
-		_pkgname="${XBPS_CROSS_TRIPLET}/${pkgname}-dbg"
+		_pkgname="${pkgname}-dbg"
+		_destdir="${XBPS_DESTDIR}/${XBPS_CROSS_TRIPLET}/pkg-${_pkgname}"
 	else
 		_pkgname="${pkgname}-dbg"
+		_destdir="${XBPS_DESTDIR}/pkg-${_pkgname}"
 	fi
-	mkdir -p "${XBPS_DESTDIR}/${_pkgname}-${version}/usr/lib"
-	mv ${DESTDIR}/usr/lib/debug \
-		${XBPS_DESTDIR}/${_pkgname}-${version}/usr/lib
+	mkdir -p "${_destdir}"
+	mv ${PKGDESTDIR}/usr/lib/debug ${_destdir}/usr/lib
 	if [ $? -ne 0 ]; then
 		msg_error "$pkgver: failed to create debug pkg\n"
 	fi
-	rmdir "${DESTDIR}/usr/lib" 2>/dev/null
+	rmdir "${PKGDESTDIR}/usr/lib" 2>/dev/null
 	return 0
 }
 
 pkg_strip() {
 	msg_normal "$pkgver: creating debug files and stripping, please wait...\n"
-	find ${DESTDIR} -type f | while read f; do
+	find ${PKGDESTDIR} -type f | while read f; do
 		fname=$(basename "$f")
 		for x in ${nostrip_files}; do
 			if [ "$x" = "$fname" ]; then
@@ -124,7 +125,7 @@ if [ -n "$nostrip" -o -n "$noarch" ]; then
 	exit 0
 fi
 
-XBPS_STRIP_DONE="$wrksrc/.xbps_${pkgname}_${XBPS_CROSS_BUILD}_strip_done"
+XBPS_STRIP_DONE="$wrksrc/.xbps_${PKGNAME}_${XBPS_CROSS_BUILD}_strip_done"
 
 if [ -f "$XBPS_STRIP_DONE" ]; then
 	exit 0

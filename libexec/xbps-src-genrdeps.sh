@@ -38,14 +38,14 @@ pkg_genrdeps() {
 	MAPLIB=$XBPS_COMMONDIR/shlibs
 
 	if [ -n "$noarch" -o -n "$noverifyrdeps" ]; then
-		echo "$run_depends" > ${DESTDIR}/rdeps
+		echo "$run_depends" > ${PKGDESTDIR}/rdeps
 		return 0
 	fi
 
 	msg_normal "$pkgver: verifying required shlibs...\n"
 
 	depsftmp=$(mktemp -t xbps_src_depstmp.XXXXXXXXXX) || exit 1
-	find ${DESTDIR} -type f -perm -u+w > $depsftmp 2>/dev/null
+	find ${PKGDESTDIR} -type f -perm -u+w > $depsftmp 2>/dev/null
 
 	exec 3<&0 # save stdin
 	exec < $depsftmp
@@ -99,7 +99,7 @@ pkg_genrdeps() {
 		rdepcnt="$(grep -E "^${_f}[[:blank:]]+.*$" $MAPLIB|awk '{print $2}'|wc -l)"
 		if [ -z "$rdep" ]; then
 			# Ignore libs by current pkg
-			soname=$(find ${DESTDIR} -name "$f")
+			soname=$(find ${PKGDESTDIR} -name "$f")
 			if [ -z "$soname" ]; then
 				msg_red_nochroot "   SONAME: $f <-> UNKNOWN PKG PLEASE FIX!\n"
 				broken=1
@@ -162,7 +162,7 @@ pkg_genrdeps() {
 	fi
 
 	if [ -n "$run_depends" ]; then
-		echo "$run_depends" > ${DESTDIR}/rdeps
+		echo "$run_depends" > ${PKGDESTDIR}/rdeps
 	fi
 }
 
@@ -182,8 +182,7 @@ for f in $XBPS_COMMONDIR/*.sh; do
 done
 
 setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
-setup_pkg_depends
-
+setup_pkg_depends $PKGNAME
 pkg_genrdeps
 
 exit 0

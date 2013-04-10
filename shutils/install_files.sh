@@ -46,8 +46,8 @@ vmove() {
 	if [ -z "$DESTDIR" ]; then
 		msg_red "$pkgver: vmove: DESTDIR unset, can't continue...\n"
 		return 1
-	elif [ -z "$SRCPKGDESTDIR" ]; then
-		msg_red "$pkgver: vmove: SRCPKGDESTDIR unset, can't continue...\n"
+	elif [ -z "$PKGDESTDIR" ]; then
+		msg_red "$pkgver: vmove: PKGDESTDIR unset, can't continue...\n"
 		return 1
 	fi
 	if [ $# -lt 1 ]; then
@@ -55,11 +55,13 @@ vmove() {
 		return 1
 	fi
 	if [ -z "${targetdir}" ]; then
-		[ ! -d ${DESTDIR} ] && install -d ${DESTDIR}
-		mv ${SRCPKGDESTDIR}/$files ${DESTDIR}
+		[ ! -d ${PKGDESTDIR} ] && install -d ${PKGDESTDIR}
+		mv ${DESTDIR}/$files ${PKGDESTDIR}
 	else
-		[ ! -d ${DESTDIR}/${targetdir} ] && vmkdir ${targetdir}
-		mv ${SRCPKGDESTDIR}/$files ${DESTDIR}/${targetdir}
+		if [ ! -d ${PKGDESTDIR}/${targetdir} ]; then
+			install -d ${PKGDESTDIR}/${targetdir}
+		fi
+		mv ${DESTDIR}/$files ${PKGDESTDIR}/${targetdir}
 	fi
 }
 
