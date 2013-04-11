@@ -135,8 +135,17 @@ set_build_options() {
 	# Prepare final options.
 	for f in ${!options[@]}; do
 		optval=${options[$f]}
-		[[ $optval -eq 1 ]] && eval build_option_${f}=1
+		if [[ $optval -eq 1 ]]; then
+			eval build_option_${f}=1
+		fi
 	done
+
+	# Re-read pkg template to get conditional vars.
+	if [ -z "$XBPS_BUILD_OPTIONS_PARSED" ]; then
+		source_file $XBPS_SRCPKGDIR/$pkgname/template
+		XBPS_BUILD_OPTIONS_PARSED=1
+		set_build_options
+	fi
 
 	for f in ${build_options}; do
 		optval=${options[$f]}
@@ -272,8 +281,8 @@ setup_pkg() {
 		msg_error "$sourcepkg: ${sourcepkg}_package() function not defined!\n"
 	fi
 
-	set_build_options
 	setup_pkg_common_vars $pkg $cross
+	set_build_options
 
 	if [ -z "$wrksrc" ]; then
 		wrksrc="$XBPS_BUILDDIR/${sourcepkg}-${version}"
