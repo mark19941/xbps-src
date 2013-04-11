@@ -188,6 +188,8 @@ if [ ! -d "$PKGDESTDIR" ]; then
 	msg_error "$pkgver: cannot access $PKGDESTDIR!\n"
 fi
 
+${PKGNAME}_package
+
 pkg_genrdeps
 
 exit 0
