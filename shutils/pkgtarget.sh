@@ -158,7 +158,5 @@ remove_pkg() {
 	if [ -d "${_destdir}/${sourcepkg}-${version}" ]; then
 		msg_normal "$sourcepkg: removing files from destdir...\n"
 		rm -rf "${_destdir}/${sourcepkg}-${version}"
-	else
-		msg_warn "$sourcepkg: not installed in destdir!\n"
 	fi
 }
