@@ -258,6 +258,9 @@ setup_pkg() {
 		# subpkg
 		reset_subpkg_vars
 		pkgname=$pkg
+		if ! declare -f ${pkg}_package >/dev/null; then
+			msg_error "$pkgname: cannot find pkg ${pkg}_package() function!\n"
+		fi
 		${pkg}_package
 		SUBPKG=1
 	fi
