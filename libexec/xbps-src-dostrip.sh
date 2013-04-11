@@ -72,25 +72,25 @@ pkg_strip() {
 		application/x-executable*)
 			if echo "$(file $f)" | grep -q "statically linked"; then
 				# static binary
-				$STRIP "$f" || msg_error "$pkgver: failed to strip $fname\n"
-				echo "   Stripped static executable: $fname"
+				$STRIP "$f" || msg_error "$pkgver: failed to strip ${f#$PKGDESTDIR}\n"
+				echo "   Stripped static executable: ${f#$PKGDESTDIR}"
 			else
 				make_debug "$f"
-				$STRIP "$f" || msg_error "$pkgver: failed to strip $fname\n"
-				echo "   Stripped executable: $fname"
+				$STRIP "$f" || msg_error "$pkgver: failed to strip ${f#$PKGDESTDIR}\n"
+				echo "   Stripped executable: ${f#$PKGDESTDIR}"
 				attach_debug "$f"
 			fi
 			;;
 		application/x-sharedlib*)
 			# shared library
 			make_debug "$f" || return $?
-			$STRIP --strip-unneeded "$f" || msg_error "$pkgver: failed to strip $fname\n"
-			echo "   Stripped library: $fname"
+			$STRIP --strip-unneeded "$f" || msg_error "$pkgver: failed to strip ${f#$PKGDESTDIR}\n"
+			echo "   Stripped library: ${f#$PKGDESTDIR}"
 			attach_debug "$f"
 			;;
 		application/x-archive*)
-			$STRIP --strip-debug "$f" || msg_error "$pkgver: failed to strip $fname\n"
-			echo "   Stripped static library: $fname";;
+			$STRIP --strip-debug "$f" || msg_error "$pkgver: failed to strip ${f#$PKGDESTDIR}\n"
+			echo "   Stripped static library: ${f#$PKGDESTDIR}";;
 		esac
 	done
 
