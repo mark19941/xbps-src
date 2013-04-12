@@ -100,7 +100,6 @@ msg_normal_append() {
 	[ -n "$NOCOLORS" ] || printf "\033[m"
 }
 
-
 set_build_options() {
 	local f j opt optval _optsset
 	local -A options
@@ -146,6 +145,7 @@ set_build_options() {
 		XBPS_BUILD_OPTIONS_PARSED=1
 		unset PKG_BUILD_OPTIONS
 		set_build_options
+		return 0
 	fi
 
 	for f in ${build_options}; do
