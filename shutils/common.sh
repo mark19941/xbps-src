@@ -144,6 +144,7 @@ set_build_options() {
 	if [ -z "$XBPS_BUILD_OPTIONS_PARSED" ]; then
 		source_file $XBPS_SRCPKGDIR/$pkgname/template
 		XBPS_BUILD_OPTIONS_PARSED=1
+		unset PKG_BUILD_OPTIONS
 		set_build_options
 	fi
 
