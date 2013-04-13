@@ -250,6 +250,47 @@ get_subpkgs() {
 	done
 }
 
+setup_pkg_reqvars() {
+	local cross="$1"
+
+	if [ -n "$cross" ]; then
+		source_file $XBPS_CROSSPFDIR/${cross}.sh
+
+		REQ_VARS="TARGET_ARCH CROSS_TRIPLET CROSS_CFLAGS CROSS_CXXFLAGS"
+		for i in ${REQ_VARS}; do
+			eval val="\$XBPS_$i"
+			if [ -z "$val" ]; then
+				echo "ERROR: XBPS_$i is not defined!"
+				exit 1
+			fi
+		done
+
+		export XBPS_CROSS_BASE=/usr/$XBPS_CROSS_TRIPLET
+
+		XBPS_INSTALL_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_INSTALL_CMD -c /host/repocache -r $XBPS_CROSS_BASE"
+		XBPS_QUERY_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_QUERY_CMD -c /host/repocache -r $XBPS_CROSS_BASE"
+		XBPS_RECONFIGURE_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_RECONFIGURE_CMD -r $XBPS_CROSS_BASE"
+		XBPS_REMOVE_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_REMOVE_CMD -r $XBPS_CROSS_BASE"
+		XBPS_RINDEX_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_RINDEX_CMD"
+		XBPS_UHELPER_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH xbps-uhelper -r $XBPS_CROSS_BASE"
+
+		export XBPS_TARGET_MACHINE=$XBPS_TARGET_ARCH
+	else
+		XBPS_INSTALL_XCMD="$XBPS_INSTALL_CMD"
+		XBPS_QUERY_XCMD="$XBPS_QUERY_CMD"
+		XBPS_RECONFIGURE_XCMD="$XBPS_RECONFIGURE_CMD"
+		XBPS_REMOVE_XCMD="$XBPS_REMOVE_CMD"
+		XBPS_RINDEX_XCMD="$XBPS_RINDEX_CMD"
+		XBPS_UHELPER_XCMD="$XBPS_UHELPER_CMD"
+
+		unset XBPS_CROSS_BASE XBPS_CROSS_LDFLAGS
+		unset XBPS_CROSS_CFLAGS XBPS_CROSS_CXXFLAGS XBPS_CROSS_CPPFLAGS
+	fi
+
+	export XBPS_INSTALL_XCMD XBPS_QUERY_XCMD XBPS_RECONFIGURE_XCMD \
+		XBPS_REMOVE_XCMD XBPS_RINDEX_XCMD XBPS_UHELPER_XCMD
+}
+
 setup_pkg() {
 	local pkg="$1" cross="$2" restorecross
 
@@ -260,6 +301,7 @@ setup_pkg() {
 	fi
 
 	reset_pkg_vars
+	setup_pkg_reqvars $cross
 
 	if [ -n "$cross" ]; then
 		export CROSS_BUILD="$cross"
@@ -267,6 +309,7 @@ setup_pkg() {
 		install_cross_pkg $cross || return 1
 	else
 		unset CROSS_BUILD
+		export XBPS_TARGET_MACHINE=$XBPS_MACHINE
 		source_file $XBPS_SRCPKGDIR/${pkg}/template
 	fi
 
@@ -378,45 +421,6 @@ setup_pkg_common_vars() {
 	if [ -n "$XBPS_MAKEJOBS" -a -z "$disable_parallel_build" ]; then
 		makejobs="-j$XBPS_MAKEJOBS"
 	fi
-
-	if [ -n "$cross" ]; then
-		source_file $XBPS_CROSSPFDIR/${cross}.sh
-
-		REQ_VARS="TARGET_ARCH CROSS_TRIPLET CROSS_CFLAGS CROSS_CXXFLAGS"
-		for i in ${REQ_VARS}; do
-			eval val="\$XBPS_$i"
-			if [ -z "$val" ]; then
-				echo "ERROR: XBPS_$i is not defined!"
-				exit 1
-			fi
-		done
-
-		export XBPS_CROSS_BASE=/usr/$XBPS_CROSS_TRIPLET
-
-		XBPS_INSTALL_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_INSTALL_CMD -c /host/repocache -r $XBPS_CROSS_BASE"
-		XBPS_QUERY_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_QUERY_CMD -c /host/repocache -r $XBPS_CROSS_BASE"
-		XBPS_RECONFIGURE_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_RECONFIGURE_CMD -r $XBPS_CROSS_BASE"
-		XBPS_REMOVE_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_REMOVE_CMD -r $XBPS_CROSS_BASE"
-		XBPS_RINDEX_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_RINDEX_CMD"
-		XBPS_UHELPER_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH xbps-uhelper -r $XBPS_CROSS_BASE"
-
-		export XBPS_TARGET_MACHINE=$XBPS_TARGET_ARCH
-	else
-		XBPS_INSTALL_XCMD="$XBPS_INSTALL_CMD"
-		XBPS_QUERY_XCMD="$XBPS_QUERY_CMD"
-		XBPS_RECONFIGURE_XCMD="$XBPS_RECONFIGURE_CMD"
-		XBPS_REMOVE_XCMD="$XBPS_REMOVE_CMD"
-		XBPS_RINDEX_XCMD="$XBPS_RINDEX_CMD"
-		XBPS_UHELPER_XCMD="$XBPS_UHELPER_CMD"
-
-		export XBPS_TARGET_MACHINE=$XBPS_MACHINE
-
-		unset XBPS_CROSS_BASE XBPS_CROSS_LDFLAGS
-		unset XBPS_CROSS_CFLAGS XBPS_CROSS_CXXFLAGS XBPS_CROSS_CPPFLAGS
-	fi
-
-	export XBPS_INSTALL_XCMD XBPS_QUERY_XCMD XBPS_RECONFIGURE_XCMD \
-		XBPS_REMOVE_XCMD XBPS_RINDEX_XCMD XBPS_UHELPER_XCMD
 
 	# For nonfree/bootstrap pkgs there's no point in building -dbg pkgs, disable them.
 	if [ -z "$XBPS_DEBUG_PKGS" -o -n "$nonfree" -o -n "$bootstrap" ]; then
