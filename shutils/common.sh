@@ -232,12 +232,21 @@ source_file() {
 }
 
 get_subpkgs() {
-	local args
+	local args list
 
 	args="$(typeset -F|grep -E '_package$')"
 	set -- ${args}
 	while [ $# -gt 0 ]; do
-		echo "${3%_package}"; shift 3
+		# Add sourcepkg at bottom
+		if [ "${3%_package}" = "$sourcepkg" ]; then
+			shift 3; continue
+		fi
+		list+=" ${3%_package}"; shift 3
+	done
+
+	list+=" $sourcepkg"
+	for f in ${list}; do
+		echo "$f"
 	done
 }
 
