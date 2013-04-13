@@ -309,7 +309,6 @@ setup_pkg() {
 		install_cross_pkg $cross || return 1
 	else
 		unset CROSS_BUILD
-		export XBPS_TARGET_MACHINE=$XBPS_MACHINE
 		source_file $XBPS_SRCPKGDIR/${pkg}/template
 	fi
 
