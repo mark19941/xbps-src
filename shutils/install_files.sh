@@ -33,7 +33,7 @@ vinstall() {
 }
 
 vcopy() {
-	local files="$1" targetdir="$2"
+	local files="$1" targetdir="$2" _destdir
 
 	if [ -z "$DESTDIR" ]; then
 		msg_red "$pkgver: vcopy: DESTDIR unset, can't continue...\n"
@@ -44,11 +44,17 @@ vcopy() {
 		return 1
 	fi
 
-	cp -a $files ${DESTDIR}/${targetdir}
+	if [ -n "$XBPS_PKGDESTDIR" ]; then
+		_destdir="$PKGDESTDIR"
+	else
+		_destdir="$DESTDIR"
+	fi
+
+	cp -a $files ${_destdir}/${targetdir}
 }
 
 vmove() {
-	local files="$1" _targetdir
+	local files="$1" _destdir _pkgdestdir _targetdir
 
 	if [ -z "$DESTDIR" ]; then
 		msg_red "$pkgver: vmove: DESTDIR unset, can't continue...\n"
@@ -66,19 +72,27 @@ vmove() {
 		break
 	done
 
-	if [ -z "${_targetdir}" ]; then
-		[ ! -d ${PKGDESTDIR} ] && install -d ${PKGDESTDIR}
-		mv ${DESTDIR}/$files ${PKGDESTDIR}
+	if [ -n "$XBPS_PKGDESTDIR" ]; then
+		_pkgdestdir="$PKGDESTDIR"
+		_destdir="$DESTDIR"
 	else
-		if [ ! -d ${PKGDESTDIR}/${_targetdir} ]; then
-			install -d ${PKGDESTDIR}/${_targetdir}
+		_pkgdestdir="$DESTDIR"
+		_destdir="$DESTDIR"
+	fi
+
+	if [ -z "${_targetdir}" ]; then
+		[ ! -d ${_pkgdestdir} ] && install -d ${_pkgdestdir}
+		mv ${_destdir}/$files ${_pkgdestdir}
+	else
+		if [ ! -d ${_pkgdestdir}/${_targetdir} ]; then
+			install -d ${_pkgdestdir}/${_targetdir}
 		fi
-		mv ${DESTDIR}/$files ${PKGDESTDIR}/${_targetdir}
+		mv ${_destdir}/$files ${_pkgdestdir}/${_targetdir}
 	fi
 }
 
 vmkdir() {
-	local dir="$1" mode="$2"
+	local dir="$1" mode="$2" _destdir
 
 	if [ -z "$DESTDIR" ]; then
 		msg_red "$pkgver: vmkdir: DESTDIR unset, can't continue...\n"
@@ -90,9 +104,15 @@ vmkdir() {
 		return 1
 	fi
 
-	if [ -z "$mode" ]; then
-		install -d ${DESTDIR}/${dir}
+	if [ -n "$XBPS_PKGDESTDIR" ]; then
+		_destdir="$PKGDESTDIR"
 	else
-		install -dm${mode} ${DESTDIR}/${dir}
+		_destdir="$DESTDIR"
+	fi
+
+	if [ -z "$mode" ]; then
+		install -d ${_destdir}/${dir}
+	else
+		install -dm${mode} ${_destdir}/${dir}
 	fi
 }
