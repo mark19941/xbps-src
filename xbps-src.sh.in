@@ -252,7 +252,7 @@ show_pkg_build_deps() {
 	local f=
 
 	# build time deps
-	for f in ${hostmakedepends} ${makedepends} ${fulldepends}; do
+	for f in ${hostmakedepends} ${makedepends}; do
 		echo "$f"
 	done
 }

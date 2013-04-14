@@ -189,7 +189,7 @@ reset_pkg_vars() {
 			homepage license kernel_hooks_version makejobs \
 			mutable_files nostrip_files skip_extraction \
 			softreplace create_srcdir \
-			depends fulldepends makedepends hostmakedepends \
+			depends makedepends hostmakedepends \
 			run_depends build_depends host_build_depends \
 			build_options build_options_default \
 			SUBPKG XBPS_EXTRACT_DONE XBPS_CONFIGURE_DONE \
