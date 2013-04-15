@@ -571,7 +571,7 @@ clean)
 	fi
 	setup_pkg $XBPS_TARGET_PKG $XBPS_CROSS_BUILD
 	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
-		chroot_handler $target $XBPS_TARGET_PKG || exit $?
+		chroot_handler $XBPS_TARGET $XBPS_TARGET_PKG || exit $?
 	else
 		remove_pkg_wrksrc $wrksrc
 		if declare -f do_clean >/dev/null; then
