@@ -185,6 +185,7 @@ if [ -n "$XBPS_USE_GIT_REVS" ]; then
 fi
 
 ${PKGNAME}_package
+pkgname=$PKGNAME
 genbinpkg
 rval=$?
 

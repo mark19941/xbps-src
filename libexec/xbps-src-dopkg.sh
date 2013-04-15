@@ -476,6 +476,7 @@ fi
 
 # Run the pkg installfunction.
 ${PKGNAME}_package
+pkgname=$PKGNAME
 
 if [ "$build_style" = "meta-template" ]; then
 	install -d $PKGDESTDIR

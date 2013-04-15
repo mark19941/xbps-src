@@ -189,6 +189,7 @@ if [ ! -d "$PKGDESTDIR" ]; then
 fi
 
 ${PKGNAME}_package
+pkgname=$PKGNAME
 
 pkg_genrdeps
 

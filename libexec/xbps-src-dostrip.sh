@@ -117,6 +117,7 @@ done
 setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 
 ${PKGNAME}_package
+pkgname=$PKGNAME
 
 if [ -n "$nostrip" -o -n "$noarch" ]; then
 	exit 0
