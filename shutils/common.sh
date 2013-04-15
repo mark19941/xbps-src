@@ -7,7 +7,7 @@ run_func() {
 		logpipe=$(mktemp -u --tmpdir=${wrksrc} .xbps_${XBPS_CROSS_BUILD}_XXXXXXXX.logpipe)
 		logfile=${wrksrc}/.xbps_${XBPS_CROSS_BUILD}_${func}.log
 	else
-		logpipe=$(mktemp -u .xbps_${XBPS_CROSS_BUILD}_${func}_${pkgname}_logpipe.XXXXXXX)
+		logpipe=$(mktemp -t -u .xbps_${XBPS_CROSS_BUILD}_${func}_${pkgname}_logpipe.XXXXXXX)
 		logfile=$(mktemp -t .xbps_${XBPS_CROSS_BUILD}_${func}_${pkgname}.log.XXXXXXXX)
 	fi
 
