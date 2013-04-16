@@ -515,7 +515,7 @@ remove_pkg_autodeps() {
 }
 
 install_cross_pkg() {
-	local cross="$1"
+	local cross="$1" rval
 
 	[ -z "$cross" -o "$cross" = "" ] && return 0
 
@@ -546,8 +546,9 @@ install_cross_pkg() {
 		fi
 		$XBPS_INSTALL_CMD -r /usr/${XBPS_CROSS_TRIPLET} \
 			-Sy cross-vpkg-dummy 2>&1 >/dev/null
-		if [ $? -ne 0 -a $? -ne 6 ]; then
-			echo "ERROR: failed to install cross-vpkg-dummy"
+		rval=$?
+		if [ $rval -ne 0 -a $rval -ne 17 ]; then
+			echo "ERROR: failed to install cross-vpkg-dummy (error $rval)"
 			exit 1
 		fi
 	fi
