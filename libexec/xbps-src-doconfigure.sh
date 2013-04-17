@@ -49,6 +49,7 @@ CONFIGURE_SHARED_ARGS="--prefix=/usr --sysconfdir=/etc --infodir=/usr/share/info
 if [ "$XBPS_CROSS_BUILD" ]; then
 	XBPS_PKGCONFIG_ARGS="
 		PKG_CONFIG_SYSROOT_DIR=$XBPS_CROSS_BASE
+		PKG_CONFIG_PATH=$XBPS_CROSS_BASE/lib/pkgconfig:$XBPS_CROSS_BASE/usr/share/pkgconfig
 		PKG_CONFIG_LIBDIR=$XBPS_CROSS_BASE/lib/pkgconfig"
 
 	CONFIGURE_SHARED_ARGS="${CONFIGURE_SHARED_ARGS}
