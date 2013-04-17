@@ -314,6 +314,14 @@ setup_pkg() {
 		source_file $XBPS_SRCPKGDIR/${pkg}/template
 	fi
 
+	if [ -z "$bootstrap" ]; then
+		check_installed_pkg base-chroot-${BASE_CHROOT_REQ%_*}_1
+		if [ $? -ne 0 ]; then
+			msg_red "${XBPS_MASTERDIR} has not been prepared for chroot operations.\n"
+			msg_error "Please install 'base-chroot>=$BASE_CHROOT_REQ' and try again.\n"
+		fi
+	fi
+
 	sourcepkg=$pkgname
 	subpackages="$(get_subpkgs)"
 
