@@ -251,7 +251,7 @@ get_subpkgs() {
 }
 
 setup_pkg_reqvars() {
-	local cross="$1"
+	local cross="$1" REQ_VARS i val
 
 	if [ -n "$cross" ]; then
 		source_file $XBPS_CROSSPFDIR/${cross}.sh
