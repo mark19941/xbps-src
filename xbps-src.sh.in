@@ -296,7 +296,9 @@ masterdir_zap() {
 
 exit_func() {
 	if [ -z "$XBPS_KEEP_ALL" ]; then
-		remove_pkg_autodeps
+		if [ -n "$IN_CHROOT" ]; then
+			remove_pkg_autodeps
+		fi
 		remove_pkg $XBPS_CROSS_BUILD
 		remove_pkg_wrksrc
 	fi
