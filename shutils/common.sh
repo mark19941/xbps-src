@@ -274,6 +274,9 @@ setup_pkg_reqvars() {
 		XBPS_RINDEX_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_RINDEX_CMD"
 		XBPS_UHELPER_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH xbps-uhelper -r $XBPS_CROSS_BASE"
 
+		if [ -n "$XBPS_PLATFORM" ]; then
+			export XBPS_PLATFORM
+		fi
 		export XBPS_TARGET_MACHINE=$XBPS_TARGET_ARCH
 	else
 		XBPS_INSTALL_XCMD="$XBPS_INSTALL_CMD"
@@ -285,7 +288,7 @@ setup_pkg_reqvars() {
 
 		export XBPS_TARGET_MACHINE=$XBPS_MACHINE
 
-		unset XBPS_CROSS_BASE XBPS_CROSS_LDFLAGS
+		unset XBPS_PLATFORM XBPS_CROSS_BASE XBPS_CROSS_LDFLAGS
 		unset XBPS_CROSS_CFLAGS XBPS_CROSS_CXXFLAGS XBPS_CROSS_CPPFLAGS
 	fi
 
@@ -330,13 +333,20 @@ setup_pkg() {
 		reset_subpkg_vars
 		pkgname=$pkg
 		if ! declare -f ${pkg}_package >/dev/null; then
-			msg_error "$pkgname: cannot find pkg ${pkg}_package() function!\n"
+			msg_error "$pkgname: missing ${pkg}_package() function!\n"
 		fi
 		${pkg}_package
 		SUBPKG=1
 	fi
 
 	pkgver="${pkg}-${version}_${revision}"
+
+	if [ -z "$build_style" ]; then
+		# Check that at least do_install() is defined.
+		if ! declare -f do_install >/dev/null; then
+			msg_error "$pkgver: missing do_install() function!\n"
+		fi
+	fi
 
 	# Check that there's a ${pkgname}_pkg function matching $pkgname.
 	if ! declare -f ${sourcepkg}_package >/dev/null; then
