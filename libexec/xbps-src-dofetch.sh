@@ -74,6 +74,10 @@ cd $srcdir || msg_error "$pkgver: cannot change dir to $srcdir!\n"
 for f in ${distfiles}; do
 	curfile=$(basename $f)
 	distfile="$srcdir/$curfile"
+	while [ -f "${distfile}.download" ]; do
+		msg_warn "$pkgver: ${distfile} is being already downloaded, waiting for 1s ...\n"
+		sleep 1
+	done
 	if [ -f "$distfile" ]; then
 		for i in ${checksum}; do
 			if [ $dfcount -eq $ckcount -a -n $i ]; then
@@ -106,7 +110,9 @@ for f in ${distfiles}; do
 		localurl="$url/$curfile"
 	fi
 
+	touch -f ${distfile}.download
 	$XBPS_FETCH_CMD $localurl
+	rm -f ${distfile}.download
 	if [ $? -ne 0 ]; then
 		unset localurl
 		if [ ! -f $distfile ]; then
