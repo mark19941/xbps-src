@@ -335,7 +335,6 @@ setup_pkg() {
 		if ! declare -f ${pkg}_package >/dev/null; then
 			msg_error "$pkgname: missing ${pkg}_package() function!\n"
 		fi
-		${pkg}_package
 		SUBPKG=1
 	fi
 
