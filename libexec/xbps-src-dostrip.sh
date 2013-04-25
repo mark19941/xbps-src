@@ -17,7 +17,8 @@ make_debug() {
 	$OBJCOPY --only-keep-debug --compress-debug-sections \
 		"$1" "${PKGDESTDIR}/usr/lib/debug/${dbgfile}"
 	if [ $? -ne 0 ]; then
-		msg_error "${pkgver}: failed to create dbg file: ${dbgfile}\n"
+		msg_red "${pkgver}: failed to create dbg file: ${dbgfile}\n"
+		return 1
 	fi
 	chmod 644 "${PKGDESTDIR}/usr/lib/debug/${dbgfile}"
 }
@@ -33,7 +34,8 @@ attach_debug() {
 
 	$OBJCOPY --add-gnu-debuglink="${PKGDESTDIR}/usr/lib/debug/${dbgfile}" "$1"
 	if [ $? -ne 0 ]; then
-		msg_error "${pkgver}: failed to attach dbg to ${dbgfile}\n"
+		msg_red "${pkgver}: failed to attach dbg to ${dbgfile}\n"
+		return 1
 	fi
 }
 
@@ -48,7 +50,8 @@ create_debug_pkg() {
 	mkdir -p "${_destdir}/usr/lib"
 	mv ${PKGDESTDIR}/usr/lib/debug ${_destdir}/usr/lib
 	if [ $? -ne 0 ]; then
-		msg_error "$pkgver: failed to create debug pkg\n"
+		msg_red "$pkgver: failed to create debug pkg\n"
+		return 1
 	fi
 	rmdir "${PKGDESTDIR}/usr/lib" 2>/dev/null
 	return 0
@@ -72,30 +75,45 @@ pkg_strip() {
 		application/x-executable*)
 			if echo "$(file $f)" | grep -q "statically linked"; then
 				# static binary
-				$STRIP "$f" || msg_error "$pkgver: failed to strip ${f#$PKGDESTDIR}\n"
+				$STRIP "$f"
+				if [ $? -ne 0 ]; then
+					msg_red "$pkgver: failed to strip ${f#$PKGDESTDIR}\n"
+					return 1
+				fi
 				echo "   Stripped static executable: ${f#$PKGDESTDIR}"
 			else
 				make_debug "$f"
-				$STRIP "$f" || msg_error "$pkgver: failed to strip ${f#$PKGDESTDIR}\n"
+				$STRIP "$f"
+				if [ $? -ne 0 ]; then
+					msg_red "$pkgver: failed to strip ${f#$PKGDESTDIR}\n"
+					return 1
+				fi
 				echo "   Stripped executable: ${f#$PKGDESTDIR}"
 				attach_debug "$f"
 			fi
 			;;
 		application/x-sharedlib*)
 			# shared library
-			make_debug "$f" || return $?
-			$STRIP --strip-unneeded "$f" || msg_error "$pkgver: failed to strip ${f#$PKGDESTDIR}\n"
+			make_debug "$f"
+			$STRIP --strip-unneeded "$f"
+			if [ $? -ne 0 ]; then
+				msg_red "$pkgver: failed to strip ${f#$PKGDESTDIR}\n"
+				return 1
+			fi
 			echo "   Stripped library: ${f#$PKGDESTDIR}"
 			attach_debug "$f"
 			;;
 		application/x-archive*)
-			$STRIP --strip-debug "$f" || msg_error "$pkgver: failed to strip ${f#$PKGDESTDIR}\n"
+			$STRIP --strip-debug "$f"
+			if [ $? -ne 0 ]; then
+				msg_red "$pkgver: failed to strip ${f#$PKGDESTDIR}\n"
+				return 1
+			fi
 			echo "   Stripped static library: ${f#$PKGDESTDIR}";;
 		esac
 	done
 
-	# Create a subpkg with debug files.
-	create_debug_pkg
+	return $?
 }
 
 if [ $# -lt 1 -o $# -gt 2 ]; then
@@ -133,7 +151,9 @@ if [ ! -d "$PKGDESTDIR" ]; then
 	msg_error "$pkgver: cannot access $PKGDESTDIR!\n"
 fi
 
-pkg_strip
+pkg_strip || exit $?
+# Create a subpkg with debug files.
+create_debug_pkg || exit $?
 
 touch -f $XBPS_STRIP_DONE
 
