@@ -311,7 +311,6 @@ setup_pkg() {
 	if [ -n "$cross" ]; then
 		export CROSS_BUILD="$cross"
 		source_file $XBPS_SRCPKGDIR/${pkg}/template
-		install_cross_pkg $cross || return 1
 	else
 		unset CROSS_BUILD
 		source_file $XBPS_SRCPKGDIR/${pkg}/template

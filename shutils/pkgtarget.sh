@@ -37,6 +37,7 @@ install_pkg() {
 
 	show_build_options
 	check_pkg_arch $cross
+	install_cross_pkg $cross
 
 	install_pkg_deps $sourcepkg $cross || return 1
 	if [ "$TARGETPKG_PKGDEPS_DONE" ]; then
@@ -55,6 +56,7 @@ install_pkg() {
 
 	# Apply patches if requested by template file
 	$XBPS_LIBEXECDIR/xbps-src-dopatch $sourcepkg || exit 1
+
 
 	# Run configure phase
 	$XBPS_LIBEXECDIR/xbps-src-doconfigure $sourcepkg $cross || exit 1
