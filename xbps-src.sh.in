@@ -157,9 +157,8 @@ check_config_vars() {
 			echo "cannot find a config file"
 			exit 1
 		fi
+		export XBPS_CONFIG_FILE="$(realpath $XBPS_CONFIG_FILE 2>/dev/null)"
 	fi
-
-	export XBPS_CONFIG_FILE="$(realpath $XBPS_CONFIG_FILE 2>/dev/null)"
 
 	if [ ! -f "$XBPS_CONFIG_FILE" ]; then
 		echo "cannot find configuration file: $XBPS_CONFIG_FILE"
@@ -341,15 +340,15 @@ readonly REQHOST_UTILS="xbps-install xbps-query xbps-rindex xbps-uhelper \
 #
 while getopts "a:Cc:D:hH:Lm:o:V" opt; do
 	case $opt in
-	a) export XBPS_CROSS_BUILD="$OPTARG";;
-	c) export XBPS_CONFIG_FILE="$(realpath $OPTARG 2>/dev/null)";;
-	C) export XBPS_KEEP_ALL=1;;
-	D) export XBPS_DISTDIR="$(realpath $OPTARG 2>/dev/null)";;
-	H) export XBPS_HOSTDIR="$(realpath $OPTARG 2>/dev/null)";;
+	a) _XBPS_CROSS_BUILD="$OPTARG";;
+	c) _XBPS_CONFIG_FILE="$(realpath $OPTARG 2>/dev/null)";;
+	C) _XBPS_KEEP_ALL=1;;
+	D) _XBPS_DISTDIR="$(realpath $OPTARG 2>/dev/null)";;
+	H) _XBPS_HOSTDIR="$(realpath $OPTARG 2>/dev/null)";;
 	h) usage && exit 0;;
-	L) export NOCOLORS=1;;
-	m) export XBPS_MASTERDIR=$(realpath $OPTARG 2>/dev/null);;
-	o) export XBPS_BUILD_OPTS="$OPTARG";;
+	L) _NOCOLORS=1;;
+	m) _XBPS_MASTERDIR=$(realpath $OPTARG 2>/dev/null);;
+	o) _XBPS_BUILD_OPTS="$OPTARG";;
 	V) echo $XBPS_SRC_VERSION && exit 0;;
 	--) shift; break;;
 	esac
@@ -367,6 +366,28 @@ check_reqhost_utils
 # Check configuration vars before anyting else, and set defaults vars.
 #
 check_config_vars
+
+if [ -n "${_XBPS_CROSS_BUILD}" ]; then
+	export XBPS_CROSS_BUILD=${_XBPS_CROSS_BUILD}
+fi
+if [ -n "${_XBPS_CONFIG_FILE}" ]; then
+	export XBPS_CONFIG_FILE="${_XBPS_CONFIG_FILE}"
+fi
+if [ -n "${_XBPS_KEEP_ALL}" ]; then
+	export XBPS_KEEP_ALL=${_XBPS_KEEP_ALL}
+fi
+if [ -n "${_XBPS_DISTDIR}" ]; then
+	export XBPS_DISTDIR="${_XBPS_DISTDIR}"
+fi
+if [ -n "${_XBPS_HOSTDIR}" ]; then
+	export XBPS_HOSTDIR="${_XBPS_HOSTDIR}"
+fi
+if [ -n "${_XBPS_MASTERDIR}" ]; then
+	export XBPS_MASTERDIR="${_XBPS_MASTERDIR}"
+fi
+if [ -n "${_XBPS_BUILD_OPTS}" ]; then
+	export XBPS_BUILD_OPTS="${_XBPS_BUILD_OPTS}"
+fi
 
 XBPS_TARGET="$1"
 XBPS_TARGET_PKG="$2"
