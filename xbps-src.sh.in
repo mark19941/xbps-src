@@ -337,16 +337,6 @@ readonly REQHOST_UTILS="xbps-install xbps-query xbps-rindex xbps-uhelper \
 	xbps-reconfigure xbps-remove xbps-create"
 
 #
-# Check for required utilities in host system.
-#
-check_reqhost_utils
-
-#
-# Check configuration vars before anyting else, and set defaults vars.
-#
-check_config_vars
-
-#
 # main()
 #
 while getopts "a:Cc:D:hH:Lm:o:V" opt; do
@@ -367,6 +357,16 @@ done
 shift $(($OPTIND - 1))
 
 [ $# -eq 0 -o $# -gt 3 ] && usage && exit 1
+
+#
+# Check for required utilities in host system.
+#
+check_reqhost_utils
+
+#
+# Check configuration vars before anyting else, and set defaults vars.
+#
+check_config_vars
 
 XBPS_TARGET="$1"
 XBPS_TARGET_PKG="$2"
