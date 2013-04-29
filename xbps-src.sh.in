@@ -362,6 +362,9 @@ shift $(($OPTIND - 1))
 #
 check_reqhost_utils
 
+if [ -n "${_XBPS_CONFIG_FILE}" ]; then
+	export XBPS_CONFIG_FILE="${_XBPS_CONFIG_FILE}"
+fi
 #
 # Check configuration vars before anyting else, and set defaults vars.
 #
@@ -369,9 +372,6 @@ check_config_vars
 
 if [ -n "${_XBPS_CROSS_BUILD}" ]; then
 	export XBPS_CROSS_BUILD=${_XBPS_CROSS_BUILD}
-fi
-if [ -n "${_XBPS_CONFIG_FILE}" ]; then
-	export XBPS_CONFIG_FILE="${_XBPS_CONFIG_FILE}"
 fi
 if [ -n "${_XBPS_KEEP_ALL}" ]; then
 	export XBPS_KEEP_ALL=${_XBPS_KEEP_ALL}
