@@ -364,6 +364,8 @@ check_reqhost_utils
 
 if [ -n "${_XBPS_CONFIG_FILE}" ]; then
 	export XBPS_CONFIG_FILE="${_XBPS_CONFIG_FILE}"
+else
+	export XBPS_CONFIG_FILE
 fi
 #
 # Check configuration vars before anyting else, and set defaults vars.
