@@ -82,6 +82,7 @@ for f in ${distfiles}; do
 		msg_warn "$pkgver: ${distfile} is being already downloaded, waiting for 1s ...\n"
 	done
 	if [ -f "$distfile" ]; then
+		flock -n ${distfile}.part rm -f ${distfile}.part
 		for i in ${checksum}; do
 			if [ $dfcount -eq $ckcount -a -n $i ]; then
 				cksum=$i
