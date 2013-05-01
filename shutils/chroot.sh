@@ -46,11 +46,6 @@ _EOF
 
 	echo "# End of configuration file." >> $XBPSSRC_CF
 
-	if [ -d $XBPS_MASTERDIR/tmp ]; then
-		msg_normal "Cleaning up /tmp...\n"
-		[ -h ${XBPS_MASTERDIR}/tmp ] || rm -rf $XBPS_MASTERDIR/tmp/*
-	fi
-
 	# Create custom script to start the chroot bash shell.
 	cat > $XBPS_MASTERDIR/bin/xbps-shell <<_EOF
 #!/bin/sh
