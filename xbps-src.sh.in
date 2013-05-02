@@ -2,7 +2,7 @@
 
 usage() {
 	cat << _EOF
-$PROGNAME: [-a cross-arch] [-Ch] [-c file] [-m dir] [-o opts] <target> [args]
+$PROGNAME: [-a cross-arch] [-Cfh] [-c file] [-m dir] [-o opts] <target> [args]
 
 Targets: (only one may be specified)
 
@@ -100,6 +100,8 @@ Options:
  -c  <config>
      Path to global configuration file (defaults to 
      ${XBPS_ETCDIR}/xbps-src.conf).
+ -f  Force building and registering binary packages into the local repository,
+     even if same version is already registered.
  -D  <distdir>
      Path to XBPS_DISTDIR, overriding the setting in xbps-src.conf.
  -H  <hostdir>
@@ -338,12 +340,13 @@ readonly REQHOST_UTILS="xbps-install xbps-query xbps-rindex xbps-uhelper \
 #
 # main()
 #
-while getopts "a:Cc:D:hH:Lm:o:V" opt; do
+while getopts "a:Cc:D:fhH:Lm:o:V" opt; do
 	case $opt in
 	a) _XBPS_CROSS_BUILD="$OPTARG";;
 	c) _XBPS_CONFIG_FILE="$(realpath $OPTARG 2>/dev/null)";;
 	C) _XBPS_KEEP_ALL=1;;
 	D) _XBPS_DISTDIR="$(realpath $OPTARG 2>/dev/null)";;
+	f) readonly XBPS_BUILD_FORCEMODE=1;;
 	H) _XBPS_HOSTDIR="$(realpath $OPTARG 2>/dev/null)";;
 	h) usage && exit 0;;
 	L) _NOCOLORS=1;;
@@ -390,6 +393,8 @@ fi
 if [ -n "${_XBPS_BUILD_OPTS}" ]; then
 	export XBPS_BUILD_OPTS="${_XBPS_BUILD_OPTS}"
 fi
+
+export XBPS_BUILD_FORCEMODE
 
 XBPS_TARGET="$1"
 XBPS_TARGET_PKG="$2"

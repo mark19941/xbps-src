@@ -124,7 +124,6 @@ fi
 PKGNAME="$1"
 XBPS_CROSS_BUILD="$2"
 
-. $XBPS_CONFIG_FILE
 . $XBPS_SHUTILSDIR/common.sh
 . $XBPS_SHUTILSDIR/install_files.sh
 

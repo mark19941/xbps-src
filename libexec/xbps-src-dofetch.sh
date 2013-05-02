@@ -24,7 +24,6 @@ fi
 
 PKGNAME="$1"
 
-. $XBPS_CONFIG_FILE
 . $XBPS_SHUTILSDIR/common.sh
 
 for f in $XBPS_COMMONDIR/*.sh; do

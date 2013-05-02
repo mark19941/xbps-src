@@ -35,17 +35,22 @@ git_revs() {
 }
 
 register_pkg() {
-	local rval= _pkgdir="$1" _binpkg="$2"
+	local rval= _pkgdir="$1" _binpkg="$2" _force="$3" _flags
 
 	while [ -f ${_pkgdir}/.xbps-src-index-lock ]; do
 		echo "The repo index is currently locked!"
 		sleep 1
 	done
 	touch -f ${_pkgdir}/.xbps-src-index-lock
+
+	if [ -n "${_force}" ]; then
+		_flags="-f"
+	fi
+
 	if [ -n "$XBPS_CROSS_BUILD" ]; then
-		$XBPS_RINDEX_XCMD -a ${_pkgdir}/${_binpkg}
+		$XBPS_RINDEX_XCMD ${_flags} -a ${_pkgdir}/${_binpkg}
 	else
-		$XBPS_RINDEX_CMD -a ${_pkgdir}/${_binpkg}
+		$XBPS_RINDEX_CMD ${_flags} -a ${_pkgdir}/${_binpkg}
 	fi
 	rval=$?
 	rm -f ${_pkgdir}/.xbps-src-index-lock
@@ -80,7 +85,7 @@ genbinpkg() {
 	fi
 
 	# Don't overwrite existing binpkgs by default, skip them.
-	if [ -f $pkgdir/$binpkg ]; then
+	if [ -f $pkgdir/$binpkg -a -z "$XBPS_BUILD_FORCEMODE" ]; then
 		msg_normal "$pkgver: skipping existing $binpkg pkg...\n"
 		register_pkg "$pkgdir" "$binpkg"
 		return $?
@@ -148,7 +153,7 @@ genbinpkg() {
 		${_preserve} ${_sourcerevs} ${PKGDESTDIR}
 	rval=$?
 	if [ $rval -eq 0 ]; then
-		register_pkg "$pkgdir" "$binpkg"
+		register_pkg "$pkgdir" "$binpkg" $XBPS_BUILD_FORCEMODE
 		rval=$?
 	else
 		rm -f $pkgdir/$binpkg
@@ -166,7 +171,6 @@ fi
 PKGNAME="$1"
 XBPS_CROSS_BUILD="$2"
 
-. $XBPS_CONFIG_FILE
 . $XBPS_SHUTILSDIR/common.sh
 
 for f in $XBPS_COMMONDIR/*.sh; do
