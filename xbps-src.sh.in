@@ -2,7 +2,7 @@
 
 usage() {
 	cat << _EOF
-$PROGNAME: [-a cross-arch] [-Cfh] [-c file] [-m dir] [-o opts] <target> [args]
+$PROGNAME: [-a cross-arch] [-Cfghj] [-c file] [-m dir] [-o opts] <target> [args]
 
 Targets: (only one may be specified)
 
@@ -102,6 +102,7 @@ Options:
      ${XBPS_ETCDIR}/xbps-src.conf).
  -f  Force building and registering binary packages into the local repository,
      even if same version is already registered.
+ -g  Enable building -dbg packages with debugging symbols.
  -D  <distdir>
      Path to XBPS_DISTDIR, overriding the setting in xbps-src.conf.
  -H  <hostdir>
