@@ -204,7 +204,7 @@ install_bbotstrap() {
 	# Reconfigure base-directories.
 	xbps-reconfigure -r $XBPS_MASTERDIR -f base-directories &>/dev/null
 	msg_normal "Installed bootstrap successfully!\n"
-	chroot_prepare
+	chroot_prepare || msg_error "Failed to initialize chroot!\n"
 }
 
 show_pkg() {
@@ -341,13 +341,14 @@ readonly REQHOST_UTILS="xbps-install xbps-query xbps-rindex xbps-uhelper \
 #
 # main()
 #
-while getopts "a:Cc:D:fhH:j:Lm:o:V" opt; do
+while getopts "a:Cc:D:fghH:j:Lm:o:V" opt; do
 	case $opt in
 	a) _XBPS_CROSS_BUILD="$OPTARG";;
 	c) _XBPS_CONFIG_FILE="$(realpath $OPTARG 2>/dev/null)";;
 	C) _XBPS_KEEP_ALL=1;;
 	D) _XBPS_DISTDIR="$(realpath $OPTARG 2>/dev/null)";;
 	f) readonly XBPS_BUILD_FORCEMODE=1;;
+	g) _BUILD_DBG_PKGS=1;;
 	H) _XBPS_HOSTDIR="$(realpath $OPTARG 2>/dev/null)";;
 	h) usage && exit 0;;
 	j) _MAKEJOBS="$OPTARG";;
@@ -397,6 +398,9 @@ if [ -n "${_XBPS_BUILD_OPTS}" ]; then
 fi
 if [ -n "${_MAKEJOBS}" ]; then
 	export XBPS_MAKEJOBS="${_MAKEJOBS}"
+fi
+if [ -n "${_BUILD_DBG_PKGS}" ]; then
+	export XBPS_DEBUG_PKGS=1
 fi
 
 export XBPS_CFLAGS XBPS_CXXFLAGS XBPS_LDFLAGS XBPS_MAKEJOBS
