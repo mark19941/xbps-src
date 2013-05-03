@@ -107,6 +107,7 @@ Options:
  -H  <hostdir>
      Path to XBPS_HOSTDIR, overriding the setting in xbps-src.conf.
  -h  Usage output.
+ -j  Number of parallel build jobs to use when compiling packages.
  -L  Disable ASCII colors.
  -m  <masterdir>
      Master directory to install and build binary packages,
@@ -340,7 +341,7 @@ readonly REQHOST_UTILS="xbps-install xbps-query xbps-rindex xbps-uhelper \
 #
 # main()
 #
-while getopts "a:Cc:D:fhH:Lm:o:V" opt; do
+while getopts "a:Cc:D:fhH:j:Lm:o:V" opt; do
 	case $opt in
 	a) _XBPS_CROSS_BUILD="$OPTARG";;
 	c) _XBPS_CONFIG_FILE="$(realpath $OPTARG 2>/dev/null)";;
@@ -349,6 +350,7 @@ while getopts "a:Cc:D:fhH:Lm:o:V" opt; do
 	f) readonly XBPS_BUILD_FORCEMODE=1;;
 	H) _XBPS_HOSTDIR="$(realpath $OPTARG 2>/dev/null)";;
 	h) usage && exit 0;;
+	j) _MAKEJOBS="$OPTARG";;
 	L) _NOCOLORS=1;;
 	m) _XBPS_MASTERDIR=$(realpath $OPTARG 2>/dev/null);;
 	o) _XBPS_BUILD_OPTS="$OPTARG";;
@@ -393,6 +395,10 @@ fi
 if [ -n "${_XBPS_BUILD_OPTS}" ]; then
 	export XBPS_BUILD_OPTS="${_XBPS_BUILD_OPTS}"
 fi
+if [ -n "${_MAKEJOBS}" ]; then
+	export XBPS_MAKEJOBS="${_MAKEJOBS}"
+fi
+
 export XBPS_CFLAGS XBPS_CXXFLAGS XBPS_LDFLAGS XBPS_MAKEJOBS
 export XBPS_BUILD_FORCEMODE XBPS_USE_GITREVS XBPS_DEBUG_PKGS
 export XBPS_CCACHE XBPS_DISTCC XBPS_DISTCC_HOSTS
