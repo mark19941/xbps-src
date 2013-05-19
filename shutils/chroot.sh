@@ -141,9 +141,11 @@ chroot_handler() {
 	else
 		[ -n "$XBPS_BUILD_OPTS" ] && arg="$arg -o $XBPS_BUILD_OPTS"
 		[ -n "$XBPS_CROSS_BUILD" ] && arg="$arg -a $XBPS_CROSS_BUILD"
-		[ -n "$KEEP_WRKSRC" ] && arg="$arg -C"
-		[ -n "$KEEP_AUTODEPS" ] && arg="$arg -K"
+		[ -n "$XBPS_KEEP_ALL" ] && arg="$arg -C"
 		[ -n "$NOCOLORS" ] && arg="$arg -L"
+		[ -n "$XBPS_BUILD_FORCEMODE" ] && arg="$arg -f"
+		[ -n "$XBPS_MAKEJOBS" ] && arg="$arg -j$XBPS_MAKEJOBS"
+		[ -n "$XBPS_DEBUG_PKGS" ] && arg="$arg -g"
 
 		action="$arg $action"
 		env -i PATH=/usr/bin:/usr/sbin IN_CHROOT=1 LANG=en_US.UTF-8 \
