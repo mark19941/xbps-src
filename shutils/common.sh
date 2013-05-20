@@ -188,7 +188,7 @@ reset_pkg_vars() {
 			pycompile_dirs pycompile_module systemd_services  \
 			homepage license kernel_hooks_version makejobs \
 			mutable_files nostrip_files skip_extraction \
-			softreplace create_srcdir \
+			softreplace create_srcdir force_debug_pkgs \
 			depends makedepends hostmakedepends \
 			run_depends build_depends host_build_depends \
 			build_options build_options_default \
@@ -443,7 +443,10 @@ setup_pkg_common_vars() {
 	if [ -z "$XBPS_DEBUG_PKGS" -o -n "$nonfree" -o -n "$bootstrap" ]; then
 		disable_debug=yes
 	fi
-
+	# If a package sets force_debug_pkgs, always build -dbg pkgs.
+	if [ -n "$force_debug_pkgs" ]; then
+		unset disable_debug
+	fi
 	# -g is required to build -dbg packages.
 	if [ -z "$disable_debug" ]; then
 		dbgflags="-g"
