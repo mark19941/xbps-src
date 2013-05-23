@@ -657,7 +657,7 @@ show-files)
 		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
 		XBPS_TARGET_PKG=$(basename_cwd)
 	fi
-	setup_pkg $XBPS_TARGET_PKG
+	setup_pkg $XBPS_TARGET_PKG $XBPS_CROSS_BUILD
 	[ -f "$PKGDESTDIR/flist" ] && cat ${PKGDESTDIR}/flist
 	;;
 show-deps)
