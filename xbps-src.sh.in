@@ -82,8 +82,8 @@ is omitted xbps-src assumes that CWD is in the target package. Example:
 Both ways are equivalent.
 
 Options:
- -a <cross-arch>
-     Cross build packages for this target arch/system/abi. Supported values:
+ -a <cross-profile>
+     Cross build packages for this target profile. Supported values:
 
 	i686		- for i686 GNU/Linux
 	armv6hf 	- for ARMv6 EABI5 (LE Hard Float) GNU/Linux
