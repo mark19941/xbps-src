@@ -45,10 +45,6 @@ Targets: (only one may be specified)
  fetch [pkgname]
    Download package source distribution file(s).
 
- fetch-srcpkgs
-   Fetches the "xbps-packages" repository from XBPS_SRCPKGS_REPOURL settting
-   in xbps-src.conf into XBPS_DISTDIR.
-
  install-destdir [pkgname]
    Install target package into <destdir> but not building the binary package
    and not removing build directory for inspection purposes.
@@ -622,14 +618,6 @@ remove-autodeps)
 	else
 		pkgver=xbps-src
 		remove_pkg_autodeps
-	fi
-	;;
-fetch-srcpkgs)
-	if ! command -v git 2>&1 >/dev/null; then
-		msg_error "git command not found, can't fetch repository."
-	fi
-	if [ ! -d $XBPS_DISTDIR/.git ]; then
-		git clone $XBPS_SRCPKGS_REPOURL $XBPS_DISTDIR
 	fi
 	;;
 fetch|extract|build|configure|install-destdir|build-pkg)
