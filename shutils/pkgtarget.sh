@@ -39,10 +39,12 @@ install_pkg() {
 	check_pkg_arch $cross
 	install_cross_pkg $cross
 
-	install_pkg_deps $sourcepkg $cross || return 1
-	if [ "$TARGETPKG_PKGDEPS_DONE" ]; then
-		setup_pkg $XBPS_TARGET_PKG $cross
-		unset TARGETPKG_PKGDEPS_DONE
+	if [ -z "$XBPS_SKIP_DEPS" ]; then
+		install_pkg_deps $sourcepkg $cross || return 1
+		if [ "$TARGETPKG_PKGDEPS_DONE" ]; then
+			setup_pkg $XBPS_TARGET_PKG $cross
+			unset TARGETPKG_PKGDEPS_DONE
+		fi
 	fi
 
 	# Fetch distfiles after installing required dependencies,

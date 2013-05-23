@@ -146,6 +146,7 @@ chroot_handler() {
 		[ -n "$XBPS_BUILD_FORCEMODE" ] && arg="$arg -f"
 		[ -n "$XBPS_MAKEJOBS" ] && arg="$arg -j$XBPS_MAKEJOBS"
 		[ -n "$XBPS_DEBUG_PKGS" ] && arg="$arg -g"
+		[ -n "$XBPS_SKIP_DEPS" ] && arg="$arg -I"
 
 		action="$arg $action"
 		env -i PATH=/usr/bin:/usr/sbin IN_CHROOT=1 LANG=en_US.UTF-8 \
