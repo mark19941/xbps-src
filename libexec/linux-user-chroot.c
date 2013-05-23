@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/prctl.h>
+#include <sys/fsuid.h>
 #include <sys/mount.h>
 #include <sys/syscall.h>
 #include <sys/wait.h>
@@ -51,7 +52,7 @@
 #define PR_SET_NO_NEW_PRIVS	38
 #endif
 
-#define PACKAGE_STRING "v2012.2"
+#define PACKAGE_STRING "v2013.1"
 
 static void fatal (const char *message, ...) __attribute__ ((noreturn)) __attribute__ ((format (printf, 1, 2)));
 static void fatal_errno (const char *message) __attribute__ ((noreturn));
@@ -110,6 +111,28 @@ reverse_mount_list (MountSpec *mount)
   return prev;
 }
 
+/**
+ * fsuid_chdir:
+ * @uid: User id we should use
+ * @path: Path string
+ *
+ * Like chdir() except we use the filesystem privileges of @uid.
+ */
+static int
+fsuid_chdir (uid_t       uid,
+             const char *path)
+{
+  int errsv;
+  int ret;
+  /* Note we don't check errors here because we can't, basically */
+  (void) setfsuid (uid);
+  ret = chdir (path);
+  errsv = errno;
+  (void) setfsuid (0);
+  errno = errsv;
+  return ret;
+}
+
 int
 main (int      argc,
       char   **argv)
@@ -155,7 +178,7 @@ main (int      argc,
 
       if (strcmp (arg, "--help") == 0)
         {
-          printf ("%s [--unshare-ipc] [--unshare-pid] [--unshare-net] [--mount-proc DIR] [--mount-readonly DIR] [--mount-bind SOURCE DEST] [--chdir DIR] ROOTDIR PROGRAM ARGS...\n", argv0);
+	  printf ("%s [--unshare-ipc] [--unshare-pid] [--unshare-net] [--mount-proc DIR] [--mount-readonly DIR] [--mount-bind SOURCE DEST] [--chdir DIR] ROOTDIR PROGRAM ARGS...\n", argv0);
           exit (0);
         }
       else if (strcmp (arg, "--version") == 0)
@@ -330,7 +353,9 @@ main (int      argc,
             }
           else if (bind_mount_iter->type == MOUNT_SPEC_BIND)
             {
-              if (mount (bind_mount_iter->source, dest,
+              if (fsuid_chdir (ruid, bind_mount_iter->source) < 0)
+                fatal ("Couldn't chdir to bind mount source");
+              if (mount (".", dest,
                          NULL, MS_BIND | MS_PRIVATE, NULL) < 0)
                 fatal_errno ("mount (MS_BIND)");
             }
@@ -345,10 +370,10 @@ main (int      argc,
           free (dest);
         }
 
-      if (chdir (chroot_dir) < 0)
+      if (fsuid_chdir (ruid, chroot_dir) < 0)
         fatal_errno ("chdir");
 
-      if (mount (chroot_dir, chroot_dir, NULL, MS_BIND | MS_PRIVATE, NULL) < 0)
+      if (mount (".", ".", NULL, MS_BIND | MS_PRIVATE, NULL) < 0)
         fatal_errno ("mount (MS_BIND)");
 
       /* Only move if we're not actually just using / */
@@ -361,15 +386,15 @@ main (int      argc,
             fatal_errno ("chroot");
         }
       
-      if (chdir (chdir_target) < 0)
-        fatal_errno ("chdir");
-
       /* Switch back to the uid of our invoking process.  These calls are
        * irrevocable - see setuid(2) */
       if (setgid (rgid) < 0)
         fatal_errno ("setgid");
       if (setuid (ruid) < 0)
         fatal_errno ("setuid");
+
+      if (chdir (chdir_target) < 0)
+        fatal_errno ("chdir");
 
       if (execvp (program, program_argv) < 0)
         fatal_errno ("execv");
