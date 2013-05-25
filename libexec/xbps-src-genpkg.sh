@@ -4,36 +4,6 @@
 # 	$1 - pkgname [REQUIRED]
 # 	$2 - cross-target [OPTIONAL]
 
-git_revs() {
-	local _revs= _out= f= _filerev= _files=
-
-	# Get the git revisions from this source pkg.
-	cd $XBPS_SRCPKGDIR
-	_files=$(git ls-files $1)
-	[ -z "${_files}" ] && return
-
-	for f in ${_files}; do
-		_filerev=$(git rev-list HEAD $f | head -n1)
-		[ -z "${_filerev}" ] && continue
-		_out="${f} ${_filerev}"
-		if [ -z "${_revs}" ]; then
-			_revs="${_out}"
-		else
-			_revs="${_revs} ${_out}"
-		fi
-	done
-
-	SRCPKG_GITREVS_FILE=$(mktemp --tmpdir || msg_error "$pkgver: failed to create tmpfile.\n")
-	echo "$pkgver git source revisions:"
-	set -- ${_revs}
-	while [ $# -gt 0 ]; do
-		local _file=$1; local _rev=$2
-		echo "${_file}: ${_rev}"
-		echo "${_file}: ${_rev}" >> ${SRCPKG_GITREVS_FILE}
-		shift 2
-	done
-}
-
 register_pkg() {
 	local rval= _pkgdir="$1" _binpkg="$2" _force="$3" _flags
 
@@ -149,7 +119,7 @@ genbinpkg() {
 		--built-with "xbps-src-${XBPS_SRC_VERSION}" \
 		--build-options "${PKG_BUILD_OPTIONS}" \
 		--pkgver "${pkgver}" --quiet \
-		--source-revisions "$(cat ${SRCPKG_GITREVS_FILE:-/dev/null} 2>/dev/null)" \
+		--source-revisions "$(cat ${PKG_GITREVS_FILE:-/dev/null} 2>/dev/null)" \
 		${_preserve} ${_sourcerevs} ${PKGDESTDIR}
 	rval=$?
 	if [ $rval -eq 0 ]; then
@@ -183,11 +153,6 @@ if [ -z "$pkgname" -o -z "$version" ]; then
 	msg_error "$PKGNAME: pkgname/version not set in pkg template!\n"
 fi
 
-if [ -n "$XBPS_USE_GIT_REVS" ]; then
-	msg_normal "$pkgver: fetching source git revisions, please wait...\n"
-	git_revs $pkgname
-fi
-
 ${PKGNAME}_package
 pkgname=$PKGNAME
 genbinpkg
@@ -202,8 +167,5 @@ if [ -d "$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET/pkg-${PKGNAME}-dbg-${version}" ]; the
 	PKGDESTDIR="$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET/pkg-${PKGNAME}-dbg-${version}"
 	genbinpkg
 fi
-
-rm -f ${SRCPKG_GITREVS_FILE}
-unset SRCPKG_GITREVS_FILE
 
 exit $rval

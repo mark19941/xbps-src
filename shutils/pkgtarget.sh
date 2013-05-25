@@ -30,6 +30,35 @@ check_pkg_arch() {
 	fi
 }
 
+fetch_git_revs() {
+	local _revs= _out= f= _filerev= _files=
+
+	# Get the git revisions from this source pkg.
+	cd $XBPS_SRCPKGDIR
+	_files=$(git ls-files $1)
+	[ -z "${_files}" ] && return
+
+	for f in ${_files}; do
+		_filerev=$(git rev-list HEAD $f | head -n1)
+		[ -z "${_filerev}" ] && continue
+		_out="${f} ${_filerev}"
+		if [ -z "${_revs}" ]; then
+			_revs="${_out}"
+		else
+			_revs="${_revs} ${_out}"
+		fi
+	done
+
+	echo "$pkgver git source revisions:"
+	set -- ${_revs}
+	while [ $# -gt 0 ]; do
+		local _file=$1; local _rev=$2
+		echo "${_file}: ${_rev}"
+		echo "${_file}: ${_rev}" >> ${PKG_GITREVS_FILE}
+		shift 2
+	done
+}
+
 install_pkg() {
 	local target="$1" cross="$2" lrepo subpkg
 
@@ -82,6 +111,11 @@ install_pkg() {
 		# Generate run-time dependecies.
 		$XBPS_LIBEXECDIR/xbps-src-genrdeps $subpkg $cross || exit 1
 	done
+
+	if [ -n "$XBPS_USE_GIT_REVS" ]; then
+		msg_normal "$pkgver: fetching source git revisions, please wait...\n"
+		fetch_git_revs $pkgname
+	fi
 
 	if [ "$XBPS_TARGET_PKG" = "$sourcepkg" ]; then
 		[ "$target" = "install-destdir" ] && return 0
