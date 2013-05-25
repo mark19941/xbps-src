@@ -361,7 +361,7 @@ setup_pkg() {
 	fi
 
 	if [ -n "$XBPS_USE_GIT_REVS" ]; then
-		PKG_GITREVS_FILE="${wrksrc}/.xbps_${pkgname}_git_revs"
+		PKG_GITREVS_FILE="${wrksrc}/.xbps_${sourcepkg}_git_revs"
 	fi
 
 }
