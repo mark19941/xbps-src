@@ -3,8 +3,10 @@
 # by the GNU autotools).
 #
 do_configure() {
-	[ -z "$configure_script" ] && configure_script="./configure"
-	env ${XBPS_PKGCONFIG_ARGS} ${configure_script} ${configure_args}
+	if [ -z "$configure_script" ]; then
+		configure_script="./configure"
+	fi
+	${configure_script} ${configure_args}
 }
 
 # configure scripts use make(1) to build/install.

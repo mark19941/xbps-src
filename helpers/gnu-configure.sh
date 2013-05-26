@@ -16,7 +16,7 @@ do_configure() {
 	for f in $(find ${wrksrc} -type f -name *config*.sub); do
 		cp -f ${XBPS_CROSSPFDIR}/config.sub ${f}
 	done
-	${configure_script} ${CONFIGURE_SHARED_ARGS} ${configure_args}
+	${configure_script} ${configure_args}
 }
 
 # GNU configure scripts use make(1) to build/install.

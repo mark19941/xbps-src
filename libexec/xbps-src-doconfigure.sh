@@ -20,6 +20,8 @@ done
 
 setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 
+. $XBPS_HELPERSDIR/environment.sh
+
 if [ -z $pkgname -o -z $version ]; then
 	msg_error "$1: pkgname or version not set in pkg template!\n"
 fi
@@ -41,21 +43,6 @@ cd $wrksrc || msg_error "$pkgver: cannot access wrksrc directory [$wrksrc].\n"
 if [ -n "$build_wrksrc" ]; then
 	cd $build_wrksrc || \
 		msg_error "$pkgver: cannot access build_wrksrc directory [$build_wrksrc].\n"
-fi
-
-CONFIGURE_SHARED_ARGS="--prefix=/usr --sysconfdir=/etc --infodir=/usr/share/info --mandir=/usr/share/man --localstatedir=/var"
-
-if [ "$XBPS_CROSS_BUILD" ]; then
-	XBPS_PKGCONFIG_ARGS="
-		PKG_CONFIG_SYSROOT_DIR=$XBPS_CROSS_BASE
-		PKG_CONFIG_PATH=$XBPS_CROSS_BASE/lib/pkgconfig:$XBPS_CROSS_BASE/usr/share/pkgconfig
-		PKG_CONFIG_LIBDIR=$XBPS_CROSS_BASE/lib/pkgconfig"
-
-	CONFIGURE_SHARED_ARGS="${CONFIGURE_SHARED_ARGS}
-		--host=$XBPS_CROSS_TRIPLET
-		--with-sysroot=$XBPS_CROSS_BASE
-		--with-libtool-sysroot=$XBPS_CROSS_BASE
-		$XBPS_PKGCONFIG_ARGS"
 fi
 
 # Run pre_configure()

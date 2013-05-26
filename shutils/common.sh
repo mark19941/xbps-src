@@ -197,7 +197,7 @@ reset_pkg_vars() {
 			PKGDESTDIR PATCHESDIR CFLAGS CXXFLAGS CPPFLAGS \
 			XBPS_CROSS_CFLAGS XBPS_CROSS_CXXFLAGS \
 			XBPS_CROSS_CPPFLAGS XBPS_CROSS_LDFLAGS PKG_GITREVS_FILE \
-			CC CXX LDFLAGS LD_LIBRARY_PATH PKG_BUILD_OPTIONS"
+			CC CXX BUILD_CC BUILD_CFLAGS LDFLAGS LD_LIBRARY_PATH PKG_BUILD_OPTIONS"
 
 	local TMPL_FUNCS="pre_configure pre_build pre_install do_build \
 			  do_install do_configure do_fetch post_configure \
@@ -463,6 +463,8 @@ setup_pkg_common_vars() {
 	export LDFLAGS="$LDFLAGS $XBPS_LDFLAGS $XBPS_CROSS_LDFLAGS"
 
 	if [ -n "$cross" ]; then
+		export BUILD_CC="cc"
+		export BUILD_CFLAGS="$XBPS_CFLAGS"
 		export CC="${XBPS_CROSS_TRIPLET}-gcc"
 		export CXX="${XBPS_CROSS_TRIPLET}-c++"
 		export CPP="${XBPS_CROSS_TRIPLET}-cpp"

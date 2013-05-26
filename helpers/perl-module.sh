@@ -17,25 +17,20 @@ do_configure() {
 	if [ -z "$perl_configure_dirs" ]; then
 		perlmkf="$wrksrc/Makefile.PL"
 		if [ ! -f $perlmkf ]; then
-			echo "*** ERROR couldn't find $perlmkf, aborting"
-			exit 1
+			msg_error "*** ERROR couldn't find $perlmkf, aborting ***\n"
 		fi
 
-		cd $wrksrc && \
-			PERL_MM_USE_DEFAULT=1 perl Makefile.PL \
-			${make_build_args} INSTALLDIRS=vendor
+		cd $wrksrc
+		PERL_MM_USE_DEFAULT=1 perl Makefile.PL ${make_build_args} INSTALLDIRS=vendor
 	fi
 
 	for i in "$perl_configure_dirs"; do
 		perlmkf="$wrksrc/$i/Makefile.PL"
 		if [ -f $perlmkf ]; then
-			cd $wrksrc/$i && PERL_MM_USE_DEFAULT=1 \
-				perl Makefile.PL ${make_build_args} \
-				INSTALLDIRS=vendor
+			cd $wrksrc/$i
+			PERL_MM_USE_DEFAULT=1 perl Makefile.PL ${make_build_args} INSTALLDIRS=vendor
 		else
-			echo -n "*** ERROR: couldn't find $perlmkf"
-			echo ", aborting ***"
-			exit 1
+			msg_error "*** ERROR: couldn't find $perlmkf, aborting **\n"
 		fi
 	done
 }

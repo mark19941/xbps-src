@@ -20,6 +20,8 @@ done
 
 setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 
+. $XBPS_HELPERSDIR/environment.sh
+
 if [ -z $pkgname -o -z $version ]; then
 	msg_error "$1: pkgname/version not set in pkg template!\n"
 	exit 1
