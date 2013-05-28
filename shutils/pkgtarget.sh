@@ -184,7 +184,9 @@ remove_pkg() {
 	for f in install pre_install post_install strip; do
 		rm -f $wrksrc/.xbps_${sourcepkg}_${cross}_${f}_done
 	done
-
+	if [ -f "$PKG_GITREVS_FILE" ]; then
+		rm -f $PKG_GITREVS_FILE
+	fi
 	for f in ${subpackages}; do
 		if [ -d "${_destdir}/pkg-${f}-${version}" ]; then
 			rm -rf ${_destdir}/pkg-${f}-${version}
