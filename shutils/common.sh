@@ -171,25 +171,18 @@ set_build_options() {
 }
 
 reset_pkg_vars() {
-	local TMPL_VARS="pkgname distfiles configure_args \
+	local TMPL_VARS="pkgname pkgver distfiles configure_args \
 			make_build_args make_install_args build_style	\
 			short_desc maintainer long_desc checksum wrksrc	\
-			make_cmd bootstrap register_shell \
+			make_cmd bootstrap disable_debug \
 			make_build_target configure_script noextract nofetch \
-			nostrip nonfree build_requires disable_debug \
 			make_install_target version revision patch_args \
-			sgml_catalogs xml_catalogs xml_entries sgml_entries \
-			disable_parallel_build font_dirs preserve \
-			only_for_archs conf_files keep_libtool_archives \
-			noarch subpackages sourcepkg triggers make_dirs \
+			disable_parallel_build only_for_archs keep_libtool_archives \
+			subpackages sourcepkg build_wrksrc create_wrksrc \
 			replaces system_accounts system_groups provides \
-			build_wrksrc create_wrksrc broken_as_needed pkgver \
-			ignore_vdeps_dir noverifyrdeps conflicts dkms_modules \
-			pycompile_dirs pycompile_module systemd_services  \
-			homepage license kernel_hooks_version makejobs \
-			mutable_files nostrip_files skip_extraction \
-			softreplace create_srcdir force_debug_pkgs \
-			depends makedepends hostmakedepends \
+			build_wrksrc create_wrksrc broken_as_needed ignore_vdeps_dir \
+			ignore_vdeps_dir homepage license makejobs skip_extraction
+			create_srcdir force_debug_pkgs makedepends hostmakedepends \
 			run_depends build_depends host_build_depends \
 			build_options build_options_default \
 			SUBPKG XBPS_EXTRACT_DONE XBPS_CONFIGURE_DONE \
@@ -213,12 +206,12 @@ reset_pkg_vars() {
 
 reset_subpkg_vars() {
         local VARS="nonfree conf_files noarch triggers replaces softreplace \
-			system_accounts system_groups preserve \
+			system_accounts system_groups preserve nostrip noverifyrdeps \
 			xml_entries sgml_entries xml_catalogs sgml_catalogs \
 			font_dirs dkms_modules provides kernel_hooks_version \
-			conflicts pycompile_dirs pycompile_module \
+			conflicts pycompile_dirs pycompile_module kernel_hooks_version \
 			systemd_services make_dirs depends run_depends \
-			pkg_install"
+			mutable_files nostrip_files pkg_install"
 
 	eval unset -v "$VARS"
 }
