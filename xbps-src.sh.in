@@ -18,7 +18,7 @@ Targets: (only one may be specified)
  bootstrap-update
    Updates bootstrap packages with latest versions available from registered
    repositories in the XBPS configuration file, by default set to
-   <masterdir>/usr/local/etc/xbps/xbps.conf.
+   <masterdir>/etc/xbps/xbps.conf.
 
  build [pkgname]
    Build package source (fetch + extract + configure + build).
