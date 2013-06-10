@@ -171,19 +171,17 @@ set_build_options() {
 }
 
 reset_pkg_vars() {
-	local TMPL_VARS="pkgname pkgver distfiles configure_args \
-			make_build_args make_install_args build_style	\
-			short_desc maintainer long_desc checksum wrksrc	\
-			make_cmd bootstrap disable_debug \
-			make_build_target configure_script noextract nofetch \
-			make_install_target version revision patch_args \
-			disable_parallel_build only_for_archs keep_libtool_archives \
-			subpackages sourcepkg build_wrksrc create_wrksrc \
-			build_wrksrc create_wrksrc \
-			homepage license makejobs skip_extraction \
-			create_srcdir force_debug_pkgs makedepends hostmakedepends \
+	local TMPL_VARS="pkgname pkgver version revision short_desc \
+			homepage license long_desc maintainer \
+			only_for_archs distfiles checksum build_style create_srcdir \
+			configure_script configure_args wrksrc build_wrksrc create_wrksrc \
+			make_cmd make_build_args make_install_args make_build_target make_install_target \
+			patch_args noextract nofetch disable_parallel_build keep_libtool_archives \
+			skip_extraction force_debug_pkgs makedepends hostmakedepends \
+			build_options build_options_default bootstrap"
+
+	local TMPL_PRIV_VARS="pkgver subpackages sourcepkg makejobs disable_debug \
 			run_depends build_depends host_build_depends \
-			build_options build_options_default \
 			SUBPKG XBPS_EXTRACT_DONE XBPS_CONFIGURE_DONE \
 			XBPS_BUILD_DONE XBPS_INSTALL_DONE FILESDIR DESTDIR \
 			PKGDESTDIR PATCHESDIR CFLAGS CXXFLAGS CPPFLAGS \
@@ -199,7 +197,7 @@ reset_pkg_vars() {
 		eval unset -f ${f}_package
 	done
 
-	eval unset -v "$TMPL_VARS"
+	eval unset -v "$TMPL_VARS" "$TMPL_PRIV_VARS"
 	eval unset -f "$TMPL_FUNCS"
 }
 
