@@ -181,7 +181,7 @@ reset_pkg_vars() {
 			subpackages sourcepkg build_wrksrc create_wrksrc \
 			replaces system_accounts system_groups provides \
 			build_wrksrc create_wrksrc broken_as_needed ignore_vdeps_dir \
-			ignore_vdeps_dir homepage license makejobs skip_extraction
+			ignore_vdeps_dir homepage license makejobs skip_extraction \
 			create_srcdir force_debug_pkgs makedepends hostmakedepends \
 			run_depends build_depends host_build_depends \
 			build_options build_options_default \
