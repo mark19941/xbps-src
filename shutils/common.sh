@@ -207,7 +207,7 @@ reset_subpkg_vars() {
 			font_dirs dkms_modules provides kernel_hooks_version \
 			conflicts pycompile_dirs pycompile_module kernel_hooks_version \
 			systemd_services make_dirs depends run_depends \
-			ignore_vdeps_dir mutable_files nostrip_files pkg_install"
+			mutable_files nostrip_files pkg_install"
 
 	eval unset -v "$VARS"
 }

@@ -33,9 +33,10 @@ add_rundep() {
 }
 
 pkg_genrdeps() {
-	local depsftmp f j igndir tmplf
+	local depsftmp f j tmplf mapshlibs
 
-	MAPLIB=$XBPS_COMMONDIR/shlibs
+	mapshlibs=$XBPS_COMMONDIR/shlibs
+	tmplf=$XBPS_SRCPKGDIR/$pkgname/template
 
 	if [ -n "$noarch" -o -n "$noverifyrdeps" ]; then
 		echo "$run_depends" > ${PKGDESTDIR}/rdeps
@@ -50,16 +51,6 @@ pkg_genrdeps() {
 	exec 3<&0 # save stdin
 	exec < $depsftmp
 	while read f; do
-		# Don't check dirs specified in ignore_vdeps_dir.
-		for j in ${ignore_vdeps_dir}; do
-			if grep -q ${j} "${f}"; then
-				igndir=1
-				break
-			fi
-		done
-		[ -n "$igndir" ] && continue
-		unset igndir
-
 		case "$(file -bi "$f")" in
 			application/x-executable*|application/x-sharedlib*)
 				for nlib in $($OBJDUMP -p "$f"|grep NEEDED|awk '{print $2}'); do
@@ -83,11 +74,6 @@ pkg_genrdeps() {
 	exec 0<&3 # restore stdin
 	rm -f $depsftmp
 
-	if [ -f $XBPS_SRCPKGDIR/$pkgname/$pkgname.template ]; then
-		tmplf=$XBPS_SRCPKGDIR/$pkgname/$pkgname.template
-	else
-		tmplf=$XBPS_SRCPKGDIR/$pkgname/template
-	fi
 	#
 	# Add required run time packages by using required shlibs resolved
 	# above, the mapping is done thru the mapping_shlib_binpkg.txt file.
@@ -95,8 +81,8 @@ pkg_genrdeps() {
 	for f in ${verify_deps}; do
 		unset _f j rdep _rdep rdepcnt soname _pkgname _rdepver found
 		_f=$(echo "$f"|sed 's|\+|\\+|g')
-		rdep="$(grep -E "^${_f}[[:blank:]]+.*$" $MAPLIB|awk '{print $2}')"
-		rdepcnt="$(grep -E "^${_f}[[:blank:]]+.*$" $MAPLIB|awk '{print $2}'|wc -l)"
+		rdep="$(grep -E "^${_f}[[:blank:]]+.*$" $mapshlibs|awk '{print $2}')"
+		rdepcnt="$(grep -E "^${_f}[[:blank:]]+.*$" $mapshlibs|awk '{print $2}'|wc -l)"
 		if [ -z "$rdep" ]; then
 			# Ignore libs by current pkg
 			soname=$(find ${PKGDESTDIR} -name "$f")
