@@ -105,7 +105,7 @@ pkg_strip() {
 			echo "   Stripped library: ${f#$PKGDESTDIR}"
 			_soname=$(objdump -p "$f"|grep SONAME|awk '{print $2}')
 			if [ -n "${_soname}" ]; then
-				echo "${_soname}" >> ${PKGDESTDIR}/shlib-provides
+				echo "${_soname}" >> ${PKGDESTDIR}/.shlib-provides
 			fi
 			attach_debug "$f"
 			;;
@@ -118,6 +118,12 @@ pkg_strip() {
 			echo "   Stripped static library: ${f#$PKGDESTDIR}";;
 		esac
 	done
+
+	if [ -s "$PKGDESTDIR/.shlib-provides" ]; then
+		cat $PKGDESTDIR/.shlib-provides | tr '\n' ' ' > $PKGDESTDIR/shlib-provides
+		echo >> $PKGDESTDIR/shlib-provides
+		rm -f $PKGDESTDIR/.shlib-provides
+	fi
 
 	return $?
 }
