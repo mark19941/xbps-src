@@ -150,6 +150,9 @@ pkg_genrdeps() {
 	if [ -n "$run_depends" ]; then
 		echo "$run_depends" > ${PKGDESTDIR}/rdeps
 	fi
+	if [ -n "$verify_deps" ]; then
+		echo "$verify_deps" > ${PKGDESTDIR}/shlib-requires
+	fi
 }
 
 if [ $# -lt 1 -o $# -gt 2 ]; then

@@ -58,6 +58,8 @@ create_debug_pkg() {
 }
 
 pkg_strip() {
+	local fname= x= f= _soname=
+
 	msg_normal "$pkgver: creating debug files and stripping, please wait...\n"
 	find ${PKGDESTDIR} -type f | while read f; do
 		fname=$(basename "$f")
@@ -101,6 +103,10 @@ pkg_strip() {
 				return 1
 			fi
 			echo "   Stripped library: ${f#$PKGDESTDIR}"
+			_soname=$(objdump -p "$f"|grep SONAME|awk '{print $2}')
+			if [ -n "${_soname}" ]; then
+				echo "${_soname}" >> ${PKGDESTDIR}/shlib-provides
+			fi
 			attach_debug "$f"
 			;;
 		application/x-archive*)

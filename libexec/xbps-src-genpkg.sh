@@ -66,8 +66,19 @@ genbinpkg() {
 	fi
 	cd $pkgdir
 
-	[ -n "$preserve" ] && _preserve="-p"
-	[ -s ${PKGDESTDIR}/rdeps ] && _deps="$(cat ${PKGDESTDIR}/rdeps)"
+	if [ -n "$preserve" ]; then
+		_preserve="-p"
+	fi
+	if [ -s ${PKGDESTDIR}/rdeps ]; then
+		_deps="$(cat ${PKGDESTDIR}/rdeps)"
+	fi
+	if [ -s ${PKGDESTDIR}/shlib-provides ]; then
+		_shprovides="$(cat ${PKGDESTDIR}/shlib-provides)"
+	fi
+	if [ -s ${PKGDESTDIR}/shlib-requires ]; then
+		_shrequires="$(cat ${PKGDESTDIR}/shlib-requires)"
+	fi
+
 	if [ -n "$provides" ]; then
 		local _provides=
 		for f in ${provides}; do
@@ -120,6 +131,8 @@ genbinpkg() {
 		--build-options "${PKG_BUILD_OPTIONS}" \
 		--pkgver "${pkgver}" --quiet \
 		--source-revisions "$(cat ${PKG_GITREVS_FILE:-/dev/null} 2>/dev/null)" \
+		--shlib-provides "${_shprovides}" \
+		--shlib-requires "${_shrequires}" \
 		${_preserve} ${_sourcerevs} ${PKGDESTDIR}
 	rval=$?
 	if [ $rval -eq 0 ]; then
