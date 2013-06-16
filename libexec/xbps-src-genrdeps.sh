@@ -33,7 +33,7 @@ add_rundep() {
 }
 
 pkg_genrdeps() {
-	local depsftmp f j tmplf mapshlibs
+	local depsftmp f j tmplf mapshlibs sorequires
 
 	mapshlibs=$XBPS_COMMONDIR/shlibs
 	tmplf=$XBPS_SRCPKGDIR/$pkgname/template
@@ -133,6 +133,7 @@ pkg_genrdeps() {
 
 		if [ "${_pkgname}" != "${pkgname}" ]; then
 			echo "   SONAME: $f <-> ${_sdep}"
+			sorequires+="${f} "
 		else
 			# Ignore libs by current pkg
 			echo "   SONAME: $f <-> ${_rdep} (ignored)"
@@ -150,8 +151,8 @@ pkg_genrdeps() {
 	if [ -n "$run_depends" ]; then
 		echo "$run_depends" > ${PKGDESTDIR}/rdeps
 	fi
-	if [ -n "$verify_deps" ]; then
-		echo "$verify_deps" > ${PKGDESTDIR}/shlib-requires
+	if [ -n "${sorequires}" ]; then
+		echo "${sorequires}" > ${PKGDESTDIR}/shlib-requires
 	fi
 }
 
