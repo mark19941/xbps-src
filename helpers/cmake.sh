@@ -1,9 +1,27 @@
 #
 # This helper is for templates using cmake.
 #
+
 do_configure() {
 	[ ! -d build ] && mkdir build
 	cd build
+
+	if [ "$CROSS_BUILD" ]; then
+		cat > cross_${XBPS_CROSS_TRIPLET}.cmake <<_EOF
+SET(CMAKE_SYSTEM_NAME Linux)
+SET(CMAKE_SYSTEM_VERSION 1)
+
+SET(CMAKE_C_COMPILER   ${XBPS_CROSS_TRIPLET}-gcc)
+SET(CMAKE_CXX_COMPILER ${XBPS_CROSS_TRIPLET}-g++)
+
+SET(CMAKE_FIND_ROOT_PATH  ${XBPS_CROSS_BASE})
+
+SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+_EOF
+		configure_args+="-DCMAKE_TOOLCHAIN_FILE=cross_${XBPS_CROSS_TRIPLET}.cmake"
+	fi
 	cmake -DCMAKE_INSTALL_PREFIX=/usr \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_SKIP_RPATH=ON \
