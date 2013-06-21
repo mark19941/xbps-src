@@ -196,6 +196,7 @@ remove_pkg() {
 		fi
 		rm -f $wrksrc/.xbps_${f}_${cross}_install_done
 		rm -f $wrksrc/.xbps_${f}_${cross}_pkg_done
+		rm -f $wrksrc/.xbps_${f}_${cross}_strip_done
 	done
 
 	if [ -d "${_destdir}/${sourcepkg}-${version}" ]; then
