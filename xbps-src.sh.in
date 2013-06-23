@@ -192,11 +192,11 @@ install_bbotstrap() {
 		_bootstrap_arch="env XBPS_TARGET_ARCH=$XBPS_TARGET_PKG"
 	fi
 
-	if [ -n "XBPS_ADDARGS" ]; then
-		_add_args="$XBPS_ADDARGS"
+	if [ -n "XBPS_OPTARGS" ]; then
+		_opt_args="$XBPS_OPTARGS"
 	fi
 
-	${_bootstrap_arch} xbps-install ${_args} ${_add_args} -r $XBPS_MASTERDIR \
+	${_bootstrap_arch} xbps-install ${_args} ${_opt_args} -r $XBPS_MASTERDIR \
 		-c $XBPS_MASTERDIR/host/repocache \
 		-y 'base-chroot>=0.33' 'xbps>=0.21_5'
 
