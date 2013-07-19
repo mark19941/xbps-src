@@ -1,16 +1,16 @@
 # Environment exported for use in packages.
 
 if [ "$build_style" != "configure" ]; then
-	configure_args+=" --prefix=/usr --sysconfdir=/etc --infodir=/usr/share/info
+	confargs="--prefix=/usr --sysconfdir=/etc --infodir=/usr/share/info
 		--mandir=/usr/share/man --localstatedir=/var "
 
 	if [ "$CROSS_BUILD" ]; then
-		configure_args+=" --host=$XBPS_CROSS_TRIPLET
+		confargs+=" --host=$XBPS_CROSS_TRIPLET
 			--with-sysroot=$XBPS_CROSS_BASE
 			--with-libtool-sysroot=$XBPS_CROSS_BASE "
 	fi
 
-	export configure_args
+	export configure_args="${confargs} ${configure_args}"
 fi
 
 if [ "$CROSS_BUILD" ]; then
