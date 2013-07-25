@@ -5,25 +5,14 @@
 # 	$2 - cross-target [OPTIONAL]
 
 register_pkg() {
-	local rval= _pkgdir="$1" _binpkg="$2" _force="$3" _flags
-
-	while [ -f ${_pkgdir}/.xbps-src-index-lock ]; do
-		echo "The repo index is currently locked!"
-		sleep 1
-	done
-	touch -f ${_pkgdir}/.xbps-src-index-lock
-
-	if [ -n "${_force}" ]; then
-		_flags="-f"
-	fi
+	local rval= _pkgdir="$1" _binpkg="$2" _force="$3"
 
 	if [ -n "$XBPS_CROSS_BUILD" ]; then
-		$XBPS_RINDEX_XCMD ${_flags} -a ${_pkgdir}/${_binpkg}
+		$XBPS_RINDEX_XCMD ${_force:+-f} -a ${_pkgdir}/${_binpkg}
 	else
-		$XBPS_RINDEX_CMD ${_flags} -a ${_pkgdir}/${_binpkg}
+		$XBPS_RINDEX_CMD ${_force:+-f} -a ${_pkgdir}/${_binpkg}
 	fi
 	rval=$?
-	rm -f ${_pkgdir}/.xbps-src-index-lock
 
 	return $rval
 }
@@ -54,12 +43,19 @@ genbinpkg() {
 		pkgdir=$XBPS_PACKAGESDIR
 	fi
 
+	while [ -f $pkgdir/${binpkg}.lock ]; do
+		msg_warn "$pkgver: binpkg is being created, waiting for 1s...\n"
+		sleep 1
+	done
+
 	# Don't overwrite existing binpkgs by default, skip them.
 	if [ -f $pkgdir/$binpkg -a -z "$XBPS_BUILD_FORCEMODE" ]; then
 		msg_normal "$pkgver: skipping existing $binpkg pkg...\n"
 		register_pkg "$pkgdir" "$binpkg"
 		return $?
 	fi
+
+	touch -f $pkgdir/${binpkg}.lock
 
 	if [ ! -d $pkgdir ]; then
 		mkdir -p $pkgdir
@@ -135,6 +131,9 @@ genbinpkg() {
 		--shlib-requires "${_shrequires}" \
 		${_preserve} ${_sourcerevs} ${PKGDESTDIR}
 	rval=$?
+
+	rm -f $pkgdir/${binpkg}.lock
+
 	if [ $rval -eq 0 ]; then
 		register_pkg "$pkgdir" "$binpkg" $XBPS_BUILD_FORCEMODE
 		rval=$?
