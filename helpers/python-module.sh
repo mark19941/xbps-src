@@ -19,9 +19,8 @@ do_build() {
 }
 
 do_install() {
-	if [ -z "$make_install_args" ]; then
-		make_install_args="--prefix=/usr --root=$DESTDIR"
-	fi
+	make_install_args+=" --prefix=/usr --root=$DESTDIR"
+
 	if [ -n "$CROSS_BUILD" ]; then
 		CC="${XBPS_CROSS_TRIPLET}-gcc -pthread"
 		LDSHARED="${CC} -shared"
