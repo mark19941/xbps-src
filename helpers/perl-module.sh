@@ -1,6 +1,6 @@
 #
 # This helper does the required steps to be able to build and install
-# perl modules into the correct location.
+# perl modules that use MakeMaker into the correct location.
 #
 # Required vars to be set by a template:
 #
@@ -21,19 +21,21 @@ do_configure() {
 		fi
 
 		cd $wrksrc
-		PERL_MM_USE_DEFAULT=1 perl Makefile.PL ${make_build_args} INSTALLDIRS=vendor
+		PERL_MM_USE_DEFAULT=1 LD="$CC" CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" \
+			perl Makefile.PL ${configure_args} INSTALLDIRS=vendor
 	fi
 
 	for i in "$perl_configure_dirs"; do
 		perlmkf="$wrksrc/$i/Makefile.PL"
 		if [ -f $perlmkf ]; then
 			cd $wrksrc/$i
-			PERL_MM_USE_DEFAULT=1 perl Makefile.PL ${make_build_args} INSTALLDIRS=vendor
+			PERL_MM_USE_DEFAULT=1 LD="$CC" CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" \
+				perl Makefile.PL ${make_build_args} INSTALLDIRS=vendor
 		else
 			msg_error "*** ERROR: couldn't find $perlmkf, aborting **\n"
 		fi
 	done
 }
 
-# Perl modules use standard make(1) to install.
+# Use GNU make(1) to build/install.
 . ${XBPS_HELPERSDIR}/gnu-makefile.sh
