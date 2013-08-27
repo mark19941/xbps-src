@@ -11,7 +11,7 @@ PRIVILEGED_GROUP ?= wheel
 
 # INMUTABLE VARIABLES
 VERSION	= 63
-GITVER	:= $(shell git rev-parse HEAD)
+GITVER	:= $(shell git rev-parse --short HEAD)
 CONF_FILE = xbps-src.conf
 
 CHROOT_C = linux-user-chroot.c
