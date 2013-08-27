@@ -44,6 +44,7 @@ else
 		touch -f $XBPS_EXTRACT_DONE
 		exit 0
 	fi
+fi
 
 if [ -n "$create_srcdir" ]; then
 	srcdir="$XBPS_SRCDISTDIR/$pkgname-$version"
