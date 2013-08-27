@@ -39,7 +39,7 @@ fetch_git_revs() {
 	[ -z "${_files}" ] && return
 
 	for f in ${_files}; do
-		_filerev=$(git rev-list HEAD $f | head -n1)
+		_filerev=$(git rev-list --abbrev-commit HEAD $f | head -n1)
 		[ -z "${_filerev}" ] && continue
 		_out="${f} ${_filerev}"
 		if [ -z "${_revs}" ]; then
