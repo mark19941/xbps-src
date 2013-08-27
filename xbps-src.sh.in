@@ -69,6 +69,12 @@ Targets: (only one may be specified)
  show-options [pkgname]
    Show available build options by <pkgname>.
 
+ show-shlib-provides <pkgname>
+   Show list of provided shlibs for <pkgname>. Package must be installed into destdir.
+
+ show-shlib-requires <pkgname>
+   Show list of required shlibs for <pkgname>. Package must be installed into destdir.
+
  zap
    Removes a masterdir but preserving ccache, distcc and host directories.
 
@@ -209,78 +215,6 @@ install_bbotstrap() {
 	chroot_prepare || msg_error "Failed to initialize chroot!\n"
 }
 
-show_pkg() {
-	local i=
-
-	echo "pkgname:	$pkgname"
-	echo "version:	$version"
-	echo "revision:	$revision"
-	for i in ${distfiles}; do
-		[ -n "$i" ] && echo "distfiles:	$i"
-	done
-	for i in ${checksum}; do
-		[ -n "$i" ] && echo "checksum:	$i"
-	done
-	[ -n "$noarch" ] && echo "noarch:		yes"
-	echo "maintainer:	$maintainer"
-	[ -n "$homepage" ] && echo "Upstream URL:	$homepage"
-	[ -n "$license" ] && echo "License(s):	$license"
-	[ -n "$build_style" ] && echo "build_style:	$build_style"
-	for i in ${configure_args}; do
-		[ -n "$i" ] && echo "configure_args:	$i"
-	done
-	echo "short_desc:	$short_desc"
-	for i in ${subpackages}; do
-		[ -n "$i" ] && echo "subpackages:	$i"
-	done
-	for i in ${conf_files}; do
-		[ -n "$i" ] && echo "conf_files:	$i"
-	done
-	for i in ${replaces}; do
-		[ -n "$i" ] && echo "replaces:	$i"
-	done
-	for i in ${provides}; do
-		[ -n "$i" ] && echo "provides:	$i"
-	done
-	for i in ${conflicts}; do
-		[ -n "$i" ] && echo "conflicts:	$i"
-	done
-	[ -n "$long_desc" ] && echo "long_desc: $long_desc"
-}
-
-show_pkg_deps() {
-	[ -f "${PKGDESTDIR}/rdeps" ] && cat ${PKGDESTDIR}/rdeps
-}
-
-show_pkg_build_deps() {
-	local f=
-
-	# build time deps
-	for f in ${hostmakedepends} ${makedepends}; do
-		echo "$f"
-	done
-}
-
-show_pkg_options() {
-	local f= j= state= desc= enabled=
-
-	for f in ${build_options}; do
-		for j in ${build_options_default}; do
-			if [ "$f" = "$j" ]; then
-				enabled=1
-				break
-			fi
-		done
-		state="OFF"
-		if [ -n "$enabled" ]; then
-			state="ON"
-			unset enabled
-		fi
-		eval desc="\$desc_option_$f"
-		printf "$f: $desc [$state]\n"
-	done
-}
-
 masterdir_zap() {
 	for f in bin boot builddir destdir dev etc home lib lib32 lib64 mnt \
 		opt proc root run sbin sys tmp usr var xbps .xbps_chroot_init; do
@@ -296,6 +230,14 @@ masterdir_zap() {
 		fi
 	done
 	echo "$XBPS_MASTERDIR masterdir cleaned up."
+}
+
+read_pkg() {
+	if [ -z "${XBPS_TARGET_PKG}" ]; then
+		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
+		XBPS_TARGET_PKG=$(basename_cwd)
+	fi
+	setup_pkg $XBPS_TARGET_PKG $XBPS_CROSS_BUILD
 }
 
 exit_func() {
@@ -604,11 +546,7 @@ chroot)
 	chroot_handler chroot dummy
 	;;
 clean)
-	if [ -z "${XBPS_TARGET_PKG}" ]; then
-		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
-		XBPS_TARGET_PKG=$(basename_cwd)
-	fi
-	setup_pkg $XBPS_TARGET_PKG $XBPS_CROSS_BUILD
+	read_pkg
 	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
 		chroot_handler $XBPS_TARGET $XBPS_TARGET_PKG || exit $?
 	else
@@ -628,11 +566,7 @@ remove-autodeps)
 	;;
 fetch|extract|build|configure|install-destdir|build-pkg)
 	BEGIN_INSTALL=1
-	if [ -z "$XBPS_TARGET_PKG" ]; then
-		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
-		XBPS_TARGET_PKG=$(basename_cwd)
-	fi
-	setup_pkg $XBPS_TARGET_PKG $XBPS_CROSS_BUILD
+	read_pkg
 	if [ -n "$CHROOT_READY" -a -z "$IN_CHROOT" ]; then
 		chroot_handler $XBPS_TARGET $XBPS_TARGET_PKG
 	else
@@ -640,47 +574,39 @@ fetch|extract|build|configure|install-destdir|build-pkg)
 	fi
 	;;
 remove-destdir)
-	if [ -z "$XBPS_TARGET_PKG" ]; then
-		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
-		XBPS_TARGET_PKG=$(basename_cwd)
-	fi
-	setup_pkg $XBPS_TARGET_PKG $XBPS_CROSS_BUILD
+	read_pkg
 	remove_pkg $XBPS_CROSS_BUILD
 	;;
 list)
 	$XBPS_QUERY_CMD -l
 	;;
 show)
-	if [ -z "$XBPS_TARGET_PKG" ]; then
-		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
-		XBPS_TARGET_PKG=$(basename_cwd)
-	fi
-	setup_pkg $XBPS_TARGET_PKG
+	read_pkg
 	show_pkg
 	;;
 show-files)
-	if [ -z "$XBPS_TARGET_PKG" ]; then
-		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
-		XBPS_TARGET_PKG=$(basename_cwd)
-	fi
-	setup_pkg $XBPS_TARGET_PKG $XBPS_CROSS_BUILD
-	[ -f "$PKGDESTDIR/flist" ] && cat ${PKGDESTDIR}/flist
+	read_pkg
+	show_pkg_files
 	;;
 show-deps)
-	setup_pkg $XBPS_TARGET_PKG
+	read_pkg
 	show_pkg_deps
 	;;
 show-build-deps)
-	setup_pkg $XBPS_TARGET_PKG
+	read_pkg
 	show_pkg_build_deps
 	;;
 show-options)
-	if [ -z "$XBPS_TARGET_PKG" ]; then
-		[ ! -r ./template ] && msg_error "missing build template in $(pwd).\n"
-		XBPS_TARGET_PKG=$(basename_cwd)
-	fi
-	setup_pkg $XBPS_TARGET_PKG $XBPS_CROSS_BUILD
+	read_pkg
 	show_pkg_options
+	;;
+show-shlib-provides)
+	read_pkg
+	show_pkg_shlib_provides
+	;;
+show-shlib-requires)
+	read_pkg
+	show_pkg_shlib_requires
 	;;
 zap)
 	masterdir_zap
