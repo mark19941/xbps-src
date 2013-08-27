@@ -175,7 +175,7 @@ reset_pkg_vars() {
 			only_for_archs distfiles checksum build_style create_srcdir \
 			configure_script configure_args wrksrc build_wrksrc create_wrksrc \
 			make_cmd make_build_args make_install_args make_build_target make_install_target \
-			patch_args noextract nofetch disable_parallel_build keep_libtool_archives \
+			patch_args disable_parallel_build keep_libtool_archives \
 			skip_extraction force_debug_pkgs makedepends hostmakedepends \
 			build_options build_options_default bootstrap"
 
@@ -410,11 +410,6 @@ setup_pkg_common_vars() {
 	[ -z "$pkgname" ] && return 1
 
 	REQ_VARS="pkgname version short_desc revision homepage license"
-
-	if [ -n "$build_style" -a "$build_style" = "meta-template" ]; then
-		nofetch=yes
-		noextract=yes
-	fi
 
 	# Check if required vars weren't set.
 	for i in ${REQ_VARS}; do

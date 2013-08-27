@@ -32,14 +32,8 @@ XBPS_POST_INSTALL_DONE="$wrksrc/.xbps_${pkgname}_${XBPS_CROSS_BUILD}_post_instal
 if [ -f $XBPS_INSTALL_DONE ]; then
 	exit 0
 fi
-#
-# There's nothing we can do if it is a meta template.
-# Just creating the dir is enough.
-#
+
 mkdir -p $XBPS_DESTDIR/$pkgname-$version
-if [ "$build_style" = "meta-template" ]; then
-	exit 0
-fi
 
 cd $wrksrc || msg_error "$pkgver: cannot access to wrksrc [$wrksrc]\n"
 if [ -n "$build_wrksrc" ]; then

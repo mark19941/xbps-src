@@ -30,16 +30,20 @@ if [ ! -w "$XBPS_BUILDDIR" ]; then
 fi
 
 #
-# If noextract is set, do a "fake extraction".
+# If a pkg defines a do_extract() function, use it.
 #
-if [ -z "$distfiles" -o -n "$noextract" ]; then
+if declare -f do_extract >/dev/null; then
 	[ ! -d "$wrksrc" ] && mkdir -p $wrksrc
-	if declare -f do_extract >/dev/null; then
-		run_func do_extract
-		touch -f $XBPS_EXTRACT_DONE
-	fi
+	cd $wrksrc
+	run_func do_extract
+	touch -f $XBPS_EXTRACT_DONE
 	exit 0
-fi
+else
+	# If distfiles and checksum not set, skip this phase.
+	if [ -z "$distfiles" -a -z "$checksum" ]; then
+		touch -f $XBPS_EXTRACT_DONE
+		exit 0
+	fi
 
 if [ -n "$create_srcdir" ]; then
 	srcdir="$XBPS_SRCDISTDIR/$pkgname-$version"

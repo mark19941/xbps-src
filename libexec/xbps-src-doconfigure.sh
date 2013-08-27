@@ -34,11 +34,6 @@ if [ -f "$XBPS_CONFIGURE_DONE" ]; then
 	exit 0
 fi
 
-# Skip this phase for meta-template style builds.
-if [ -n "$build_style" -a "$build_style" = "meta-template" ]; then
-	exit 0
-fi
-
 cd $wrksrc || msg_error "$pkgver: cannot access wrksrc directory [$wrksrc].\n"
 if [ -n "$build_wrksrc" ]; then
 	cd $build_wrksrc || \

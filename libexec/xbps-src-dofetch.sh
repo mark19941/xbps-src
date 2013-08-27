@@ -38,10 +38,6 @@ fi
 #
 # There's nothing of interest if we are a meta template.
 #
-if [ -n "$build_style" -a "$build_style" = "meta-template" ]; then
-	exit 0
-fi
-
 XBPS_FETCH_DONE="$wrksrc/.xbps_fetch_done"
 
 if [ -f "$XBPS_FETCH_DONE" ]; then
@@ -49,16 +45,13 @@ if [ -f "$XBPS_FETCH_DONE" ]; then
 fi
 
 #
-# If nofetch is set in a build template, skip this phase
-# entirely and run the do_fetch() function.
+# if a pkg defines a do_fetch() function, use it.
 #
-if [ -n "$nofetch" ]; then
+if declare -f do_fetch >/dev/null; then
 	cd ${XBPS_BUILDDIR}
 	[ -n "$build_wrksrc" ] && mkdir -p "$wrksrc"
-	if declare -f do_fetch >/dev/null; then
-		run_func do_fetch
-		touch -f $XBPS_FETCH_DONE
-	fi
+	run_func do_fetch
+	touch -f $XBPS_FETCH_DONE
 	exit 0
 fi
 
