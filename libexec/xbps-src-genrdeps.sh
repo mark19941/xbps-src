@@ -22,13 +22,12 @@ add_rundep() {
 		$XBPS_UHELPER_CMD cmpver "$i" "$dep"
 		rval=$?
 		if [ $rval -eq 255 ]; then
-			_rdeps="$(echo ${run_depends}|sed -e "s|${i}|${dep}|g")"
-			run_depends="${_rdeps}"
+			run_depends="${run_depends/${i}/${dep}}"
 		fi
 		found=1
 	done
 	if [ -z "$found" ]; then
-		run_depends="${run_depends} ${dep}"
+		run_depends+=" ${dep}"
 	fi
 }
 
