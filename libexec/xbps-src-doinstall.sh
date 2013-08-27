@@ -61,10 +61,10 @@ cd $wrksrc
 if declare -f do_install >/dev/null; then
 	run_func do_install
 else
-	if [ ! -r $XBPS_HELPERSDIR/${build_style}.sh ]; then
-		msg_error "$pkgver: cannot find build helper $XBPS_HELPERSDIR/${build_style}.sh!\n"
+	if [ ! -r $XBPS_BUILDSTYLEDIR/${build_style}.sh ]; then
+		msg_error "$pkgver: cannot find build helper $XBPS_BUILDSTYLEDIR/${build_style}.sh!\n"
 	fi
-	. $XBPS_HELPERSDIR/${build_style}.sh
+	. $XBPS_BUILDSTYLEDIR/${build_style}.sh
 	run_func do_install
 fi
 

@@ -66,10 +66,10 @@ if declare -f do_configure >/dev/null; then
 	run_func do_configure
 else
 	if [ -n "$build_style" ]; then
-		if [ ! -r $XBPS_HELPERSDIR/${build_style}.sh ]; then
-			msg_error "$pkgver: cannot find build helper $XBPS_HELPERSDIR/${build_style}.sh!\n"
+		if [ ! -r $XBPS_BUILDSTYLEDIR/${build_style}.sh ]; then
+			msg_error "$pkgver: cannot find build helper $XBPS_BUILDSTYLEDIR/${build_style}.sh!\n"
 		fi
-		. $XBPS_HELPERSDIR/${build_style}.sh
+		. $XBPS_BUILDSTYLEDIR/${build_style}.sh
 		if declare -f do_configure >/dev/null; then
 			run_func do_configure
 		fi

@@ -20,4 +20,4 @@ do_configure() {
 }
 
 # GNU configure scripts use make(1) to build/install.
-. $XBPS_HELPERSDIR/gnu-makefile.sh
+. $XBPS_BUILDSTYLEDIR/gnu-makefile.sh

@@ -45,6 +45,8 @@ install-scripts: all
 	install -m 644 shutils/*.sh $(DESTDIR)$(SHAREDIR)/shutils
 	install -d $(DESTDIR)$(SHAREDIR)/helpers
 	install -m 644 helpers/*.sh $(DESTDIR)$(SHAREDIR)/helpers
+	install -d $(DESTDIR)$(SHAREDIR)/build_style
+	install -m 644 build_style/*.sh $(DESTDIR)$(SHAREDIR)/build_style
 	install -d $(DESTDIR)$(SHAREDIR)/cross-profiles
 	install -m 644 cross-profiles/*.sh $(DESTDIR)$(SHAREDIR)/cross-profiles
 	install -m 644 cross-profiles/config.sub $(DESTDIR)$(SHAREDIR)/cross-profiles
