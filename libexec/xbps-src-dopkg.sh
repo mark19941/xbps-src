@@ -477,9 +477,11 @@ fi
 ${PKGNAME}_package
 pkgname=$PKGNAME
 
-export XBPS_PKGDESTDIR=1
 install -d $PKGDESTDIR
-run_func pkg_install
+if [ "$build_style" != "meta" ]; then
+	export XBPS_PKGDESTDIR=1
+	run_func pkg_install
+fi
 
 # Prepare pkg destdir and install/remove scripts.
 prepare_destdir
