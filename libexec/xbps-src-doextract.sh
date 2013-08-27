@@ -41,6 +41,7 @@ if declare -f do_extract >/dev/null; then
 else
 	# If distfiles and checksum not set, skip this phase.
 	if [ -z "$distfiles" -a -z "$checksum" ]; then
+		mkdir -p $wrksrc
 		touch -f $XBPS_EXTRACT_DONE
 		exit 0
 	fi
