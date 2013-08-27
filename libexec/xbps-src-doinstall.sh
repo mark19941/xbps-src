@@ -90,8 +90,9 @@ fi
 
 # Remove empty directories by default.
 for f in $(find ${DESTDIR} -depth -type d); do
-	rmdir $f 2>/dev/null && \
-		msg_warn "$pkgver: removed empty dir: ${f##${DESTDIR}}\n"
+	_dir="${f##${DESTDIR}}"
+	[ -z "${_dir}" ] && continue
+	rmdir "${_dir}" 2>/dev/null && msg_warn "$pkgver: removed empty dir: ${_dir}\n"
 done
 
 touch -f $XBPS_INSTALL_DONE
