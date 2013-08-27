@@ -29,7 +29,7 @@ process_metadata_scripts() {
 
 	cd ${PKGDESTDIR}
 	cat >> $tmpf <<_EOF
-#!/bin/sh -e
+#!/bin/sh
 #
 # Generic INSTALL/REMOVE script. Arguments passed to this script:
 #
@@ -477,12 +477,9 @@ fi
 ${PKGNAME}_package
 pkgname=$PKGNAME
 
-if [ "$build_style" = "meta-template" ]; then
-	install -d $PKGDESTDIR
-else
-	export XBPS_PKGDESTDIR=1
-	run_func pkg_install
-fi
+export XBPS_PKGDESTDIR=1
+install -d $PKGDESTDIR
+run_func pkg_install
 
 # Prepare pkg destdir and install/remove scripts.
 prepare_destdir
