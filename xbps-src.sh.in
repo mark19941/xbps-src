@@ -92,6 +92,7 @@ Options:
      Cross build packages for this target profile. Supported values:
 
 	i686		- for i686 GNU/Linux
+	i686-musl	- for i686 Musl/Linux
 	armv6hf 	- for ARMv6 EABI5 (LE Hard Float) GNU/Linux
 	armv6hf-musl	- for ARMv6 EABI5 (LE Hard Float) Musl/Linux
 	mips		- for MIPS o32 (BE Soft Float) GNU/Linux
