@@ -36,8 +36,8 @@ fi
 # There's nothing we can do if it is a meta template.
 # Just creating the dir is enough.
 #
+mkdir -p $XBPS_DESTDIR/$pkgname-$version
 if [ "$build_style" = "meta-template" ]; then
-	mkdir -p $XBPS_DESTDIR/$pkgname-$version
 	exit 0
 fi
 
