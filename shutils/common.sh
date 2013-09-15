@@ -205,7 +205,7 @@ reset_subpkg_vars() {
 			system_accounts system_groups preserve nostrip noverifyrdeps \
 			xml_entries sgml_entries xml_catalogs sgml_catalogs \
 			font_dirs dkms_modules provides kernel_hooks_version \
-			conflicts pycompile_dirs pycompile_module kernel_hooks_version \
+			conflicts pycompile_dirs pycompile_module \
 			systemd_services make_dirs depends run_depends \
 			mutable_files nostrip_files pkg_install"
 
@@ -547,19 +547,18 @@ install_cross_pkg() {
 	if [ "$XBPS_TARGET" != "remove-autodeps" ]; then
 		check_installed_pkg cross-${XBPS_CROSS_TRIPLET}-0.1_1
 		if [ $? -ne 0 ]; then
-			echo "Installing required cross pkg: cross-${XBPS_CROSS_TRIPLET}"
+			msg_normal "Installing cross pkg: cross-${XBPS_CROSS_TRIPLET}"
 			$XBPS_INSTALL_CMD -Ay cross-${XBPS_CROSS_TRIPLET} 2>&1 >/dev/null
-			if [ $? -ne 0 ]; then
-				echo "ERROR: failed to install cross-${XBPS_CROSS_TRIPLET}"
-				exit 1
+			rval=$?
+			if [ $rval -ne 0 ]; then
+				msg_error "failed to install cross-${XBPS_CROSS_TRIPLET} (error $rval)"
 			fi
 		fi
 		$XBPS_INSTALL_CMD -r /usr/${XBPS_CROSS_TRIPLET} \
 			-Sy cross-vpkg-dummy 2>&1 >/dev/null
 		rval=$?
 		if [ $rval -ne 0 -a $rval -ne 17 ]; then
-			echo "ERROR: failed to install cross-vpkg-dummy (error $rval)"
-			exit 1
+			msg_error "failed to install cross-vpkg-dummy (error $rval)"
 		fi
 	fi
 }
