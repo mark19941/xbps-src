@@ -37,7 +37,7 @@ DEPENDENCIES
 ============
 
 	* GNU bash
-	* XBPS utilities
+	* XBPS >= 0.26
 	* fakeroot
 
 The following packages are required to build a full bootstrap from scratch:
