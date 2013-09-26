@@ -37,6 +37,7 @@ DEPENDENCIES
 ============
 
 	* GNU bash
+	* git
 	* XBPS >= 0.26
 	* fakeroot
 
