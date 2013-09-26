@@ -10,7 +10,7 @@ ETCDIR  ?= $(PREFIX)/etc/xbps
 PRIVILEGED_GROUP ?= wheel
 
 # INMUTABLE VARIABLES
-VERSION	= 66
+VERSION	= 67
 GITVER	:= $(shell git rev-parse --short HEAD)
 CONF_FILE = xbps-src.conf
 
