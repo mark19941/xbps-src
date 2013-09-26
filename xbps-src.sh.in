@@ -477,12 +477,14 @@ if [ -d "${XBPS_DISTDIR}/.git" ]; then
 	fi
 	# Set XBPS_ALT_REPOSITORY to our current branch.
 	if [ -z "$XBPS_ALT_REPOSITORY" ]; then
+		pushd "$PWD" &>/dev/null
 		cd $XBPS_DISTDIR
 		_gitbranch="$(git symbolic-ref --short HEAD 2>/dev/null)"
 		if [ -n "${_gitbranch}" -a "${_gitbranch}" != "master" ]; then
 			readonly XBPS_ALT_REPOSITORY="${_gitbranch}"
 			msg_normal "Using git branch \`$XBPS_ALT_REPOSITORY\' as local repository.\n"
 		fi
+		popd &>/dev/null
 	else
 		msg_normal "Using \`$XBPS_ALT_REPOSITORY\' as local repository.\n"
 	fi
