@@ -123,7 +123,7 @@ install_pkg() {
 
 	# If install went ok generate the binpkgs.
 	for subpkg in ${subpackages}; do
-		$XBPS_LIBEXECDIR/xbps-src-genpkg $subpkg $cross || exit 1
+		$XBPS_LIBEXECDIR/xbps-src-genpkg $subpkg "$cross" "$XBPS_ALT_REPOSITORY" || exit 1
 	done
 
 	# pkg cleanup

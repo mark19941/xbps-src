@@ -64,6 +64,19 @@ _EOF
 	chmod 755 $XBPS_MASTERDIR/bin/xbps-shell
 
 	cp -f /etc/resolv.conf $XBPS_MASTERDIR/etc
+
+	# Update xbps alternative repository if set.
+	mkdir -p $XBPS_MASTERDIR/etc/xbps/repos
+	if [ -n "$XBPS_ALT_REPOSITORY" ]; then
+		( \
+		printf "repositories += {\n"; \
+		printf "\t/host/binpkgs/${XBPS_ALT_REPOSITORY},\n"; \
+		printf "\t/host/binpkgs/${XBPS_ALT_REPOSITORY}/nonfree\n"; \
+		printf "}\n"; \
+		) > $XBPS_MASTERDIR/etc/xbps/repos/alternative.conf
+	else
+		: > $XBPS_MASTERDIR/etc/xbps/repos/alternative.conf
+	fi
 }
 
 chroot_prepare() {
@@ -102,17 +115,25 @@ chroot_prepare() {
 chroot_sync_repos() {
 	local f=
 
+	# Copy xbps configuration files to the masterdir.
 	if [ ! -f ${XBPS_MASTERDIR}/etc/xbps/xbps.conf ]; then
 		install -Dm644 ${XBPS_SHAREDIR}/chroot/xbps.conf \
 			${XBPS_MASTERDIR}/etc/xbps/xbps.conf
 	fi
+	if [ ! -f ${XBPS_MASTERDIR}/etc/xbps/repos/local.conf ]; then
+		install -Dm644 ${XBPS_SHAREDIR}/chroot/repos-local.conf \
+			${XBPS_MASTERDIR}/etc/xbps/repos/local.conf
+	fi
+	if [ ! -f ${XBPS_MASTERDIR}/etc/xbps/repos/remote.conf ]; then
+		install -Dm644 ${XBPS_SHAREDIR}/chroot/repos-remote.conf \
+			${XBPS_MASTERDIR}/etc/xbps/repos/remote.conf
+	fi
+
 	# Make sure to sync index for remote repositories.
-	xbps-install -r ${XBPS_MASTERDIR} \
-			-C ${XBPS_MASTERDIR}/etc/xbps/xbps.conf -S
+	$CHROOT_CMD $XBPS_MASTERDIR xbps-install -S
 	if [ -n "$XBPS_CROSS_BUILD" ]; then
-		env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH \
-			xbps-install -r $XBPS_MASTERDIR/usr/$XBPS_CROSS_TRIPLET \
-				-C ${XBPS_MASTERDIR}/etc/xbps/xbps.conf -S
+		$CHROOT_CMD $XBPS_MASTERDIR sh -c \
+			"env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH xbps-install -r /usr/$XBPS_CROSS_TRIPLET -S"
 	fi
 
 	return 0
@@ -147,6 +168,7 @@ chroot_handler() {
 		[ -n "$XBPS_MAKEJOBS" ] && arg="$arg -j$XBPS_MAKEJOBS"
 		[ -n "$XBPS_DEBUG_PKGS" ] && arg="$arg -g"
 		[ -n "$XBPS_SKIP_DEPS" ] && arg="$arg -I"
+		[ -n "$XBPS_ALT_REPOSITORY" ] && arg="$arg -r $XBPS_ALT_REPOSITORY"
 
 		action="$arg $action"
 		env -i PATH=/usr/bin:/usr/sbin IN_CHROOT=1 LANG=en_US.UTF-8 \

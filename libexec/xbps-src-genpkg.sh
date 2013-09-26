@@ -3,6 +3,7 @@
 # Passed arguments:
 # 	$1 - pkgname [REQUIRED]
 # 	$2 - cross-target [OPTIONAL]
+#	$3 - alternative local repository [OPTIONAL]
 
 register_pkg() {
 	local rval= _pkgdir="$1" _binpkg="$2" _force="$3"
@@ -37,11 +38,16 @@ genbinpkg() {
 		arch=$XBPS_MACHINE
 	fi
 	binpkg=$pkgver.$arch.xbps
-	if [ -n "$nonfree" ]; then
-		pkgdir=$XBPS_PACKAGESDIR/nonfree
+	if [ -n "$XBPS_ALT_REPOSITORY" ]; then
+		pkgdir=$XBPS_PACKAGESDIR/$XBPS_ALT_REPOSITORY
 	else
 		pkgdir=$XBPS_PACKAGESDIR
 	fi
+	if [ -n "$nonfree" ]; then
+		pkgdir=$pkgdir/nonfree
+	fi
+
+	[ ! -d $pkgdir ] && mkdir -p $pkgdir
 
 	while [ -f $pkgdir/${binpkg}.lock ]; do
 		msg_warn "$pkgver: binpkg is being created, waiting for 1s...\n"
@@ -145,13 +151,14 @@ genbinpkg() {
 	return $rval
 }
 
-if [ $# -lt 1 -o $# -gt 2 ]; then
-	echo "$(basename $0): invalid number of arguments: pkgname [cross-target]"
+if [ $# -lt 1 -o $# -gt 3 ]; then
+	echo "$(basename $0): invalid number of arguments: pkgname [cross-target] [altrepo]"
 	exit 1
 fi
 
 PKGNAME="$1"
 XBPS_CROSS_BUILD="$2"
+XBPS_ALT_REPOSITORY="$3"
 
 . $XBPS_SHUTILSDIR/common.sh
 

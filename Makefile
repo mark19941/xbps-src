@@ -10,7 +10,7 @@ ETCDIR  ?= $(PREFIX)/etc/xbps
 PRIVILEGED_GROUP ?= wheel
 
 # INMUTABLE VARIABLES
-VERSION	= 65
+VERSION	= 66
 GITVER	:= $(shell git rev-parse --short HEAD)
 CONF_FILE = xbps-src.conf
 
@@ -50,8 +50,10 @@ install-scripts: all
 	install -d $(DESTDIR)$(SHAREDIR)/cross-profiles
 	install -m 644 cross-profiles/*.sh $(DESTDIR)$(SHAREDIR)/cross-profiles
 	install -m 644 cross-profiles/config.sub $(DESTDIR)$(SHAREDIR)/cross-profiles
-	install -d $(DESTDIR)$(SHAREDIR)/chroot
+	install -d $(DESTDIR)$(SHAREDIR)/chroot/repos
 	install -m 644 chroot/xbps.conf $(DESTDIR)$(SHAREDIR)/chroot
+	install -m 644 chroot/repos-local.conf $(DESTDIR)$(SHAREDIR)/chroot
+	install -m 644 chroot/repos-remote.conf $(DESTDIR)$(SHAREDIR)/chroot
 	if [ ! -d $(DESTDIR)$(ETCDIR) ]; then           \
 		install -d $(DESTDIR)$(ETCDIR);         \
 	fi
