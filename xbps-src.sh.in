@@ -475,6 +475,17 @@ if [ -d "${XBPS_DISTDIR}/.git" ]; then
 		echo "ERROR: requires xbps-$XBPS_UTILS_REQ API: $XBPS_UTILS_API_REQ"
 		exit 1
 	fi
+	# Set XBPS_ALT_REPOSITORY to our current branch.
+	if [ -z "$XBPS_ALT_REPOSITORY" ]; then
+		cd $XBPS_DISTDIR
+		_gitbranch="$(git symbolic-ref --short HEAD 2>/dev/null)"
+		if [ -n "${_gitbranch}" -a "${_gitbranch}" != "master" ]; then
+			readonly XBPS_ALT_REPOSITORY="${_gitbranch}"
+			msg_normal "Using git branch \`$XBPS_ALT_REPOSITORY\' as local repository.\n"
+		fi
+	else
+		msg_normal "Using \`$XBPS_ALT_REPOSITORY\' as local repository.\n"
+	fi
 fi
 
 #
