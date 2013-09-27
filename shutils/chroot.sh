@@ -130,10 +130,10 @@ chroot_sync_repos() {
 	fi
 
 	# Make sure to sync index for remote repositories.
-	$CHROOT_CMD $XBPS_MASTERDIR xbps-install -S
+	$CHROOT_CMD $XBPS_MASTERDIR /usr/sbin/xbps-install -S
 	if [ -n "$XBPS_CROSS_BUILD" ]; then
 		$CHROOT_CMD $XBPS_MASTERDIR sh -c \
-			"env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH xbps-install -r /usr/$XBPS_CROSS_TRIPLET -S"
+			"/usr/bin/env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH /usr/sbin/xbps-install -r /usr/$XBPS_CROSS_TRIPLET -S"
 	fi
 
 	return 0
