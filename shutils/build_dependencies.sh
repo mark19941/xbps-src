@@ -72,7 +72,7 @@ check_pkgdep_matched() {
 # Installs all dependencies required by a package.
 #
 install_pkg_deps() {
-	local pkg="$1" cross="$2" i rval curpkgdepname pkgn iver _props _exact
+	local pkg="$1" cross="$2" i rval _realpkg curpkgdepname pkgn iver _props _exact
 
 	local -a host_binpkg_deps binpkg_deps
 	local -a host_missing_deps missing_deps
@@ -91,26 +91,27 @@ install_pkg_deps() {
 	# Host build dependencies.
 	#
 	for i in ${host_build_depends}; do
-		pkgn=$($XBPS_UHELPER_CMD getpkgdepname "${i}")
+		_realpkg="${i%\?*}"
+		pkgn=$($XBPS_UHELPER_CMD getpkgdepname "${_realpkg}")
 		if [ -z "$pkgn" ]; then
-			pkgn=$($XBPS_UHELPER_CMD getpkgname "${i}")
+			pkgn=$($XBPS_UHELPER_CMD getpkgname "${_realpkg}")
 			if [ -z "$pkgn" ]; then
 				msg_error "$pkgver: invalid build dependency: ${i}\n"
 			fi
 			_exact=1
 		fi
-		check_pkgdep_matched "$i"
+		check_pkgdep_matched "${_realpkg}"
 		local rval=$?
 		if [ $rval -eq 0 ]; then
 			iver=$($XBPS_UHELPER_CMD version "${pkgn}")
 			if [ $? -eq 0 -a -n "$iver" ]; then
-				echo "   [host] ${i}: found '$pkgn-$iver'."
+				echo "   [host] ${_realpkg}: found '$pkgn-$iver'."
 				continue
 			fi
 		elif [ $rval -eq 1 ]; then
 			iver=$($XBPS_UHELPER_CMD version "${pkgn}")
 			if [ $? -eq 0 -a -n "$iver" ]; then
-				echo "   [host] ${i}: installed ${iver} (unresolved) removing..."
+				echo "   [host] ${_realpkg}: installed ${iver} (unresolved) removing..."
 				$FAKEROOT_CMD $XBPS_REMOVE_CMD -iyf $pkgn >/dev/null 2>&1
 			fi
 		else
@@ -118,51 +119,52 @@ install_pkg_deps() {
 				unset _exact
 				_props=$($XBPS_QUERY_CMD -R -ppkgver,repository "${pkgn}" 2>/dev/null)
 			else
-				_props=$($XBPS_QUERY_CMD -R -ppkgver,repository "${i}" 2>/dev/null)
+				_props=$($XBPS_QUERY_CMD -R -ppkgver,repository "${_realpkg}" 2>/dev/null)
 			fi
 			if [ -n "${_props}" ]; then
 				set -- ${_props}
-				$XBPS_UHELPER_CMD pkgmatch ${1} "${i}"
+				$XBPS_UHELPER_CMD pkgmatch ${1} "${_realpkg}"
 				if [ $? -eq 1 ]; then
-					echo "   [host] ${i}: found $1 in $2."
+					echo "   [host] ${_realpkg}: found $1 in $2."
 					host_binpkg_deps+=("$1")
 					shift 2
 					continue
 				else
-					echo "   [host] ${i}: not found."
+					echo "   [host] ${_realpkg}: not found."
 				fi
 				shift 2
 			else
-				echo "   [host] ${i}: not found."
+				echo "   [host] ${_realpkg}: not found."
 			fi
 		fi
-		host_missing_deps+=("$i")
+		host_missing_deps+=("${_realpkg}")
 	done
 
 	#
 	# Target build dependencies.
 	#
 	for i in ${build_depends}; do
-		pkgn=$($XBPS_UHELPER_CMD getpkgdepname "${i}")
+		_realpkg="${i%\?*}"
+		pkgn=$($XBPS_UHELPER_CMD getpkgdepname "${_realpkg}")
 		if [ -z "$pkgn" ]; then
-			pkgn=$($XBPS_UHELPER_CMD getpkgname "${i}")
+			pkgn=$($XBPS_UHELPER_CMD getpkgname "${_realpkg}")
 			if [ -z "$pkgn" ]; then
-				msg_error "$pkgver: invalid build dependency: ${i}\n"
+				msg_error "$pkgver: invalid build dependency: ${_realpkg}\n"
 			fi
 			_exact=1
 		fi
-		check_pkgdep_matched "$i" $cross
+		check_pkgdep_matched "${_realpkg}" $cross
 		local rval=$?
 		if [ $rval -eq 0 ]; then
 			iver=$($XBPS_UHELPER_XCMD version "${pkgn}")
 			if [ $? -eq 0 -a -n "$iver" ]; then
-				echo "   [target] ${i}: found '$pkgn-$iver'."
+				echo "   [target] ${_realpkg}: found '$pkgn-$iver'."
 				continue
 			fi
 		elif [ $rval -eq 1 ]; then
 			iver=$($XBPS_UHELPER_XCMD version "${pkgn}")
 			if [ $? -eq 0 -a -n "$iver" ]; then
-				echo "   [target] ${i}: installed ${iver} (unresolved) removing..."
+				echo "   [target] ${_realpkg}: installed ${iver} (unresolved) removing..."
 				$XBPS_REMOVE_XCMD -iyf $pkgn >/dev/null 2>&1
 			fi
 		else
@@ -170,25 +172,25 @@ install_pkg_deps() {
 				unset _exact
 				_props=$($XBPS_QUERY_XCMD -R -ppkgver,repository "${pkgn}" 2>/dev/null)
 			else
-				_props=$($XBPS_QUERY_XCMD -R -ppkgver,repository "${i}" 2>/dev/null)
+				_props=$($XBPS_QUERY_XCMD -R -ppkgver,repository "${_realpkg}" 2>/dev/null)
 			fi
 			if [ -n "${_props}" ]; then
 				set -- ${_props}
-				$XBPS_UHELPER_CMD pkgmatch ${1} "${i}"
+				$XBPS_UHELPER_CMD pkgmatch ${1} "${_realpkg}"
 				if [ $? -eq 1 ]; then
-					echo "   [target] ${i}: found $1 in $2."
+					echo "   [target] ${_realpkg}: found $1 in $2."
 					binpkg_deps+=("$1")
 					shift 2
 					continue
 				else
-					echo "   [target] ${i}: not found."
+					echo "   [target] ${_realpkg}: not found."
 				fi
 				shift 2
 			else
-				echo "   [target] ${i}: not found."
+				echo "   [target] ${_realpkg}: not found."
 			fi
 		fi
-		missing_deps+=("$i")
+		missing_deps+=("${_realpkg}")
 	done
 
 	# Host missing dependencies, build from srcpkgs.

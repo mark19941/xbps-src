@@ -356,7 +356,7 @@ setup_pkg() {
 }
 
 setup_pkg_depends() {
-	local pkg="$1" j _pkgdepname _pkgdep
+	local pkg="$1" j _pkgdepname _pkgdep _depname
 
 	if [ -n "$pkg" ]; then
 		# subpkg
@@ -366,39 +366,42 @@ setup_pkg_depends() {
 	fi
 
 	for j in ${depends}; do
-		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${j} 2>/dev/null)"
+		_depname="${j#*\?}"
+		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${_depname} 2>/dev/null)"
 		if [ -z "${_pkgdepname}" ]; then
-			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${j} 2>/dev/null)"
+			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${_depname} 2>/dev/null)"
 		fi
 
 		if [ -z "${_pkgdepname}" ]; then
-			_pkgdep="$j>=0"
+			_pkgdep="${_depname}>=0"
 		else
-			_pkgdep="$j"
+			_pkgdep="${_depname}"
 		fi
 		run_depends+=" ${_pkgdep}"
 	done
 	for j in ${hostmakedepends}; do
-		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${j} 2>/dev/null)"
+		_depname="${j%\?*}"
+		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${_depname} 2>/dev/null)"
 		if [ -z "${_pkgdepname}" ]; then
-			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${j} 2>/dev/null)"
+			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${_depname} 2>/dev/null)"
 		fi
 		if [ -z "${_pkgdepname}" ]; then
-			_pkgdep="$j>=0"
+			_pkgdep="${_depname}>=0"
 		else
-			_pkgdep="$j"
+			_pkgdep="${_depname}"
 		fi
 		host_build_depends+=" ${_pkgdep}"
 	done
 	for j in ${makedepends}; do
-		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${j} 2>/dev/null)"
+		_depname="${j%\?*}"
+		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${_depname} 2>/dev/null)"
 		if [ -z "${_pkgdepname}" ]; then
-			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${j} 2>/dev/null)"
+			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${_depname} 2>/dev/null)"
 		fi
 		if [ -z "${_pkgdepname}" ]; then
-			_pkgdep="$j>=0"
+			_pkgdep="${_depname}>=0"
 		else
-			_pkgdep="$j"
+			_pkgdep="${_depname}"
 		fi
 		build_depends+=" ${_pkgdep}"
 	done
