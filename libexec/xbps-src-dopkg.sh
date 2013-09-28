@@ -478,7 +478,7 @@ ${PKGNAME}_package
 pkgname=$PKGNAME
 
 install -d $PKGDESTDIR
-if [ "$build_style" != "meta" ]; then
+if declare -f pkg_install >/dev/null; then
 	export XBPS_PKGDESTDIR=1
 	run_func pkg_install
 fi
