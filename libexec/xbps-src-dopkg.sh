@@ -335,6 +335,29 @@ prepare_destdir() {
 		[ -f ${PKGDESTDIR}/${f} ] && rm -f ${PKGDESTDIR}/${f}
 	done
 
+	# Remove libtool archives by default.
+	if [ -z "$keep_libtool_archives" ]; then
+		msg_normal "$pkgver: removing libtool archives...\n"
+		find ${PKGDESTDIR} -type f -name \*.la -delete
+	fi
+
+	# Remove bytecode python generated files.
+	msg_normal "$pkgver: removing python bytecode archives...\n"
+	find ${PKGDESTDIR} -type f -name \*.py[co] -delete
+
+	# Always remove perllocal.pod and .packlist files.
+	if [ "$pkgname" != "perl" ]; then
+		find ${PKGDESTDIR} -type f -name perllocal.pod -delete
+		find ${PKGDESTDIR} -type f -name .packlist -delete
+	fi
+
+	# Remove empty directories by default.
+	for f in $(find ${PKGDESTDIR} -type d -empty -delete -print); do
+		_dir="${f##${PKGDESTDIR}}"
+		[ -z "${_dir}" ] && continue
+		msg_warn "$pkgver: removed empty dir: ${_dir}\n"
+	done
+
 	#
 	# If package provides virtual packages, create dynamically the
 	# required configuration file.

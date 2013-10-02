@@ -72,29 +72,6 @@ if [ ! -f $XBPS_POST_INSTALL_DONE ]; then
 	fi
 fi
 
-# Remove libtool archives by default.
-if [ -z "$keep_libtool_archives" ]; then
-	msg_normal "$pkgver: removing libtool archives...\n"
-	find ${DESTDIR} -type f -name \*.la -delete
-fi
-
-# Remove bytecode python generated files.
-msg_normal "$pkgver: removing python bytecode archives...\n"
-find ${DESTDIR} -type f -name \*.py[co] -delete
-
-# Always remove perllocal.pod and .packlist files.
-if [ "$pkgname" != "perl" ]; then
-	find ${DESTDIR} -type f -name perllocal.pod -delete
-	find ${DESTDIR} -type f -name .packlist -delete
-fi
-
-# Remove empty directories by default.
-for f in $(find ${DESTDIR} -depth -type d); do
-	_dir="${f##${DESTDIR}}"
-	[ -z "${_dir}" ] && continue
-	rmdir "${_dir}" 2>/dev/null && msg_warn "$pkgver: removed empty dir: ${_dir}\n"
-done
-
 touch -f $XBPS_INSTALL_DONE
 
 exit 0
