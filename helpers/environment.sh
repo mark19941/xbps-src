@@ -1,6 +1,6 @@
 # Environment exported for use in packages.
 
-if [ "$build_style" = "gnu-configure" ]; then
+if [ "$build_style" = "gnu-configure" -o -z "$build_style" ]; then
 	confargs="--prefix=/usr --sysconfdir=/etc --infodir=/usr/share/info
 		--mandir=/usr/share/man --localstatedir=/var "
 
