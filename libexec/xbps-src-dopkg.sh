@@ -352,9 +352,10 @@ prepare_destdir() {
 	fi
 
 	# Remove empty directories by default.
-	for f in $(find ${PKGDESTDIR} -type d -empty -delete -print); do
+	for f in $(find ${PKGDESTDIR} -type d -empty -print); do
 		_dir="${f##${PKGDESTDIR}}"
-		[ -z "${_dir}" ] && continue
+		[ -z "${_dir}" -o "${_dir}" = "${PKGDESTDIR}" ] && continue
+		rmdir "${_dir}" &>/dev/null
 		msg_warn "$pkgver: removed empty dir: ${_dir}\n"
 	done
 
@@ -445,9 +446,11 @@ prepare_destdir() {
 	#
 	# Create package's flist for bootstrap packages.
 	#
-	find ${PKGDESTDIR} -print > ${PKGDESTDIR}/flist
-	sed -i -e "s|${PKGDESTDIR}||g;s|/flist||g;/^$/d" ${PKGDESTDIR}/flist
-
+	touch -f ${PKGDESTDIR}/flist
+	find ${PKGDESTDIR} -print >> ${PKGDESTDIR}/flist
+	if [ -s ${PKGDESTDIR}/flist ]; then
+		sed -i -e "s|${PKGDESTDIR}||g;s|/flist||g;/^$/d" ${PKGDESTDIR}/flist
+	fi
 	#
 	# Create the INSTALL/REMOVE scripts if package uses them
 	# or uses any available trigger.
