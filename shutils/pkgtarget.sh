@@ -60,7 +60,7 @@ fetch_git_revs() {
 }
 
 install_pkg() {
-	local target="$1" cross="$2" lrepo subpkg
+	local target="$1" cross="$2" lrepo subpkg opkg
 
 	[ -z "$pkgname" ] && return 1
 
@@ -131,6 +131,7 @@ install_pkg() {
 		run_func do_clean
 	fi
 
+	opkg=$pkgver
 	if [ -z "$XBPS_KEEP_ALL" ]; then
 		remove_pkg_autodeps
 		remove_pkg_wrksrc
@@ -141,14 +142,14 @@ install_pkg() {
 	# If base-chroot not installed, install binpkg into masterdir
 	# from local repository.
 	if [ -z "$CHROOT_READY" ]; then
-		msg_normal "Installing $pkgver into masterdir...\n"
+		msg_normal "Installing $opkg into masterdir...\n"
 		local _log=$(mktemp --tmpdir|| exit 1)
 		if [ -n "$XBPS_BUILD_FORCEMODE" ]; then
 			local _flags="-f"
 		fi
-		$FAKEROOT_CMD $XBPS_INSTALL_CMD ${_flags} -y $pkgver >${_log} 2>&1
+		$FAKEROOT_CMD $XBPS_INSTALL_CMD ${_flags} -y $opkg >${_log} 2>&1
 		if [ $? -ne 0 ]; then
-			msg_red "Failed to install $pkgver into masterdir, see below for errors:\n"
+			msg_red "Failed to install $opkg into masterdir, see below for errors:\n"
 			cat ${_log}
 			rm -f ${_log}
 			msg_error "Cannot continue!"
