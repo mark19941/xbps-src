@@ -308,7 +308,7 @@ setup_pkg() {
 	if [ -z "$bootstrap" ]; then
 		check_installed_pkg base-chroot-${BASE_CHROOT_REQ%_*}_1
 		if [ $? -ne 0 ]; then
-			msg_red "${XBPS_MASTERDIR} has not been prepared for chroot operations.\n"
+			msg_red "${pkg} is not a bootstrap package and cannot be built without it.\n"
 			msg_error "Please install 'base-chroot>=$BASE_CHROOT_REQ' and try again.\n"
 		fi
 	fi
