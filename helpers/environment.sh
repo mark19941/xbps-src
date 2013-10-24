@@ -18,3 +18,7 @@ if [ "$CROSS_BUILD" ]; then
 	export PKG_CONFIG_PATH="$XBPS_CROSS_BASE/lib/pkgconfig:$XBPS_CROSS_BASE/usr/share/pkgconfig"
 	export PKG_CONFIG_LIBDIR="$XBPS_CROSS_BASE/lib/pkgconfig"
 fi
+
+if [ -z "$CHROOT_READY" ]; then
+	export PKG_CONFIG_PATH="${XBPS_MASTERDIR}/usr/lib/pkgconfig:${XBPS_MASTERDIR}/usr/share/pkgconfig"
+fi
