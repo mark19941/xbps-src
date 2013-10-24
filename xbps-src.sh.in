@@ -281,7 +281,7 @@ export CHROOT_CMD="${XBPS_LIBEXECDIR}/xbps-src-chroot-helper --unshare-ipc --uns
 export XBPS_MACHINE=$(uname -m)
 
 # Required utilities in host system for the bootstrap target.
-readonly REQHOST_UTILS_BOOTSTRAP="awk bash bison sed gcc g++ msgfmt patch makeinfo \
+readonly REQHOST_UTILS_BOOTSTRAP="awk bash bison sed gcc g++ msgfmt makeinfo \
 	perl fakeroot tar xz gzip bzip2 patch flex"
 
 # Required utilities in host system for chroot ops.
