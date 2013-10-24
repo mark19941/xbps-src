@@ -109,6 +109,10 @@ chroot_prepare() {
 	ln -sfr ${XBPS_MASTERDIR}/bin/bash ${XBPS_MASTERDIR}/bin/sh
 	rm -f $XBPS_MASTERDIR/etc/xbps/xbps.conf
 
+	# Prepare default locale: en_US.UTF-8.
+	echo 'en_US.UTF-8 UTF-8' >> ${XBPS_MASTERDIR}/etc/default/libc-locales
+	$XBPS_RECONFIGURE_CMD -f glibc-locales
+
 	touch $XBPS_MASTERDIR/.xbps_chroot_init
 }
 
