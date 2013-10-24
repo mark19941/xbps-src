@@ -37,16 +37,16 @@ DEPENDENCIES
 ============
 
 	* GNU bash
-	* git
-	* XBPS >= 0.26
 	* fakeroot
+	* git
+	* xbps >= 0.26
 
 The following packages are required to build a full bootstrap from scratch:
 
 	* GNU Awk
 	* GNU Binutils
-	* GNU Bison
-	* GNU CC
+	* GNU Bison/Flex
+	* GNU CC with C++ support
 	* GNU Gettext (msgfmt)
 	* GNU patch
 	* GNU Tar
