@@ -2,7 +2,7 @@
 
 usage() {
 	cat << _EOF
-$PROGNAME: [-a cross-arch] [-Cfghj] [-c file] [-m dir] [-o opts] [-r repo] <target> [args]
+$PROGNAME: [-a cross-arch] [-CfghjN] [-c file] [-m dir] [-o opts] [-r repo] <target> [args]
 
 Targets: (only one may be specified)
 
@@ -117,6 +117,7 @@ Options:
  -m  <masterdir>
      Master directory to install and build binary packages,
      overwritting the value set in configuration file.
+ -N  Disable the use of remote repositories to resolve dependencies.
  -o  <opt,~opt2,...>
      Enable or disable (prefixed with ~) package build options.
      Supported options can be shown with the 'show-options' target.
@@ -291,7 +292,7 @@ readonly REQHOST_UTILS="xbps-install xbps-query xbps-rindex xbps-uhelper \
 #
 # main()
 #
-while getopts "a:Cc:D:fghH:Ij:Lm:o:r:V" opt; do
+while getopts "a:Cc:D:fghH:Ij:Lm:No:r:V" opt; do
 	case $opt in
 	a) _XBPS_CROSS_BUILD="$OPTARG";;
 	c) _XBPS_CONFIG_FILE="$(realpath $OPTARG 2>/dev/null)";;
@@ -305,6 +306,7 @@ while getopts "a:Cc:D:fghH:Ij:Lm:o:r:V" opt; do
 	j) _MAKEJOBS="$OPTARG";;
 	L) _NOCOLORS=1;;
 	m) _XBPS_MASTERDIR=$(realpath $OPTARG 2>/dev/null);;
+	N) readonly XBPS_SKIP_REMOTEREPOS=1;;
 	o) _XBPS_BUILD_OPTS="$OPTARG";;
 	r) readonly XBPS_ALT_REPOSITORY="$OPTARG";;
 	V) echo $XBPS_SRC_VERSION && exit 0;;
@@ -358,7 +360,7 @@ fi
 export XBPS_CFLAGS XBPS_CXXFLAGS XBPS_LDFLAGS XBPS_MAKEJOBS
 export XBPS_BUILD_FORCEMODE XBPS_USE_GIT_REVS XBPS_DEBUG_PKGS
 export XBPS_CCACHE XBPS_DISTCC XBPS_DISTCC_HOSTS XBPS_SKIP_DEPS
-export XBPS_ALT_REPOSITORY
+export XBPS_ALT_REPOSITORY XBPS_SKIP_REMOTEREPOS
 
 XBPS_TARGET="$1"
 XBPS_TARGET_PKG="$2"
