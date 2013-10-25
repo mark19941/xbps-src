@@ -210,9 +210,7 @@ install_bbotstrap() {
 	fi
 
 	${_bootstrap_arch} xbps-install ${_args} ${_opt_args} -r $XBPS_MASTERDIR \
-		-c $XBPS_MASTERDIR/host/repocache \
-		-y 'base-chroot>=0.33' 'xbps>=0.21_5'
-
+		-c $XBPS_MASTERDIR/host/repocache -y base-chroot
 	if [ $? -ne 0 ]; then
 		msg_error "Failed to install bootstrap packages!\n"
 	fi
