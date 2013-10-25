@@ -1,4 +1,5 @@
 #!/bin/bash
+# vim: set ts=4 sw=4 et:
 
 usage() {
 	cat << _EOF
@@ -210,7 +211,7 @@ install_bbotstrap() {
 	fi
 
 	${_bootstrap_arch} xbps-install ${_args} ${_opt_args} -r $XBPS_MASTERDIR \
-		-c $XBPS_MASTERDIR/host/repocache -y base-chroot
+		-c $XBPS_MASTERDIR/host/repocache -y "base-chroot>=${BASE_CHROOT_REQ%_*}"
 	if [ $? -ne 0 ]; then
 		msg_error "Failed to install bootstrap packages!\n"
 	fi
@@ -460,20 +461,25 @@ if [ -d "${XBPS_DISTDIR}/.git" ]; then
 		echo "ERROR: missing defs from global-defs.sh!"
 		exit 1
 	fi
-	xbps-uhelper cmpver $(echo "$XBPS_SRC_VERSION"|awk '{print $1}') "$XBPS_SRC_REQ"
-	if [ $? -eq 255 ]; then
-		echo "ERROR: this xbps-src version is outdated! (>=$XBPS_SRC_REQ is required)"
-		exit 1
-	fi
-	xbps-uhelper cmpver "$XBPS_VERSION" "$XBPS_UTILS_REQ"
-	if [ $? -eq 255 ]; then
-		echo "ERROR: requires xbps-$XBPS_UTILS_REQ API: $XBPS_UTILS_API_REQ"
-		exit 1
-	fi
-	xbps-uhelper cmpver "$XBPS_APIVER" "$XBPS_UTILS_API_REQ"
-	if [ $? -eq 255 ]; then
-		echo "ERROR: requires xbps-$XBPS_UTILS_REQ API: $XBPS_UTILS_API_REQ"
-		exit 1
+	if [ "$XBPS_TARGET" != "bootstrap-update" ]; then
+		xbps-uhelper cmpver $(echo "$XBPS_SRC_VERSION"|awk '{print $1}') "$XBPS_SRC_REQ"
+		if [ $? -eq 255 ]; then
+			echo "ERROR: this xbps-src version is outdated! (>=$XBPS_SRC_REQ is required)"
+			echo "Bootstrap packages must be updated with 'xbps-src bootstrap-update'"
+			exit 1
+		fi
+		xbps-uhelper cmpver "$XBPS_VERSION" "$XBPS_UTILS_REQ"
+		if [ $? -eq 255 ]; then
+			echo "ERROR: requires xbps-$XBPS_UTILS_REQ API: $XBPS_UTILS_API_REQ"
+			echo "Bootstrap packages must be updated with 'xbps-src bootstrap-update'"
+			exit 1
+		fi
+		xbps-uhelper cmpver "$XBPS_APIVER" "$XBPS_UTILS_API_REQ"
+		if [ $? -eq 255 ]; then
+			echo "ERROR: requires xbps-$XBPS_UTILS_REQ API: $XBPS_UTILS_API_REQ"
+			echo "Bootstrap packages must be updated with 'xbps-src bootstrap-update'"
+			exit 1
+		fi
 	fi
 	# Set XBPS_ALT_REPOSITORY to our current branch.
 	if [ -z "$XBPS_ALT_REPOSITORY" ]; then
