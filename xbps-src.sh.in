@@ -118,7 +118,7 @@ Options:
  -m  <masterdir>
      Master directory to install and build binary packages,
      overwritting the value set in configuration file.
- -N  Disable the use of remote repositories to resolve dependencies.
+ -N  Disable use of remote repositories to resolve dependencies.
  -o  <opt,~opt2,...>
      Enable or disable (prefixed with ~) package build options.
      Supported options can be shown with the 'show-options' target.
