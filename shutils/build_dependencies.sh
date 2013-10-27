@@ -43,6 +43,7 @@ install_pkg_from_repos() {
 check_pkgdep_matched() {
 	local pkg="$1" cross="$2" uhelper= pkgn= iver=
 
+	[ "$build_style" = "meta" ] && return 2
 	[ -z "$pkg" ] && return 255
 
 	pkgn="$($XBPS_UHELPER_CMD getpkgdepname ${pkg})"
