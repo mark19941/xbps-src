@@ -7,7 +7,7 @@ SHAREDIR ?= $(PREFIX)/share/xbps-src
 LIBEXECDIR ?= $(PREFIX)/libexec
 ETCDIR  ?= $(PREFIX)/etc/xbps
 
-PRIVILEGED_GROUP ?= wheel
+PRIVILEGED_GROUP ?= xbuilder
 
 # INMUTABLE VARIABLES
 VERSION	= 74
