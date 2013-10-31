@@ -12,9 +12,11 @@ verify_sha256_cksum() {
 	filesum=$(${XBPS_DIGEST_CMD} $distfile)
 	if [ "$origsum" != "$filesum" ]; then
 		echo
-		msg_error "SHA256 mismatch for '$file:'\n$filesum\n"
+		msg_red "SHA256 mismatch for '$file:'\n$filesum\n"
+		return 1
+	else
+		msg_normal_append "OK.\n"
 	fi
-	msg_normal_append "OK.\n"
 }
 
 if [ $# -ne 1 ]; then
@@ -76,7 +78,7 @@ for f in ${distfiles}; do
 	if [ -f "$distfile" ]; then
 		flock -n ${distfile}.part rm -f ${distfile}.part
 		for i in ${checksum}; do
-			if [ $dfcount -eq $ckcount -a -n $i ]; then
+			if [ $dfcount -eq $ckcount -a -n "$i" ]; then
 				cksum=$i
 				found=yes
 				break
@@ -90,12 +92,11 @@ for f in ${distfiles}; do
 		fi
 
 		verify_sha256_cksum $curfile $cksum $distfile
-		if [ $? -eq 0 ]; then
-			unset cksum found
-			ckcount=0
-			dfcount=$(($dfcount + 1))
-			continue
-		fi
+		rval=$?
+		unset cksum found
+		ckcount=0
+		dfcount=$(($dfcount + 1))
+		continue
 	fi
 
 	msg_normal "$pkgver: fetching distfile '$curfile'...\n"
@@ -120,7 +121,7 @@ for f in ${distfiles}; do
 		# XXX duplicate code.
 		#
 		for i in ${checksum}; do
-			if [ $dfcount -eq $ckcount -a -n $i ]; then
+			if [ $dfcount -eq $ckcount -a -n "$i" ]; then
 				cksum=$i
 				found=yes
 				break
@@ -134,13 +135,12 @@ for f in ${distfiles}; do
 		fi
 
 		verify_sha256_cksum $curfile $cksum $distfile
-		if [ $? -eq 0 ]; then
-			unset cksum found
-			ckcount=0
-		fi
+		rval=$?
+		unset cksum found
+		ckcount=0
 	fi
 
 	dfcount=$(($dfcount + 1))
 done
 
-exit 0
+exit $rval
