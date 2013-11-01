@@ -57,7 +57,7 @@ XBPS_SRC_VERSION="$XBPS_SRC_VERSION"
 PATH=/usr/bin:/usr/sbin:/usr/lib/perl5/core_perl/bin
 
 exec env -i PATH="\$PATH" DISTCC_HOSTS="\$XBPS_DISTCC_HOSTS" DISTCC_DIR="/distcc" \
-	CCACHE_DIR="/ccache" IN_CHROOT=1 LANG=en_US.UTF-8 TERM=linux \
+	CCACHE_DIR="/ccache" IN_CHROOT=1 LANG=en_US.UTF-8 TERM=linux HOME="/tmp" \
 	PS1="[\u@$XBPS_MASTERDIR \W]$ " /bin/bash +h
 
 _EOF
@@ -183,7 +183,7 @@ chroot_handler() {
 		[ -n "$XBPS_ALT_REPOSITORY" ] && arg="$arg -r $XBPS_ALT_REPOSITORY"
 
 		action="$arg $action"
-		env -i PATH=/usr/bin:/usr/sbin IN_CHROOT=1 LANG=en_US.UTF-8 \
+		env -i PATH=/usr/bin:/usr/sbin HOME=/tmp IN_CHROOT=1 LANG=en_US.UTF-8 \
 			$CHROOT_CMD ${_chargs} $XBPS_MASTERDIR sh -c \
 			"xbps-src $action $pkg" || rv=$?
 	fi
