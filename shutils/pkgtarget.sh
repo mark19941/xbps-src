@@ -204,4 +204,7 @@ remove_pkg() {
 		msg_normal "$sourcepkg: removing files from destdir...\n"
 		rm -rf "${_destdir}/${sourcepkg}-${version}"
 	fi
+	if [ -d "$XBPS_DESTDIR/${sourcepkg}-${version}" ]; then
+		rm -rf "${XBPS_DESTDIR}/${sourcepkg}-${version}"
+	fi
 }
