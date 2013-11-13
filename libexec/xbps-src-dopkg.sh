@@ -46,7 +46,7 @@ process_metadata_scripts() {
 
 export PATH="/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
 
-TRIGGERSDIR="/usr/libexec/xbps-triggers"
+TRIGGERSDIR="./usr/libexec/xbps-triggers"
 ACTION="\$1"
 PKGNAME="\$2"
 VERSION="\$3"
