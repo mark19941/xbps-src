@@ -135,10 +135,10 @@ chroot_sync_repos() {
 
 	# if -N is set, comment out remote repositories from xbps.conf.
 	if [ -n "$XBPS_SKIP_REMOTEREPOS" ]; then
-		sed -e 's,\(include("/etc/xbps/repos/remote.conf")\),#\1,' \
+		sed -e 's,^.*\(include("/etc/xbps/repos/remote.conf")$\),#\1,' \
 			-i ${XBPS_MASTERDIR}/etc/xbps/xbps.conf
 	else
-		sed -e 's,#\(include("/etc/xbps/repos/remote.conf")\),\1,' \
+		sed -e 's,^#.*\(include("/etc/xbps/repos/remote.conf")$\),\1,' \
 			-i ${XBPS_MASTERDIR}/etc/xbps/xbps.conf
 		# Make sure to sync index for remote repositories.
 		$CHROOT_CMD $XBPS_MASTERDIR /usr/sbin/xbps-install -S
@@ -154,7 +154,7 @@ chroot_sync_repos() {
 chroot_handler() {
 	local _chargs="--mount-bind ${XBPS_DISTDIR} /xbps \
 		--mount-bind /dev /dev --mount-bind /sys /sys \
-		--mount-proc /proc"
+		--mount-proc /proc --mount-bind /dev/shm /dev/shm"
 
 	if [ -n "$XBPS_HOSTDIR" ]; then
 		_chargs="${_chargs} --mount-bind $XBPS_HOSTDIR /host"
