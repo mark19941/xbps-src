@@ -50,16 +50,19 @@ if [ ! -f $XBPS_PRE_INSTALL_DONE ]; then
 fi
 
 # Run do_install()
-cd $wrksrc
-[ -n "$build_wrksrc" ] && cd $build_wrksrc
-if declare -f do_install >/dev/null; then
-	run_func do_install
-else
-	if [ ! -r $XBPS_BUILDSTYLEDIR/${build_style}.sh ]; then
-		msg_error "$pkgver: cannot find build helper $XBPS_BUILDSTYLEDIR/${build_style}.sh!\n"
+if [ ! -f $XBPS_INSTALL_DONE ]; then
+	cd $wrksrc
+	[ -n "$build_wrksrc" ] && cd $build_wrksrc
+	if declare -f do_install >/dev/null; then
+		run_func do_install
+	else
+		if [ ! -r $XBPS_BUILDSTYLEDIR/${build_style}.sh ]; then
+			msg_error "$pkgver: cannot find build helper $XBPS_BUILDSTYLEDIR/${build_style}.sh!\n"
+		fi
+		. $XBPS_BUILDSTYLEDIR/${build_style}.sh
+		run_func do_install
 	fi
-	. $XBPS_BUILDSTYLEDIR/${build_style}.sh
-	run_func do_install
+	touch -f $XBPS_INSTALL_DONE
 fi
 
 # Run post_install()
@@ -71,7 +74,5 @@ if [ ! -f $XBPS_POST_INSTALL_DONE ]; then
 		touch -f $XBPS_POST_INSTALL_DONE
 	fi
 fi
-
-touch -f $XBPS_INSTALL_DONE
 
 exit 0
