@@ -33,6 +33,10 @@ check_pkg_arch() {
 fetch_git_revs() {
 	local _revs= _out= f= _filerev= _files=
 
+	# If the file exists don't regenerate it again.
+	if [ -s ${PKG_GITREVS_FILE} ]; then
+		return
+	fi
 	# Get the git revisions from this source pkg.
 	cd $XBPS_SRCPKGDIR
 	_files=$(git ls-files $1)
