@@ -179,6 +179,8 @@ fi
 ${PKGNAME}_package
 pkgname=$PKGNAME
 
-pkg_genrdeps
+if [ ! -s ${PKGDESTDIR}/rdeps ]; then
+	pkg_genrdeps
+fi
 
 exit 0
