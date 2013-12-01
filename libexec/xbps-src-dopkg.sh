@@ -352,10 +352,10 @@ prepare_destdir() {
 	fi
 
 	# Remove empty directories by default.
-	for f in $(find ${PKGDESTDIR} -type d -empty -print); do
+	for f in $(find ${PKGDESTDIR} -type d -empty|sort -r); do
 		_dir="${f##${PKGDESTDIR}}"
-		[ -z "${_dir}" -o "${_dir}" = "${PKGDESTDIR}" ] && continue
-		rmdir "${_dir}" &>/dev/null
+		[ -z "${_dir}" ] && continue
+		rmdir -p "$f" &>/dev/null
 		msg_warn "$pkgver: removed empty dir: ${_dir}\n"
 	done
 
