@@ -7,8 +7,6 @@ chroot_init() {
 		fi
 	fi
 
-	msg_normal "Starting chroot on $XBPS_MASTERDIR.\n"
-
 	if [ ! -d $XBPS_MASTERDIR/etc/xbps ]; then
 		mkdir -p $XBPS_MASTERDIR/etc/xbps
 	fi
@@ -193,8 +191,6 @@ chroot_handler() {
 			$CHROOT_CMD ${_chargs} $XBPS_MASTERDIR sh -c \
 			"xbps-src $action $pkg" || rv=$?
 	fi
-
-	msg_normal "Exiting from chroot on $XBPS_MASTERDIR.\n"
 
 	return $rv
 }
