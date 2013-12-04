@@ -3,7 +3,7 @@
 
 usage() {
 	cat << _EOF
-$PROGNAME: [-a cross-arch] [-CfghjN] [-c file] [-m dir] [-o opts] [-r repo] <target> [args]
+$PROGNAME: [options] <target> [arguments]
 
 Targets: (only one may be specified)
 
@@ -89,15 +89,15 @@ is omitted xbps-src assumes that CWD is in the target package. Example:
 Both ways are equivalent.
 
 Options:
- -a <cross-profile>
-     Cross build packages for this target profile. Supported values:
+ -a  <profile>
+     Cross compile packages for this profile. Supported values:
 
-	i686		- for i686 GNU/Linux
-	i686-musl	- for i686 Musl/Linux
-	armv6hf 	- for ARMv6 EABI5 (LE Hard Float) GNU/Linux
-	armv6hf-musl	- for ARMv6 EABI5 (LE Hard Float) Musl/Linux
-	mips		- for MIPS o32 (BE Soft Float) GNU/Linux
-	mipsel		- for MIPS o32 (LE Soft Float) GNU/Linux
+	 i686           - for i686 GNU/Linux
+	 i686-musl      - for i686 Musl/Linux
+	 armv6hf        - for ARMv6 EABI5 (LE Hard Float) GNU/Linux
+	 armv6hf-musl   - for ARMv6 EABI5 (LE Hard Float) Musl/Linux
+	 mips           - for MIPS o32 (BE Soft Float) GNU/Linux
+	 mipsel         - for MIPS o32 (LE Soft Float) GNU/Linux
 
  -C  Do not remove build directory, automatic dependencies and
      package destdir after successful install.
