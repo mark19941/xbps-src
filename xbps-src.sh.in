@@ -102,22 +102,25 @@ Options:
  -C  Do not remove build directory, automatic dependencies and
      package destdir after successful install.
  -c  <config>
-     Path to global configuration file (defaults to 
-     ${XBPS_ETCDIR}/xbps-src.conf).
+     Path to the configuration file (defaults to ${HOME}/.xbps-src.conf,
+     or ${XBPS_ETCDIR}/xbps-src.conf if user configuration file not found).
  -f  Force building and registering binary packages into the local repository,
      even if same version is already registered.
  -g  Enable building -dbg packages with debugging symbols.
  -D  <distdir>
-     Path to XBPS_DISTDIR, overriding the setting in xbps-src.conf.
+     Path to XBPS_DISTDIR, overriding the setting from xbps-src.conf.
+     The distribution directory contains the 'xbps-packages' repository.
  -H  <hostdir>
-     Path to XBPS_HOSTDIR, overriding the setting in xbps-src.conf.
+     Path to XBPS_HOSTDIR, overriding the setting from xbps-src.conf.
+     The host directory stores binary packages, sources and package dependencies
+     downloaded from remote repositories.
  -h  Usage output.
  -I  Ignore required dependencies, useful for extracting/fetching sources.
  -j  Number of parallel build jobs to use when compiling packages.
  -L  Disable ASCII colors.
  -m  <masterdir>
-     Master directory to install and build binary packages,
-     overwritting the value set in configuration file.
+     Path to XBPS_MASTERDIR, overriding the setting from xbps-src.conf.
+     The masterdir is the main directory to build/store/compile packages.
  -N  Disable use of remote repositories to resolve dependencies.
  -o  <opt,~opt2,...>
      Enable or disable (prefixed with ~) package build options.
@@ -158,37 +161,28 @@ check_reqhost_utils() {
 }
 
 check_config_vars() {
-	local val= cffound= f=
-
 	if [ -z "$XBPS_CONFIG_FILE" ]; then
-		for f in @@XBPS_ETCDIRX@@/xbps-src.conf ./etc/xbps-src.conf; do
-			if [ -f ${f} ]; then
-				XBPS_CONFIG_FILE=${f}
-				cffound=yes
-				break
-			fi
-		done
-		if [ -z "$cffound" ]; then
-			echo "cannot find a config file"
-			exit 1
-		fi
-		export XBPS_CONFIG_FILE="$(realpath $XBPS_CONFIG_FILE 2>/dev/null)"
-	fi
-
-	if [ ! -f "$XBPS_CONFIG_FILE" ]; then
-		echo "cannot find configuration file: $XBPS_CONFIG_FILE"
-		exit 1
-	fi
-
-	. $XBPS_CONFIG_FILE
-
-	for f in XBPS_DISTDIR XBPS_MASTERDIR; do
-		eval val="\$${f}"
-		if [ -z "$val" ]; then
-			echo "${f} not set in configuration file!"
-			exit 1
-		fi
-	done
+        if [ -f ${HOME}/.xbps-src.conf ]; then
+            export XBPS_CONFIG_FILE=${HOME}/.xbps-src.conf
+        elif [ -f ${XBPS_ETCDIR}/xbps-src.conf ]; then
+            export XBPS_CONFIG_FILE=${XBPS_ETCDIR}/xbps-src.conf
+        fi
+    fi
+    if [ -s "$XBPS_CONFIG_FILE" ]; then
+        . $XBPS_CONFIG_FILE
+	    for f in XBPS_DISTDIR XBPS_MASTERDIR; do
+            eval val="\$${f}"
+            if [ -z "$val" ]; then
+                echo "WARNING: ${j} not set in configuration file: $XBPS_CONFIG_FILE (using defaults)."
+            fi
+        done
+    fi
+    if [ -z "$XBPS_DISTDIR" ]; then
+        export XBPS_DISTDIR="${HOME}/xbps-packages"
+    fi
+    if [ -z "$XBPS_MASTERDIR" ]; then
+        export XBPS_MASTERDIR="${XBPS_DISTDIR}/masterdir"
+    fi
 	if [ -d "$XBPS_MASTERDIR" -a ! -w "$XBPS_MASTERDIR" ]; then
 		echo "ERROR: not enough perms for masterdir $XBPS_MASTERDIR."
 		exit 1
@@ -214,11 +208,7 @@ install_bbotstrap() {
 		_bootstrap_arch="env XBPS_TARGET_ARCH=$XBPS_TARGET_PKG"
 	fi
 
-	if [ -n "$XBPS_INSTALL_ARGS" ]; then
-		_opt_args="$XBPS_INSTALL_ARGS"
-	fi
-
-	${_bootstrap_arch} xbps-install ${_args} ${_opt_args} -r $XBPS_MASTERDIR \
+	${_bootstrap_arch} xbps-install ${_args} ${XBPS_INSTALL_ARGS} -r $XBPS_MASTERDIR \
 		-c $XBPS_MASTERDIR/host/repocache -y "base-chroot>=${BASE_CHROOT_REQ%_*}"
 	if [ $? -ne 0 ]; then
 		msg_error "Failed to install bootstrap packages!\n"
@@ -280,14 +270,13 @@ readonly XBPS_SHAREDIR=${DESTDIR}@@XBPS_INSTALL_SHAREDIR@@
 readonly XBPS_LIBEXECDIR=${DESTDIR}@@XBPS_INSTALL_LIBEXECDIR@@
 readonly XBPS_PKGS_REPO="git://github.com/voidlinux/xbps-packages"
 
-export XBPS_SRC_VERSION XBPS_PREFIX XBPS_ETCDIR \
-	XBPS_SBINDIR XBPS_SHAREDIR XBPS_LIBEXECDIR
-
-XBPS_CONFIG_FILE=${XBPS_ETCDIR}/xbps-src.conf
 readonly PROGNAME=$(basename $0)
-export FAKEROOT_CMD="fakeroot --"
-export CHROOT_CMD="${XBPS_LIBEXECDIR}/xbps-src-chroot-helper --unshare-ipc --unshare-pid"
-export XBPS_MACHINE=$(uname -m)
+readonly FAKEROOT_CMD="fakeroot --"
+readonly CHROOT_CMD="${XBPS_LIBEXECDIR}/xbps-src-chroot-helper --unshare-ipc --unshare-pid"
+readonly XBPS_MACHINE=$(uname -m)
+
+export XBPS_SRC_VERSION XBPS_SHAREDIR XBPS_LIBEXECDIR
+export XBPS_PKGS_REPO FAKEROOT_CMD CHROOT_CMD XBPS_MACHINE
 
 # Required utilities in host system for the bootstrap target.
 readonly REQHOST_UTILS_BOOTSTRAP="awk bash bison sed gcc g++ msgfmt makeinfo \
@@ -331,9 +320,7 @@ shift $(($OPTIND - 1))
 check_reqhost_utils
 
 if [ -n "${_XBPS_CONFIG_FILE}" ]; then
-	export XBPS_CONFIG_FILE="${_XBPS_CONFIG_FILE}"
-else
-	export XBPS_CONFIG_FILE
+	XBPS_CONFIG_FILE="${_XBPS_CONFIG_FILE}"
 fi
 #
 # Check configuration vars before anyting else, and set defaults vars.
@@ -381,8 +368,8 @@ fi
 test -t 1 || export NOCOLORS=1
 
 if [ "$(id -u)" -eq 0 ]; then
-	# disable fakeroot if uid==0
-	unset FAKEROOT_CMD
+    echo "ERROR: root cannot use xbps-src, switch to a regular user."
+    exit 1
 fi
 
 readonly XBPS_BUILDSTYLEDIR=$XBPS_SHAREDIR/build_style
@@ -410,25 +397,16 @@ else
 fi
 readonly XBPS_TRIGGERSDIR=$XBPS_SRCPKGDIR/xbps-triggers/files
 
-DDIRS="DISTDIR TRIGGERSDIR HELPERSDIR BUILDSTYLEDIR SRCPKGDIR SHUTILSDIR COMMONDIR"
-for i in ${DDIRS}; do
-	eval val="\$XBPS_$i"
-	if [ -z "$val" ]; then
-		echo "ERROR: XBPS_$i not defined!"
-		exit 1
-	elif [ ! -d "$val" ]; then
-		echo "WARNING: cannot find $i at $val."
-	fi
-done
-
-for i in DESTDIR PACKAGESDIR BUILDDIR SRCDISTDIR; do
-	eval val="\$XBPS_$i"
-	if [ ! -d "$val" ]; then
-		mdir=$(dirname $XBPS_MASTERDIR)
-		[ -z "$IN_CHROOT" -a "$mdir" = "/" ] && continue
-		[ -d $XBPS_DISTDIR/.git ] && mkdir -p $val
-	fi
-done
+if [ -d "$XBPS_DISTDIR/.git" ]; then
+    DDIRS="DISTDIR TRIGGERSDIR HELPERSDIR BUILDSTYLEDIR SRCPKGDIR SHUTILSDIR COMMONDIR"
+    for i in ${DDIRS}; do
+	    eval val="\$XBPS_$i"
+	    if [ ! -d "$val" ]; then
+		    echo "ERROR: missing $val directory, cannot continue."
+            exit 1
+	    fi
+    done
+fi
 
 if [ -n "$IN_CHROOT" ]; then
 	readonly XBPS_UHELPER_CMD="xbps-uhelper"
@@ -467,7 +445,7 @@ done
 if [ -d "${XBPS_DISTDIR}/.git" ]; then
 	if [ -z "$XBPS_SRC_REQ" -o -z "$XBPS_UTILS_REQ" -o \
 		-z "$XBPS_UTILS_API_REQ" -o -z "$BASE_CHROOT_REQ" ]; then
-		echo "ERROR: missing defs from global-defs.sh!"
+		echo "ERROR: missing defs from xbps-packages/common/global-defs.sh!"
 		exit 1
 	fi
 	if [ "$XBPS_TARGET" != "bootstrap-update" ]; then
