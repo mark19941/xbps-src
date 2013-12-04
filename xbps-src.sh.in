@@ -195,6 +195,14 @@ check_config_vars() {
 	fi
 }
 
+prepare_xbps_packages() {
+    if [ ! -d ${XBPS_DISTDIR}/.git ]; then
+        [ ! -d $XBPS_DISTDIR ] && mkdir -p $XBPS_DISTDIR
+        msg_normal "Cloning $XBPS_PKGS_REPO ...\n"
+        git clone $XBPS_PKGS_REPO $XBPS_DISTDIR || msg_error "Failed to clone xbps-packages repository!\n"
+    fi
+}
+
 install_bbotstrap() {
 	# binary bootstrap
 	msg_normal "Installing bootstrap from binary package repositories...\n"
@@ -270,6 +278,7 @@ readonly XBPS_ETCDIR=${DESTDIR}@@XBPS_INSTALL_ETCDIR@@
 readonly XBPS_SBINDIR=${DESTDIR}@@XBPS_INSTALL_SBINDIR@@
 readonly XBPS_SHAREDIR=${DESTDIR}@@XBPS_INSTALL_SHAREDIR@@
 readonly XBPS_LIBEXECDIR=${DESTDIR}@@XBPS_INSTALL_LIBEXECDIR@@
+readonly XBPS_PKGS_REPO="git://github.com/voidlinux/xbps-packages"
 
 export XBPS_SRC_VERSION XBPS_PREFIX XBPS_ETCDIR \
 	XBPS_SBINDIR XBPS_SHAREDIR XBPS_LIBEXECDIR
@@ -286,7 +295,7 @@ readonly REQHOST_UTILS_BOOTSTRAP="awk bash bison sed gcc g++ msgfmt makeinfo \
 
 # Required utilities in host system for chroot ops.
 readonly REQHOST_UTILS="xbps-install xbps-query xbps-rindex xbps-uhelper \
-	xbps-reconfigure xbps-remove xbps-create"
+	xbps-reconfigure xbps-remove xbps-create git"
 
 #
 # main()
@@ -553,12 +562,14 @@ export NOCOLORS=$NOCOLORS
 #
 case "$XBPS_TARGET" in
 binary-bootstrap)
+	prepare_xbps_packages
 	install_bbotstrap
 	;;
 bootstrap)
 	# bootstrap from sources
 	# check for required host utils
 	check_reqhost_utils bootstrap
+	prepare_xbps_packages
 	[ ! -d $XBPS_SRCPKGDIR/base-chroot ] && \
 		msg_error "Cannot find $XBPS_SRCPKGDIR/base-chroot directory!\n"
 	XBPS_TARGET_PKG="base-chroot"
