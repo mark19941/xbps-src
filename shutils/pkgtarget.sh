@@ -1,7 +1,7 @@
 # -*-* shell *-*-
 
 show_build_options() {
-	local f opt opt_enabled desc state
+	local f opt desc
 
 	[ -z "$PKG_BUILD_OPTIONS" ] && return 0
 
