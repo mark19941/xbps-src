@@ -1,13 +1,22 @@
 # -*-* shell *-*-
 
 show_build_options() {
+	local f opt opt_enabled desc state
+
 	[ -z "$PKG_BUILD_OPTIONS" ] && return 0
 
-	msg_normal "$pkgver: build options: "
+	msg_normal "$pkgver: the following build options are set:\n"
 	for f in ${PKG_BUILD_OPTIONS}; do
-		printf "$f "
+		opt="${f#\~}"
+		eval desc="\${desc_option_${opt}}"
+		if [[ ${f:0:1} == '~' ]]; then
+			echo "    $opt: $desc (OFF)"
+		else
+			printf "    "
+			msg_normal_append "$opt: "
+			printf "$desc (ON)\n"
+		fi
 	done
-	msg_normal_append "\n"
 }
 
 check_pkg_arch() {

@@ -151,10 +151,8 @@ set_build_options() {
 	for f in ${build_options}; do
 		optval=${options[$f]}
 		if [[ $optval -eq 1 ]]; then
-			state=enabled
 			_optsset="${_optsset} ${f}"
 		else
-			state=disabled
 			_optsset="${_optsset} ~${f}"
 		fi
 	done
@@ -167,6 +165,8 @@ set_build_options() {
 		fi
 	done
 
+	# Sort pkg build options alphabetically.
+	PKG_BUILD_OPTIONS="$(echo "$PKG_BUILD_OPTIONS"|tr ' ' '\n'|sort)"
 	export PKG_BUILD_OPTIONS
 }
 
