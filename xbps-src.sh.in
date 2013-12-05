@@ -408,6 +408,15 @@ if [ -d "$XBPS_DISTDIR/.git" ]; then
     done
 fi
 
+for i in DESTDIR PACKAGESDIR BUILDDIR SRCDISTDIR; do
+    eval val="\$XBPS_$i"
+    if [ ! -d "$val" ]; then
+        mdir=$(dirname $XBPS_MASTERDIR)
+        [ -z "$IN_CHROOT" -a "$mdir" = "/" ] && continue
+        [ -d $XBPS_DISTDIR/.git ] && mkdir -p $val
+    fi
+done
+
 if [ -n "$IN_CHROOT" ]; then
 	readonly XBPS_UHELPER_CMD="xbps-uhelper"
 	readonly XBPS_INSTALL_CMD="xbps-install"
