@@ -154,8 +154,7 @@ set_build_options() {
 	done
 
 	# Sort pkg build options alphabetically.
-	PKG_BUILD_OPTIONS="$(echo "$PKG_BUILD_OPTIONS"|tr ' ' '\n'|sort)"
-	export PKG_BUILD_OPTIONS
+	export PKG_BUILD_OPTIONS="$(echo "$PKG_BUILD_OPTIONS"|tr ' ' '\n'|sort|tr '\n' ' ')"
 }
 
 reset_pkg_vars() {
