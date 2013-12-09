@@ -169,7 +169,7 @@ check_config_vars() {
         fi
     fi
     if [ -s "$XBPS_CONFIG_FILE" ]; then
-        . $XBPS_CONFIG_FILE
+        . $XBPS_CONFIG_FILE &>/dev/null
 	    for f in XBPS_DISTDIR XBPS_MASTERDIR; do
             eval val="\$${f}"
             if [ -z "$val" ]; then
@@ -189,12 +189,60 @@ check_config_vars() {
 	fi
 }
 
+check_build_requirements() {
+    for f in $XBPS_COMMONDIR/*.sh $XBPS_SHUTILSDIR/*.sh; do
+	    [ -r $f ] && . $f
+    done
+
+    if [ -d "${XBPS_DISTDIR}/.git" ]; then
+	    if [ -z "$XBPS_SRC_REQ" -o -z "$XBPS_UTILS_REQ" -o \
+		     -z "$XBPS_UTILS_API_REQ" -o -z "$BASE_CHROOT_REQ" ]; then
+		    echo "ERROR: missing defs from xbps-packages/common/global-defs.sh!"
+		    exit 1
+	    fi
+	    if [ "$XBPS_TARGET" != "bootstrap-update" ]; then
+		    xbps-uhelper cmpver $(echo "$XBPS_SRC_VERSION"|awk '{print $1}') "$XBPS_SRC_REQ"
+		    if [ $? -eq 255 ]; then
+			    echo "ERROR: this xbps-src version is outdated! (>=$XBPS_SRC_REQ is required)"
+			    echo "Bootstrap packages must be updated with 'xbps-src bootstrap-update'"
+			    exit 1
+		    fi
+		    xbps-uhelper cmpver "$XBPS_VERSION" "$XBPS_UTILS_REQ"
+		    if [ $? -eq 255 ]; then
+			    echo "ERROR: requires xbps-$XBPS_UTILS_REQ API: $XBPS_UTILS_API_REQ"
+			    echo "Bootstrap packages must be updated with 'xbps-src bootstrap-update'"
+			    exit 1
+		    fi
+		    xbps-uhelper cmpver "$XBPS_APIVER" "$XBPS_UTILS_API_REQ"
+		    if [ $? -eq 255 ]; then
+			    echo "ERROR: requires xbps-$XBPS_UTILS_REQ API: $XBPS_UTILS_API_REQ"
+			    echo "Bootstrap packages must be updated with 'xbps-src bootstrap-update'"
+			    exit 1
+		    fi
+	    fi
+	    # Set XBPS_ALT_REPOSITORY to our current branch.
+	    if [ -z "$XBPS_ALT_REPOSITORY" ]; then
+		    pushd "$PWD" &>/dev/null
+		    cd $XBPS_DISTDIR
+		    _gitbranch="$(git symbolic-ref --short HEAD 2>/dev/null)"
+		    if [ -n "${_gitbranch}" -a "${_gitbranch}" != "master" ]; then
+			    readonly XBPS_ALT_REPOSITORY="${_gitbranch}"
+			    msg_normal "Using git branch \`$XBPS_ALT_REPOSITORY\' as local repository.\n"
+		    fi
+		    popd &>/dev/null
+	    else
+		    msg_normal "Using \`$XBPS_ALT_REPOSITORY\' as local repository.\n"
+	    fi
+    fi
+}
+
 prepare_xbps_packages() {
     if [ ! -d ${XBPS_DISTDIR}/.git ]; then
         [ ! -d $XBPS_DISTDIR ] && mkdir -p $XBPS_DISTDIR
         msg_normal "Cloning $XBPS_PKGS_REPO ...\n"
         git clone $XBPS_PKGS_REPO $XBPS_DISTDIR || msg_error "Failed to clone xbps-packages repository!\n"
     fi
+    check_build_requirements
 }
 
 install_bbotstrap() {
@@ -291,20 +339,20 @@ readonly REQHOST_UTILS="xbps-install xbps-query xbps-rindex xbps-uhelper \
 #
 while getopts "a:Cc:D:fghH:Ij:Lm:No:r:V" opt; do
 	case $opt in
-	a) _XBPS_CROSS_BUILD="$OPTARG";;
-	c) _XBPS_CONFIG_FILE="$(realpath $OPTARG 2>/dev/null)";;
-	C) _XBPS_KEEP_ALL=1;;
-	D) _XBPS_DISTDIR="$(realpath $OPTARG 2>/dev/null)";;
+	a) readonly XBPS_CROSS_BUILD="$OPTARG";;
+	c) readonly XBPS_CONFIG_FILE="$(realpath $OPTARG 2>/dev/null)";;
+	C) readonly XBPS_KEEP_ALL=1;;
+	D) readonly XBPS_DISTDIR="$(realpath $OPTARG 2>/dev/null)";;
 	f) readonly XBPS_BUILD_FORCEMODE=1;;
-	g) _BUILD_DBG_PKGS=1;;
-	H) _XBPS_HOSTDIR="$(realpath $OPTARG 2>/dev/null)";;
+	g) readonly XBPS_DEBUG_PKGS=1;;
+	H) readonly XBPS_HOSTDIR="$(realpath $OPTARG 2>/dev/null)";;
 	h) usage && exit 0;;
 	I) readonly XBPS_SKIP_DEPS=1;;
-	j) _MAKEJOBS="$OPTARG";;
-	L) _NOCOLORS=1;;
-	m) _XBPS_MASTERDIR=$(realpath $OPTARG 2>/dev/null);;
+	j) readonly XBPS_MAKEJOBS="$OPTARG";;
+	L) export NOCOLORS=1;;
+	m) readonly XBPS_MASTERDIR=$(realpath $OPTARG 2>/dev/null);;
 	N) readonly XBPS_SKIP_REMOTEREPOS=1;;
-	o) _XBPS_BUILD_OPTS="$OPTARG";;
+	o) readonly XBPS_BUILD_OPTS="$OPTARG";;
 	r) readonly XBPS_ALT_REPOSITORY="$OPTARG";;
 	V) echo $XBPS_SRC_VERSION && exit 0;;
 	--) shift; break;;
@@ -319,43 +367,10 @@ shift $(($OPTIND - 1))
 #
 check_reqhost_utils
 
-if [ -n "${_XBPS_CONFIG_FILE}" ]; then
-	XBPS_CONFIG_FILE="${_XBPS_CONFIG_FILE}"
-fi
 #
 # Check configuration vars before anyting else, and set defaults vars.
 #
 check_config_vars
-
-if [ -n "${_XBPS_CROSS_BUILD}" ]; then
-	export XBPS_CROSS_BUILD=${_XBPS_CROSS_BUILD}
-fi
-if [ -n "${_XBPS_KEEP_ALL}" ]; then
-	export XBPS_KEEP_ALL=${_XBPS_KEEP_ALL}
-fi
-if [ -n "${_XBPS_DISTDIR}" ]; then
-	export XBPS_DISTDIR="${_XBPS_DISTDIR}"
-fi
-if [ -n "${_XBPS_HOSTDIR}" ]; then
-	export XBPS_HOSTDIR="${_XBPS_HOSTDIR}"
-fi
-if [ -n "${_XBPS_MASTERDIR}" ]; then
-	export XBPS_MASTERDIR="${_XBPS_MASTERDIR}"
-fi
-if [ -n "${_XBPS_BUILD_OPTS}" ]; then
-	export XBPS_BUILD_OPTS="${_XBPS_BUILD_OPTS}"
-fi
-if [ -n "${_MAKEJOBS}" ]; then
-	export XBPS_MAKEJOBS="${_MAKEJOBS}"
-fi
-if [ -n "${_BUILD_DBG_PKGS}" ]; then
-	export XBPS_DEBUG_PKGS=1
-fi
-
-export XBPS_CFLAGS XBPS_CXXFLAGS XBPS_LDFLAGS XBPS_MAKEJOBS
-export XBPS_BUILD_FORCEMODE XBPS_USE_GIT_REVS XBPS_DEBUG_PKGS
-export XBPS_CCACHE XBPS_DISTCC XBPS_DISTCC_HOSTS XBPS_SKIP_DEPS
-export XBPS_ALT_REPOSITORY XBPS_SKIP_REMOTEREPOS
 
 XBPS_TARGET="$1"
 XBPS_TARGET_PKG="$2"
@@ -426,8 +441,8 @@ if [ -n "$IN_CHROOT" ]; then
 	readonly XBPS_REMOVE_CMD="xbps-remove"
 else
 	readonly XBPS_UHELPER_CMD="xbps-uhelper -r $XBPS_MASTERDIR"
-	readonly XBPS_INSTALL_CMD="xbps-install --repository=$XBPS_PACKAGESDIR -r $XBPS_MASTERDIR"
-	readonly XBPS_QUERY_CMD="xbps-query --repository=$XBPS_PACKAGESDIR -r $XBPS_MASTERDIR"
+	readonly XBPS_INSTALL_CMD="xbps-install -C _empty.conf_ --repository=$XBPS_PACKAGESDIR -r $XBPS_MASTERDIR"
+	readonly XBPS_QUERY_CMD="xbps-query -C _empty.conf_ --repository=$XBPS_PACKAGESDIR -r $XBPS_MASTERDIR"
 	readonly XBPS_RINDEX_CMD="xbps-rindex"
 	readonly XBPS_RECONFIGURE_CMD="xbps-reconfigure -r $XBPS_MASTERDIR"
 	readonly XBPS_REMOVE_CMD="xbps-remove -r $XBPS_MASTERDIR"
@@ -445,52 +460,12 @@ export XBPS_HELPERSDIR XBPS_SHUTILSDIR XBPS_CROSSPFDIR XBPS_TRIGGERSDIR \
 	XBPS_UHELPER_CMD XBPS_INSTALL_CMD XBPS_QUERY_CMD \
 	XBPS_RINDEX_CMD XBPS_RECONFIGURE_CMD XBPS_REMOVE_CMD \
 	XBPS_CMPVER_CMD XBPS_FETCH_CMD XBPS_VERSION XBPS_APIVER \
-	XBPS_BUILDSTYLEDIR
-
-for f in $XBPS_COMMONDIR/*.sh $XBPS_SHUTILSDIR/*.sh; do
-	[ -r $f ] && . $f
-done
-
-if [ -d "${XBPS_DISTDIR}/.git" ]; then
-	if [ -z "$XBPS_SRC_REQ" -o -z "$XBPS_UTILS_REQ" -o \
-		-z "$XBPS_UTILS_API_REQ" -o -z "$BASE_CHROOT_REQ" ]; then
-		echo "ERROR: missing defs from xbps-packages/common/global-defs.sh!"
-		exit 1
-	fi
-	if [ "$XBPS_TARGET" != "bootstrap-update" ]; then
-		xbps-uhelper cmpver $(echo "$XBPS_SRC_VERSION"|awk '{print $1}') "$XBPS_SRC_REQ"
-		if [ $? -eq 255 ]; then
-			echo "ERROR: this xbps-src version is outdated! (>=$XBPS_SRC_REQ is required)"
-			echo "Bootstrap packages must be updated with 'xbps-src bootstrap-update'"
-			exit 1
-		fi
-		xbps-uhelper cmpver "$XBPS_VERSION" "$XBPS_UTILS_REQ"
-		if [ $? -eq 255 ]; then
-			echo "ERROR: requires xbps-$XBPS_UTILS_REQ API: $XBPS_UTILS_API_REQ"
-			echo "Bootstrap packages must be updated with 'xbps-src bootstrap-update'"
-			exit 1
-		fi
-		xbps-uhelper cmpver "$XBPS_APIVER" "$XBPS_UTILS_API_REQ"
-		if [ $? -eq 255 ]; then
-			echo "ERROR: requires xbps-$XBPS_UTILS_REQ API: $XBPS_UTILS_API_REQ"
-			echo "Bootstrap packages must be updated with 'xbps-src bootstrap-update'"
-			exit 1
-		fi
-	fi
-	# Set XBPS_ALT_REPOSITORY to our current branch.
-	if [ -z "$XBPS_ALT_REPOSITORY" ]; then
-		pushd "$PWD" &>/dev/null
-		cd $XBPS_DISTDIR
-		_gitbranch="$(git symbolic-ref --short HEAD 2>/dev/null)"
-		if [ -n "${_gitbranch}" -a "${_gitbranch}" != "master" ]; then
-			readonly XBPS_ALT_REPOSITORY="${_gitbranch}"
-			msg_normal "Using git branch \`$XBPS_ALT_REPOSITORY\' as local repository.\n"
-		fi
-		popd &>/dev/null
-	else
-		msg_normal "Using \`$XBPS_ALT_REPOSITORY\' as local repository.\n"
-	fi
-fi
+	XBPS_BUILDSTYLEDIR XBPS_CFLAGS XBPS_CXXFLAGS XBPS_LDFLAGS \
+    XBPS_MAKEJOBS XBPS_BUILD_FORCEMODE XBPS_USE_GIT_REVS XBPS_DEBUG_PKGS \
+    XBPS_CCACHE XBPS_DISTCC XBPS_DISTCC_HOSTS XBPS_SKIP_DEPS \
+    XBPS_ALT_REPOSITORY XBPS_SKIP_REMOTEREPOS XBPS_CROSS_BUILD \
+    XBPS_CONFIG_FILE XBPS_KEEP_ALL XBPS_DISTDIR XBPS_HOSTDIR XBPS_MASTERDIR \
+    XBPS_BUILD_OPTS
 
 #
 # Sanitize PATH.
@@ -501,7 +476,6 @@ if [ -z "$IN_CHROOT" ]; then
 	export PATH="$PATH:$MYPATH"
 else
 	MYPATH="/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
-	MYPATH="$MYPATH:/usr/lib/perl5/core_perl/bin"
 	export PATH="$MYPATH"
 	if [ -n "$XBPS_CCACHE" ]; then
 		CCACHEPATH="/usr/lib/ccache/bin"
@@ -530,6 +504,8 @@ else
 	fi
 fi
 
+check_build_requirements
+
 if [ -z "$CHROOT_READY" ]; then
 	if [ -n "$BASE_CHROOT_REQ" ]; then
 		check_installed_pkg base-chroot-$BASE_CHROOT_REQ
@@ -541,8 +517,6 @@ if [ -z "$CHROOT_READY" ]; then
 		fi
 	fi
 fi
-
-export NOCOLORS=$NOCOLORS
 
 #
 # Main switch.
