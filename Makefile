@@ -10,11 +10,12 @@ ETCDIR  ?= $(PREFIX)/etc/xbps
 PRIVILEGED_GROUP ?= xbuilder
 
 # INMUTABLE VARIABLES
-VERSION	= 83
+VERSION	= 84
 GITVER	:= $(shell git rev-parse --short HEAD)
 CONF_FILE = xbps-src.conf
 
 CHROOT_C = linux-user-chroot.c
+CHROOT_BIN = xbps-src-chroot-helper
 CFLAGS += -O2 -Wall -Werror
 
 .PHONY: all clean install uninstall
@@ -27,7 +28,7 @@ all:
 	    -e	"s|@@XBPS_INSTALL_LIBEXECDIR@@|$(LIBEXECDIR)|g"	\
 	    -e  "s|@@XBPS_SRC_VERSION@@|$(VERSION) ($(GITVER))|g"	\
 		xbps-src.sh.in > xbps-src
-	$(CC) $(CFLAGS) libexec/$(CHROOT_C) -o libexec/xbps-src-chroot-helper
+	$(CC) $(CFLAGS) libexec/$(CHROOT_C) -o libexec/$(CHROOT_BIN)
 
 clean:
 	rm -f libexec/xbps-src-chroot-helper
@@ -40,7 +41,7 @@ install-scripts: all
 	for f in libexec/*.sh; do	\
 		install -m 755 $$f $(DESTDIR)$(LIBEXECDIR)/$$(basename $${f%.sh});	\
 	done
-	install -m 750 libexec/xbps-src-chroot-helper $(DESTDIR)$(LIBEXECDIR)
+	install -m 750 libexec/$(CHROOT_BIN) $(DESTDIR)$(LIBEXECDIR)
 	install -d $(DESTDIR)$(SHAREDIR)/shutils
 	install -m 644 shutils/*.sh $(DESTDIR)$(SHAREDIR)/shutils
 	install -d $(DESTDIR)$(SHAREDIR)/helpers
