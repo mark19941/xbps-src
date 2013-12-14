@@ -237,6 +237,7 @@ prepare_xbps_packages() {
 }
 
 install_bbotstrap() {
+    [ -n "$CHROOT_READY" ] && return
 	# binary bootstrap
 	msg_normal "Installing bootstrap from binary package repositories...\n"
 	case "$XBPS_VERSION" in
