@@ -107,9 +107,6 @@ Options:
  -f  Force building and registering binary packages into the local repository,
      even if same version is already registered.
  -g  Enable building -dbg packages with debugging symbols.
- -D  <distdir>
-     Path to XBPS_DISTDIR, overriding the setting from xbps-src.conf.
-     The distribution directory contains the 'xbps-packages' repository.
  -H  <hostdir>
      Path to XBPS_HOSTDIR, overriding the setting from xbps-src.conf.
      The host directory stores binary packages, sources and package dependencies
@@ -170,18 +167,9 @@ check_config_vars() {
     fi
     if [ -s "$XBPS_CONFIG_FILE" ]; then
         . $XBPS_CONFIG_FILE &>/dev/null
-	    for f in XBPS_DISTDIR XBPS_MASTERDIR; do
-            eval val="\$${f}"
-            if [ -z "$val" ]; then
-                echo "WARNING: ${j} not set in configuration file: $XBPS_CONFIG_FILE (using defaults)."
-            fi
-        done
-    fi
-    if [ -z "$XBPS_DISTDIR" ]; then
-        export XBPS_DISTDIR="${HOME}/xbps-packages"
     fi
     if [ -z "$XBPS_MASTERDIR" ]; then
-        export XBPS_MASTERDIR="${XBPS_DISTDIR}/masterdir"
+        export XBPS_MASTERDIR="${HOME}/masterdir"
     fi
 	if [ -d "$XBPS_MASTERDIR" -a ! -w "$XBPS_MASTERDIR" ]; then
 		echo "ERROR: not enough perms for masterdir $XBPS_MASTERDIR."
@@ -342,7 +330,8 @@ while getopts "a:Cc:D:fghH:Ij:Lm:No:r:V" opt; do
 	a) readonly XBPS_CROSS_BUILD="$OPTARG";;
 	c) readonly XBPS_CONFIG_FILE="$(realpath $OPTARG 2>/dev/null)";;
 	C) readonly XBPS_KEEP_ALL=1;;
-	D) readonly XBPS_DISTDIR="$(realpath $OPTARG 2>/dev/null)";;
+    # Keep -D for compat
+	D) ;;
 	f) readonly XBPS_BUILD_FORCEMODE=1;;
 	g) readonly XBPS_DEBUG_PKGS=1;;
 	H) readonly XBPS_HOSTDIR="$(realpath $OPTARG 2>/dev/null)";;
@@ -393,11 +382,13 @@ readonly XBPS_SHUTILSDIR=$XBPS_SHAREDIR/shutils
 readonly XBPS_CROSSPFDIR=$XBPS_SHAREDIR/cross-profiles
 
 if [ -n "$IN_CHROOT" ]; then
-	readonly XBPS_SRCPKGDIR=/xbps/srcpkgs
-	readonly XBPS_COMMONDIR=/xbps/common
+    readonly XBPS_DISTDIR=/xbps-packages
+	readonly XBPS_SRCPKGDIR=$XBPS_DISTDIR/srcpkgs
+	readonly XBPS_COMMONDIR=$XBPS_DISTDIR/common
 	readonly XBPS_DESTDIR=/destdir
 	readonly XBPS_BUILDDIR=/builddir
 else
+    readonly XBPS_DISTDIR=$XBPS_MASTERDIR/xbps-packages
 	readonly XBPS_SRCPKGDIR=$XBPS_DISTDIR/srcpkgs
 	readonly XBPS_COMMONDIR=$XBPS_DISTDIR/common
 	readonly XBPS_DESTDIR=$XBPS_MASTERDIR/destdir
@@ -413,7 +404,7 @@ fi
 readonly XBPS_TRIGGERSDIR=$XBPS_SRCPKGDIR/xbps-triggers/files
 
 if [ -d "$XBPS_DISTDIR/.git" ]; then
-    DDIRS="DISTDIR TRIGGERSDIR HELPERSDIR BUILDSTYLEDIR SRCPKGDIR SHUTILSDIR COMMONDIR"
+    DDIRS="TRIGGERSDIR HELPERSDIR BUILDSTYLEDIR SRCPKGDIR SHUTILSDIR COMMONDIR"
     for i in ${DDIRS}; do
 	    eval val="\$XBPS_$i"
 	    if [ ! -d "$val" ]; then
@@ -464,7 +455,7 @@ export XBPS_HELPERSDIR XBPS_SHUTILSDIR XBPS_CROSSPFDIR XBPS_TRIGGERSDIR \
     XBPS_MAKEJOBS XBPS_BUILD_FORCEMODE XBPS_USE_GIT_REVS XBPS_DEBUG_PKGS \
     XBPS_CCACHE XBPS_DISTCC XBPS_DISTCC_HOSTS XBPS_SKIP_DEPS \
     XBPS_ALT_REPOSITORY XBPS_SKIP_REMOTEREPOS XBPS_CROSS_BUILD \
-    XBPS_CONFIG_FILE XBPS_KEEP_ALL XBPS_DISTDIR XBPS_HOSTDIR XBPS_MASTERDIR \
+    XBPS_CONFIG_FILE XBPS_KEEP_ALL XBPS_HOSTDIR XBPS_MASTERDIR \
     XBPS_BUILD_OPTS
 
 #

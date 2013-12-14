@@ -1,21 +1,10 @@
 # -*-* shell *-*-
 
 chroot_init() {
-	if [ "${CHROOT_CMD}" = "chroot" ]; then
-		if [ "$(id -u)" -ne 0 ]; then
-			msg_error "Root permissions are required for the chroot, try again."
-		fi
-	fi
-
-	if [ ! -d $XBPS_MASTERDIR/etc/xbps ]; then
-		mkdir -p $XBPS_MASTERDIR/etc/xbps
-	fi
-
 	XBPSSRC_CF=$XBPS_MASTERDIR/etc/xbps/xbps-src.conf
 
 	cat > $XBPSSRC_CF <<_EOF
 # Generated configuration file by xbps-src, DO NOT EDIT!
-XBPS_DISTDIR=/xbps
 XBPS_MASTERDIR=/
 XBPS_CFLAGS="$XBPS_CFLAGS"
 XBPS_CXXFLAGS="$XBPS_CXXFLAGS"
@@ -156,12 +145,14 @@ chroot_sync_repos() {
 }
 
 chroot_handler() {
-	local _chargs="--mount-bind ${XBPS_DISTDIR} /xbps \
-		--mount-bind /dev /dev --mount-bind /sys /sys \
-		--mount-proc /proc --mount-bind /dev/shm /dev/shm"
+	local _chargs="
+		--mount-bind /dev /dev
+		--mount-bind /sys /sys
+		--mount-proc /proc
+		--mount-bind /dev/shm /dev/shm"
 
 	if [ -n "$XBPS_HOSTDIR" ]; then
-		_chargs="${_chargs} --mount-bind $XBPS_HOSTDIR /host"
+		_chargs+=" --mount-bind $XBPS_HOSTDIR /host"
 	fi
 
 	local action="$1" pkg="$2" rv=0 arg=
