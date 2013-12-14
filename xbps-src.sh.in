@@ -334,7 +334,7 @@ while getopts "a:Cc:D:fghH:Ij:Lm:No:r:V" opt; do
 	a) readonly XBPS_CROSS_BUILD="$OPTARG";;
 	c) readonly XBPS_CONFIG_FILE="$(realpath $OPTARG 2>/dev/null)";;
 	C) readonly XBPS_KEEP_ALL=1;;
-	D) XBPS_DISTDIR="$OPTARG";;
+    D) XBPS_DISTDIR="$(realpath $OPTARG 2>/dev/null)";;
 	f) readonly XBPS_BUILD_FORCEMODE=1;;
 	g) readonly XBPS_DEBUG_PKGS=1;;
 	H) readonly XBPS_HOSTDIR="$(realpath $OPTARG 2>/dev/null)";;
