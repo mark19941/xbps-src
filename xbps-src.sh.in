@@ -118,6 +118,9 @@ Options:
  -m  <masterdir>
      Path to XBPS_MASTERDIR, overriding the setting from xbps-src.conf.
      The masterdir is the main directory to build/store/compile packages.
+ -D  <distdir>
+     Path to XBPS_DISTDIR, overriding the setting from xbps-src.conf.
+     The distdir contains the "xbps-packages" repository.
  -N  Disable use of remote repositories to resolve dependencies.
  -o  <opt,~opt2,...>
      Enable or disable (prefixed with ~) package build options.
@@ -330,8 +333,7 @@ while getopts "a:Cc:D:fghH:Ij:Lm:No:r:V" opt; do
 	a) readonly XBPS_CROSS_BUILD="$OPTARG";;
 	c) readonly XBPS_CONFIG_FILE="$(realpath $OPTARG 2>/dev/null)";;
 	C) readonly XBPS_KEEP_ALL=1;;
-    # Keep -D for compat
-	D) ;;
+	D) XBPS_DISTDIR="$OPTARG";;
 	f) readonly XBPS_BUILD_FORCEMODE=1;;
 	g) readonly XBPS_DEBUG_PKGS=1;;
 	H) readonly XBPS_HOSTDIR="$(realpath $OPTARG 2>/dev/null)";;
@@ -388,7 +390,9 @@ if [ -n "$IN_CHROOT" ]; then
 	readonly XBPS_DESTDIR=/destdir
 	readonly XBPS_BUILDDIR=/builddir
 else
-    readonly XBPS_DISTDIR=$XBPS_MASTERDIR/xbps-packages
+    if [ -z "$XBPS_DISTDIR" ]; then
+        readonly XBPS_DISTDIR=$XBPS_MASTERDIR/xbps-packages
+    fi
 	readonly XBPS_SRCPKGDIR=$XBPS_DISTDIR/srcpkgs
 	readonly XBPS_COMMONDIR=$XBPS_DISTDIR/common
 	readonly XBPS_DESTDIR=$XBPS_MASTERDIR/destdir
@@ -535,6 +539,7 @@ bootstrap-update)
 	fi
 	;;
 chroot)
+	prepare_xbps_packages
 	chroot_handler chroot dummy
 	;;
 clean)

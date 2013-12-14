@@ -154,7 +154,10 @@ chroot_handler() {
 	if [ -n "$XBPS_HOSTDIR" ]; then
 		_chargs+=" --mount-bind $XBPS_HOSTDIR /host"
 	fi
-
+	if [ "$XBPS_DISTDIR" != "$XBPS_MASTERDIR/xbps-packages" ]; then
+		mkdir -p $XBPS_MASTERDIR/xbps-packages
+		_chargs+=" --mount-bind ${XBPS_DISTDIR} /xbps-packages"
+	fi
 	local action="$1" pkg="$2" rv=0 arg=
 
 	[ -z "$action" -a -z "$pkg" ] && return 1
