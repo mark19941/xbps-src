@@ -143,7 +143,7 @@ pkg_genrdeps() {
 	#
 	# If pkg uses any unknown SONAME error out.
 	#
-	if [ -n "$broken" ]; then
+	if [ -n "$broken" -a -z "$allow_unknown_shlibs" ]; then
 		msg_error "$pkgver: cannot guess required shlibs, aborting!\n"
 	fi
 

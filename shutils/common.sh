@@ -188,15 +188,16 @@ reset_pkg_vars() {
 }
 
 reset_subpkg_vars() {
-        local VARS="nonfree conf_files noarch triggers replaces softreplace \
+        local VARS="nonfree conf_files noarch triggers replaces allow_unknown_shlibs \
 			system_accounts system_groups preserve nostrip noverifyrdeps \
 			xml_entries sgml_entries xml_catalogs sgml_catalogs \
 			font_dirs dkms_modules provides kernel_hooks_version \
 			conflicts pycompile_dirs pycompile_module \
 			systemd_services make_dirs depends run_depends \
-			mutable_files nostrip_files pkg_install"
+			mutable_files nostrip_files"
 
 	eval unset -v "$VARS"
+	unset -f pkg_install
 }
 
 source_file() {
