@@ -9,15 +9,13 @@ do_build() {
 }
 
 do_install() {
-	local target
+	make_install_args+=" PREFIX=/usr DESTDIR=${DESTDIR}"
 
 	if [ -z "$make_install_target" ]; then
-		target="DESTDIR=${DESTDIR} install"
-	else
-		target="${make_install_target}"
+		make_install_target="install"
 	fi
 	if [ -z "$make_cmd" ]; then
 		make_cmd=make
 	fi
-	${make_cmd} ${make_install_args} ${target}
+	${make_cmd} ${make_install_args} ${make_install_target}
 }
