@@ -3,11 +3,22 @@
 # by the GNU autotools).
 #
 do_configure() {
-	if [ -z "$configure_script" ]; then
-		configure_script="./configure"
-	fi
+	: ${configure_script:=./configure}
+
 	${configure_script} ${configure_args}
 }
 
-# configure scripts use make(1) to build/install.
-. $XBPS_BUILDSTYLEDIR/gnu-makefile.sh
+do_build() {
+	: ${make_cmd:=make}
+
+	${make_cmd} ${makejobs} ${make_build_args} ${make_build_target}
+}
+
+do_install() {
+	: ${make_cmd:=make}
+	: ${make_install_target:=install}
+
+	make_install_args+=" DESTDIR=${DESTDIR}"
+
+	${make_cmd} ${make_install_args} ${make_install_target}
+}

@@ -10,8 +10,7 @@ do_build() {
 }
 
 do_install() {
-	if [ -z "$make_install_args" ]; then
-		make_install_args="--destdir=$DESTDIR"
-	fi
+	make_install_args+=" --destdir=${DESTDIR}"
+
 	python waf install ${make_install_args}
 }

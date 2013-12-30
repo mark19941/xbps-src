@@ -37,5 +37,17 @@ do_configure() {
 	done
 }
 
-# Use GNU make(1) to build/install.
-. ${XBPS_BUILDSTYLEDIR}/gnu-makefile.sh
+do_build() {
+	: ${make_cmd:=make}
+
+	${make_cmd} ${makejobs} ${make_build_args} ${make_build_target}
+}
+
+do_install() {
+	: ${make_cmd:=make}
+	: ${make_install_target:=install}
+
+	make_install_args+=" DESTDIR=${DESTDIR}"
+
+	${make_cmd} ${make_install_args} ${make_install_target}
+}
