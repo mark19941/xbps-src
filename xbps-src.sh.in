@@ -181,6 +181,8 @@ check_config_vars() {
 }
 
 check_build_requirements() {
+    local found
+
     for f in $XBPS_COMMONDIR/*.sh $XBPS_SHUTILSDIR/*.sh; do
 	    [ -r $f ] && . $f
     done
@@ -191,7 +193,11 @@ check_build_requirements() {
 		    echo "ERROR: missing defs from xbps-packages/common/global-defs.sh!"
 		    exit 1
 	    fi
-	    if [ "$XBPS_TARGET" != "bootstrap-update" ]; then
+        case "$XBPS_TARGET" in
+            *bootstrap*) found=1;;
+            *) ;;
+        esac
+        if [ -z "$found" ]; then
 		    xbps-uhelper cmpver $(echo "$XBPS_SRC_VERSION"|awk '{print $1}') "$XBPS_SRC_REQ"
 		    if [ $? -eq 255 ]; then
 			    echo "ERROR: this xbps-src version is outdated! (>=$XBPS_SRC_REQ is required)"
