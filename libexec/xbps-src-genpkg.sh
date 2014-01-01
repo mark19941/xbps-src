@@ -172,18 +172,21 @@ if [ -z "$pkgname" -o -z "$version" ]; then
 	msg_error "$PKGNAME: pkgname/version not set in pkg template!\n"
 fi
 
-${PKGNAME}_package
-pkgname=$PKGNAME
+if [ "$sourcepkg" != "$PKGNAME" ]; then
+	${PKGNAME}_package
+	pkgname=$PKGNAME
+fi
+
 genbinpkg
 rval=$?
 
 # Generate -dbg pkg automagically.
-if [ -d "$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET/pkg-${PKGNAME}-dbg-${version}" ]; then
+if [ -d "$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET/${PKGNAME}-dbg-${version}" ]; then
 	reset_subpkg_vars
 	pkgname="${PKGNAME}-dbg"
 	pkgver="${PKGNAME}-dbg-${version}_${revision}"
 	short_desc="${short_desc} (debug files)"
-	PKGDESTDIR="$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET/pkg-${PKGNAME}-dbg-${version}"
+	PKGDESTDIR="$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET/${PKGNAME}-dbg-${version}"
 	genbinpkg
 fi
 

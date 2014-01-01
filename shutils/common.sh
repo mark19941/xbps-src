@@ -214,14 +214,8 @@ get_subpkgs() {
 	args="$(typeset -F|grep -E '_package$')"
 	set -- ${args}
 	while [ $# -gt 0 ]; do
-		# Add sourcepkg at bottom
-		if [ "${3%_package}" = "$sourcepkg" ]; then
-			shift 3; continue
-		fi
 		list+=" ${3%_package}"; shift 3
 	done
-
-	list+=" $sourcepkg"
 	for f in ${list}; do
 		echo "$f"
 	done
@@ -323,11 +317,6 @@ setup_pkg() {
 		fi
 	fi
 
-	# Check that there's a ${pkgname}_pkg function matching $pkgname.
-	if ! declare -f ${sourcepkg}_package >/dev/null; then
-		msg_error "$sourcepkg: ${sourcepkg}_package() function not defined!\n"
-	fi
-
 	setup_pkg_common_vars $pkg $cross
 	set_build_options
 
@@ -413,7 +402,7 @@ setup_pkg_common_vars() {
 	FILESDIR=$XBPS_SRCPKGDIR/$sourcepkg/files
 	PATCHESDIR=$XBPS_SRCPKGDIR/$sourcepkg/patches
 	DESTDIR=$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET/${sourcepkg}-${version}
-	PKGDESTDIR=$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET/pkg-${pkg}-${version}
+	PKGDESTDIR=$XBPS_DESTDIR/$XBPS_CROSS_TRIPLET/${pkg}-${version}
 
 	if [ -n "$XBPS_MAKEJOBS" -a -z "$disable_parallel_build" ]; then
 		makejobs="-j$XBPS_MAKEJOBS"

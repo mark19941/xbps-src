@@ -110,12 +110,11 @@ install_pkg() {
 	$XBPS_LIBEXECDIR/xbps-src-dobuild $sourcepkg $cross || exit 1
 	[ "$target" = "build" ] && return 0
 
-	# Install pkg into destdir.
+	# Install sourcepkg into destdir.
 	$FAKEROOT_CMD $XBPS_LIBEXECDIR/xbps-src-doinstall $sourcepkg $cross || exit 1
 
-	# Install subpkgs into destdir.
 	for subpkg in ${subpackages}; do
-		# Exec pkg install func.
+		# Run subpkg pkg_install func.
 		$FAKEROOT_CMD $XBPS_LIBEXECDIR/xbps-src-dopkg $subpkg $cross || exit 1
 
 		# Strip binaries/libraries.
@@ -125,9 +124,18 @@ install_pkg() {
 		$XBPS_LIBEXECDIR/xbps-src-genrdeps $subpkg $cross || exit 1
 	done
 
+	# Prepare sourcepkg destdir.
+	$FAKEROOT_CMD $XBPS_LIBEXECDIR/xbps-src-dopkg $sourcepkg $cross || exit 1
+
+	# Strip binaries/libraries.
+	$XBPS_LIBEXECDIR/xbps-src-dostrip $sourcepkg $cross || exit 1
+
+	# Generate run-time dependecies.
+	$XBPS_LIBEXECDIR/xbps-src-genrdeps $sourcepkg $cross || exit 1
+
 	if [ -n "$XBPS_USE_GIT_REVS" ]; then
 		msg_normal "$pkgver: fetching source git revisions, please wait...\n"
-		fetch_git_revs $pkgname
+		fetch_git_revs $sourcepkg
 	fi
 
 	if [ "$XBPS_TARGET_PKG" = "$sourcepkg" ]; then
@@ -135,7 +143,7 @@ install_pkg() {
 	fi
 
 	# If install went ok generate the binpkgs.
-	for subpkg in ${subpackages}; do
+	for subpkg in ${sourcepkg} ${subpackages}; do
 		$XBPS_LIBEXECDIR/xbps-src-genpkg $subpkg "$cross" "$XBPS_ALT_REPOSITORY" || exit 1
 	done
 
@@ -202,11 +210,11 @@ remove_pkg() {
 		rm -f $PKG_GITREVS_FILE
 	fi
 	for f in ${subpackages}; do
-		if [ -d "${_destdir}/pkg-${f}-${version}" ]; then
-			rm -rf ${_destdir}/pkg-${f}-${version}
+		if [ -d "${_destdir}/${f}-${version}" ]; then
+			rm -rf ${_destdir}/${f}-${version}
 		fi
-		if [ -d "${_destdir}/pkg-${f}-dbg-${version}" ]; then
-			rm -rf ${_destdir}/pkg-${f}-dbg-${version}
+		if [ -d "${_destdir}/${f}-dbg-${version}" ]; then
+			rm -rf ${_destdir}/${f}-dbg-${version}
 		fi
 		rm -f $wrksrc/.xbps_${f}_${cross}_install_done
 		rm -f $wrksrc/.xbps_${f}_${cross}_pkg_done

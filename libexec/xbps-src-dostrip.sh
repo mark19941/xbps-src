@@ -145,8 +145,10 @@ done
 
 setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 
-${PKGNAME}_package
-pkgname=$PKGNAME
+if [ "$sourcepkg" != "$PKGNAME" ]; then
+	${PKGNAME}_package
+	pkgname=$PKGNAME
+fi
 
 if [ -n "$nostrip" -o -n "$noarch" ]; then
 	exit 0

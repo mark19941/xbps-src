@@ -176,8 +176,10 @@ if [ ! -d "$PKGDESTDIR" ]; then
 	msg_error "$pkgver: cannot access $PKGDESTDIR!\n"
 fi
 
-${PKGNAME}_package
-pkgname=$PKGNAME
+if [ "$sourcepkg" != "$PKGNAME" ]; then
+	${PKGNAME}_package
+	pkgname=$PKGNAME
+fi
 
 if [ ! -s ${PKGDESTDIR}/rdeps ]; then
 	pkg_genrdeps

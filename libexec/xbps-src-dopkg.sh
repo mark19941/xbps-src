@@ -499,14 +499,16 @@ if [ -f $XBPS_PKG_DONE ]; then
 	exit 0
 fi
 
-# Run the pkg installfunction.
-${PKGNAME}_package
-pkgname=$PKGNAME
+# If it's a subpkg execute the pkg_install() function.
+if [ "$sourcepkg" != "$PKGNAME" ]; then
+	${PKGNAME}_package
+	pkgname=$PKGNAME
 
-install -d $PKGDESTDIR
-if declare -f pkg_install >/dev/null; then
-	export XBPS_PKGDESTDIR=1
-	run_func pkg_install
+	install -d $PKGDESTDIR
+	if declare -f pkg_install >/dev/null; then
+		export XBPS_PKGDESTDIR=1
+		run_func pkg_install
+	fi
 fi
 
 # Prepare pkg destdir and install/remove scripts.
