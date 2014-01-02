@@ -203,29 +203,22 @@ remove_pkg() {
 		_destdir="$XBPS_DESTDIR"
 	fi
 
-	for f in install pre_install post_install strip; do
-		rm -f $wrksrc/.xbps_${sourcepkg}_${cross}_${f}_done
-	done
 	if [ -f "$PKG_GITREVS_FILE" ]; then
 		rm -f $PKG_GITREVS_FILE
 	fi
-	for f in ${subpackages}; do
+	for f in ${sourcepkg} ${subpackages}; do
 		if [ -d "${_destdir}/${f}-${version}" ]; then
+			msg_normal "$f: removing files from destdir...\n"
 			rm -rf ${_destdir}/${f}-${version}
 		fi
 		if [ -d "${_destdir}/${f}-dbg-${version}" ]; then
+			msg_normal "$f: removing dbg files from destdir...\n"
 			rm -rf ${_destdir}/${f}-dbg-${version}
 		fi
+		rm -f $wrksrc/.xbps_${f}_${cross}_pre_install_done
 		rm -f $wrksrc/.xbps_${f}_${cross}_install_done
+		rm -f $wrksrc/.xbps_${f}_${cross}_post_install_done
 		rm -f $wrksrc/.xbps_${f}_${cross}_pkg_done
 		rm -f $wrksrc/.xbps_${f}_${cross}_strip_done
 	done
-
-	if [ -d "${_destdir}/${sourcepkg}-${version}" ]; then
-		msg_normal "$sourcepkg: removing files from destdir...\n"
-		rm -rf "${_destdir}/${sourcepkg}-${version}"
-	fi
-	if [ -d "$XBPS_DESTDIR/${sourcepkg}-${version}" ]; then
-		rm -rf "${XBPS_DESTDIR}/${sourcepkg}-${version}"
-	fi
 }
