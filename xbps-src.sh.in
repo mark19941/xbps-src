@@ -341,15 +341,15 @@ while getopts "a:Cc:D:fghH:Ij:Lm:No:r:V" opt; do
 	a) readonly XBPS_CROSS_BUILD="$OPTARG";;
 	c) readonly XBPS_CONFIG_FILE="$(realpath $OPTARG 2>/dev/null)";;
 	C) readonly XBPS_KEEP_ALL=1;;
-    D) XBPS_DISTDIR="$(realpath $OPTARG 2>/dev/null)";;
+    D) export XBPS_DISTDIR="$(realpath $OPTARG 2>/dev/null)";;
 	f) readonly XBPS_BUILD_FORCEMODE=1;;
 	g) readonly XBPS_DEBUG_PKGS=1;;
-	H) readonly XBPS_HOSTDIR="$(realpath $OPTARG 2>/dev/null)";;
+	H) export XBPS_HOSTDIR="$(realpath $OPTARG 2>/dev/null)";;
 	h) usage && exit 0;;
 	I) readonly XBPS_SKIP_DEPS=1;;
 	j) readonly XBPS_MAKEJOBS="$OPTARG";;
 	L) export NOCOLORS=1;;
-	m) readonly XBPS_MASTERDIR=$(realpath $OPTARG 2>/dev/null);;
+	m) export XBPS_MASTERDIR=$(realpath $OPTARG 2>/dev/null);;
 	N) readonly XBPS_SKIP_REMOTEREPOS=1;;
 	o) readonly XBPS_BUILD_OPTS="$OPTARG";;
 	r) readonly XBPS_ALT_REPOSITORY="$OPTARG";;
@@ -453,7 +453,7 @@ fi
 
 readonly XBPS_DIGEST_CMD="xbps-uhelper digest"
 readonly XBPS_CMPVER_CMD="xbps-uhelper cmpver"
-readonly XBPS_FETCH_CMD="xbps-uhelper fetch"
+export XBPS_FETCH_CMD="xbps-uhelper fetch"
 readonly XBPS_VERSION=$(xbps-uhelper -V|awk '{print $2}')
 readonly XBPS_APIVER=$(xbps-uhelper -V|awk '{print $4}')
 
