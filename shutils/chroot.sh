@@ -79,7 +79,7 @@ chroot_prepare() {
 	cp -f /etc/services $XBPS_MASTERDIR/etc
 	[ -f /etc/localtime ] && cp -f /etc/localtime $XBPS_MASTERDIR/etc
 
-	for f in dev sys proc xbps host boot; do
+	for f in dev sys proc host boot; do
 		[ ! -d $XBPS_MASTERDIR/$f ] && mkdir -p $XBPS_MASTERDIR/$f
 	done
 
