@@ -44,7 +44,7 @@ process_metadata_scripts() {
 # not possible to chroot(3).
 #
 
-export PATH="/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
+export PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
 
 TRIGGERSDIR="./usr/libexec/xbps-triggers"
 ACTION="\$1"
