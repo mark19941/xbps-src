@@ -339,17 +339,17 @@ readonly REQHOST_UTILS="xbps-install xbps-query xbps-rindex xbps-uhelper \
 while getopts "a:Cc:D:fghH:Ij:Lm:No:r:V" opt; do
 	case $opt in
 	a) readonly XBPS_CROSS_BUILD="$OPTARG";;
-	c) readonly XBPS_CONFIG_FILE="$(realpath $OPTARG 2>/dev/null)";;
+	c) readonly XBPS_CONFIG_FILE="$(readlink -fe $OPTARG 2>/dev/null)";;
 	C) readonly XBPS_KEEP_ALL=1;;
-    D) export XBPS_DISTDIR="$(realpath $OPTARG 2>/dev/null)";;
+    D) export XBPS_DISTDIR="$(readlink -fe $OPTARG 2>/dev/null)";;
 	f) readonly XBPS_BUILD_FORCEMODE=1;;
 	g) readonly XBPS_DEBUG_PKGS=1;;
-	H) export XBPS_HOSTDIR="$(realpath $OPTARG 2>/dev/null)";;
+	H) export XBPS_HOSTDIR="$(readlink -fe $OPTARG 2>/dev/null)";;
 	h) usage && exit 0;;
 	I) readonly XBPS_SKIP_DEPS=1;;
 	j) readonly XBPS_MAKEJOBS="$OPTARG";;
 	L) export NOCOLORS=1;;
-	m) export XBPS_MASTERDIR=$(realpath $OPTARG 2>/dev/null);;
+	m) export XBPS_MASTERDIR=$(readlink -fe $OPTARG 2>/dev/null);;
 	N) readonly XBPS_SKIP_REMOTEREPOS=1;;
 	o) readonly XBPS_BUILD_OPTS="$OPTARG";;
 	r) readonly XBPS_ALT_REPOSITORY="$OPTARG";;
