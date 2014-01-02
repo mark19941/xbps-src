@@ -92,12 +92,13 @@ Options:
  -a  <profile>
      Cross compile packages for this profile. Supported values:
 
-	 i686           - for i686 GNU/Linux
-	 i686-musl      - for i686 Musl/Linux
-	 armv6hf        - for ARMv6 EABI5 (LE Hard Float) GNU/Linux
-	 armv6hf-musl   - for ARMv6 EABI5 (LE Hard Float) Musl/Linux
-	 mips           - for MIPS o32 (BE Soft Float) GNU/Linux
-	 mipsel         - for MIPS o32 (LE Soft Float) GNU/Linux
+     i686           - for i686 GNU/Linux
+     i686-musl      - for i686 Musl/Linux
+     armv6hf        - for ARMv6 EABI5 (LE Hard Float) GNU/Linux
+     armv6hf-musl   - for ARMv6 EABI5 (LE Hard Float) Musl/Linux
+     armv7          - for ARMv7 EABI5 (LE Hard Float) GNU/Linux
+     mips           - for MIPS o32 (BE Soft Float) GNU/Linux
+     mipsel         - for MIPS o32 (LE Soft Float) GNU/Linux
 
  -C  Do not remove build directory, automatic dependencies and
      package destdir after successful install.
