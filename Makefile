@@ -10,7 +10,7 @@ ETCDIR  ?= $(PREFIX)/etc/xbps
 PRIVILEGED_GROUP ?= xbuilder
 
 # INMUTABLE VARIABLES
-VERSION	= 92
+VERSION	= 93
 GITVER	:= $(shell git rev-parse --short HEAD)
 CONF_FILE = xbps-src.conf
 
