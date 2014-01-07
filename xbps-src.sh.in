@@ -386,7 +386,6 @@ if [ "$(id -u)" -eq 0 ]; then
     exit 1
 fi
 
-readonly XBPS_BUILDSTYLEDIR=$XBPS_SHAREDIR/build_style
 readonly XBPS_HELPERSDIR=$XBPS_SHAREDIR/helpers
 readonly XBPS_SHUTILSDIR=$XBPS_SHAREDIR/shutils
 readonly XBPS_CROSSPFDIR=$XBPS_SHAREDIR/cross-profiles
@@ -414,6 +413,8 @@ else
 	readonly XBPS_PACKAGESDIR=$XBPS_MASTERDIR/host/binpkgs
 fi
 readonly XBPS_TRIGGERSDIR=$XBPS_SRCPKGDIR/xbps-triggers/files
+readonly XBPS_CROSSPFDIR=$XBPS_COMMONDIR/cross-profiles
+readonly XBPS_BUILDSTYLEDIR=$XBPS_COMMONDIR/build_style
 
 if [ -d "$XBPS_DISTDIR/.git" ]; then
     DDIRS="TRIGGERSDIR HELPERSDIR BUILDSTYLEDIR SRCPKGDIR SHUTILSDIR COMMONDIR"
