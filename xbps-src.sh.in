@@ -388,7 +388,6 @@ fi
 
 readonly XBPS_HELPERSDIR=$XBPS_SHAREDIR/helpers
 readonly XBPS_SHUTILSDIR=$XBPS_SHAREDIR/shutils
-readonly XBPS_CROSSPFDIR=$XBPS_SHAREDIR/cross-profiles
 
 if [ -n "$IN_CHROOT" ]; then
     readonly XBPS_DISTDIR=/xbps-packages
