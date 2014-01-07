@@ -534,8 +534,12 @@ install_cross_pkg() {
 				msg_error "failed to install cross-${XBPS_CROSS_TRIPLET} (error $rval)\n"
 			fi
 		fi
-		$XBPS_INSTALL_CMD -r /usr/${XBPS_CROSS_TRIPLET} \
-			-Sy cross-vpkg-dummy 2>&1 >/dev/null
+		if [ ! -d ${XBPS_CROSS_BASE}/var/db/xbps/keys ]; then
+			mkdir -p ${XBPS_CROSS_BASE}/var/db/xbps/keys
+			cp ${XBPS_MASTERDIR}/var/db/xbps/keys/*.plist \
+				${XBPS_CROSS_BASE}/var/db/xbps/keys
+		fi
+		$XBPS_INSTALL_CMD -r ${XBPS_CROSS_BASE} -Sy cross-vpkg-dummy 2>&1 >/dev/null
 		rval=$?
 		if [ $rval -ne 0 -a $rval -ne 17 ]; then
 			msg_error "failed to install cross-vpkg-dummy (error $rval)\n"
