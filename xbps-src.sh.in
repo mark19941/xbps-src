@@ -99,6 +99,7 @@ Options:
      armv7          - for ARMv7 EABI5 (LE Hard Float) GNU/Linux
      mips           - for MIPS o32 (BE Soft Float) GNU/Linux
      mipsel         - for MIPS o32 (LE Soft Float) GNU/Linux
+     x86_64-musl    - for x86_64 Musl/Linux
 
  -C  Do not remove build directory, automatic dependencies and
      package destdir after successful install.
