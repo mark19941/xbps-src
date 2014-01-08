@@ -325,7 +325,11 @@ prepare_destdir() {
 	local fpattern="s|${PKGDESTDIR}||g;s|^\./$||g;/^$/d"
 
 	if [ ! -d "${PKGDESTDIR}" ]; then
-		msg_error "$pkgver: not installed in destdir!\n"
+		if [ "$build_style" = "meta" ]; then
+			install -d $PKGDESTDIR
+		else
+			msg_error "$pkgver: not installed in destdir!\n"
+		fi
 	fi
 
 	#
