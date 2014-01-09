@@ -245,9 +245,7 @@ setup_pkg_reqvars() {
 		XBPS_RINDEX_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_RINDEX_CMD"
 		XBPS_UHELPER_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH xbps-uhelper -r $XBPS_CROSS_BASE"
 
-		if [ -n "$XBPS_PLATFORM" ]; then
-			export XBPS_PLATFORM
-		fi
+		unset XBPS_ARCH
 		export XBPS_TARGET_MACHINE=$XBPS_TARGET_ARCH
 	else
 		XBPS_INSTALL_XCMD="$XBPS_INSTALL_CMD"
@@ -257,9 +255,10 @@ setup_pkg_reqvars() {
 		XBPS_RINDEX_XCMD="$XBPS_RINDEX_CMD"
 		XBPS_UHELPER_XCMD="$XBPS_UHELPER_CMD"
 
+		export XBPS_ARCH=$XBPS_MACHINE
 		export XBPS_TARGET_MACHINE=$XBPS_MACHINE
 
-		unset XBPS_PLATFORM XBPS_CROSS_BASE XBPS_CROSS_LDFLAGS
+		unset XBPS_CROSS_BASE XBPS_CROSS_LDFLAGS
 		unset XBPS_CROSS_CFLAGS XBPS_CROSS_CXXFLAGS XBPS_CROSS_CPPFLAGS
 	fi
 
@@ -288,10 +287,10 @@ setup_pkg() {
 	fi
 
 	if [ -z "$bootstrap" ]; then
-		check_installed_pkg base-chroot-${BASE_CHROOT_REQ%_*}_1
+		check_installed_pkg base-chroot-0.1_1
 		if [ $? -ne 0 ]; then
 			msg_red "${pkg} is not a bootstrap package and cannot be built without it.\n"
-			msg_error "Please install 'base-chroot>=$BASE_CHROOT_REQ' and try again.\n"
+			msg_error "Please install bootstrap packages and try again.\n"
 		fi
 	fi
 
