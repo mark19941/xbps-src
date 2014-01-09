@@ -37,7 +37,7 @@ genbinpkg() {
 	else
 		arch=$XBPS_MACHINE
 	fi
-	if [ -n "$XBPS_ARCH" -a "$XBPS_ARCH" != "$XBPS_TARGET_MACHINE" ]; then
+	if [ -z "$noarch" -a -n "$XBPS_ARCH" -a "$XBPS_ARCH" != "$XBPS_TARGET_MACHINE" ]; then
 		arch=${XBPS_ARCH}
 	fi
 	binpkg=$pkgver.$arch.xbps
