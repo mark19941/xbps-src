@@ -107,7 +107,10 @@ chroot_prepare() {
 		$XBPS_RECONFIGURE_CMD -f glibc-locales
 	fi
 
-	echo $1 > $XBPS_MASTERDIR/.xbps_chroot_init
+	touch -f $XBPS_MASTERDIR/.xbps_chroot_init
+	[ -n "$1" ] && echo $1 >> $XBPS_MASTERDIR/.xbps_chroot_init
+
+	return 0
 }
 
 chroot_sync_repos() {
