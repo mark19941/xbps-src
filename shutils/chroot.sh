@@ -43,12 +43,16 @@ XBPS_SRC_VERSION="$XBPS_SRC_VERSION"
 
 PATH=/usr/bin:/usr/sbin:/usr/lib/perl5/core_perl/bin
 
-exec env -i PATH="\$PATH" DISTCC_HOSTS="\$XBPS_DISTCC_HOSTS" DISTCC_DIR="/distcc" \
-	XBPS_ARCH="$XBPS_ARCH" \
+exec env -i PATH="\$PATH" DISTCC_HOSTS="\$XBPS_DISTCC_HOSTS" DISTCC_DIR="/distcc" @@XARCH@@ \
 	CCACHE_DIR="/ccache" IN_CHROOT=1 LANG=en_US.UTF-8 TERM=linux HOME="/tmp" \
 	PS1="[\u@$XBPS_MASTERDIR \W]$ " /bin/bash +h
 
 _EOF
+	if [ -n "$XBPS_ARCH" ]; then
+		sed -e "s,@@XARCH@@,XBPS_ARCH=${XBPS_ARCH},g" -i $XBPS_MASTERDIR/bin/xbps-shell
+	else
+		sed -e 's,@@XARCH@@,,g' -i $XBPS_MASTERDIR/bin/xbps-shell
+	fi
 	chmod 755 $XBPS_MASTERDIR/bin/xbps-shell
 
 	cp -f /etc/resolv.conf $XBPS_MASTERDIR/etc
@@ -148,6 +152,7 @@ chroot_sync_repos() {
 }
 
 chroot_handler() {
+	local action="$1" pkg="$2" rv=0 arg= _envargs=
 	local _chargs="
 		--mount-bind /dev /dev
 		--mount-bind /sys /sys
@@ -163,8 +168,6 @@ chroot_handler() {
 		fi
 		_chargs+=" --mount-bind ${XBPS_DISTDIR} /xbps-packages"
 	fi
-	local action="$1" pkg="$2" rv=0 arg=
-
 	[ -z "$action" -a -z "$pkg" ] && return 1
 
 	chroot_prepare || return $?
@@ -172,8 +175,7 @@ chroot_handler() {
 	chroot_sync_repos || return $?
 
 	if [ "$action" = "chroot" ]; then
-		env -i LANG=en_US.UTF-8 $CHROOT_CMD ${_chargs} \
-			$XBPS_MASTERDIR /bin/xbps-shell || rv=$?
+		$CHROOT_CMD ${_chargs} $XBPS_MASTERDIR /bin/xbps-shell || rv=$?
 	else
 		[ -n "$XBPS_BUILD_OPTS" ] && arg="$arg -o $XBPS_BUILD_OPTS"
 		[ -n "$XBPS_CROSS_BUILD" ] && arg="$arg -a $XBPS_CROSS_BUILD"
