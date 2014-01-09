@@ -44,6 +44,7 @@ XBPS_SRC_VERSION="$XBPS_SRC_VERSION"
 PATH=/usr/bin:/usr/sbin:/usr/lib/perl5/core_perl/bin
 
 exec env -i PATH="\$PATH" DISTCC_HOSTS="\$XBPS_DISTCC_HOSTS" DISTCC_DIR="/distcc" \
+	XBPS_ARCH="$XBPS_ARCH" \
 	CCACHE_DIR="/ccache" IN_CHROOT=1 LANG=en_US.UTF-8 TERM=linux HOME="/tmp" \
 	PS1="[\u@$XBPS_MASTERDIR \W]$ " /bin/bash +h
 
@@ -102,7 +103,7 @@ chroot_prepare() {
 		$XBPS_RECONFIGURE_CMD -f glibc-locales
 	fi
 
-	touch $XBPS_MASTERDIR/.xbps_chroot_init
+	echo $1 > $XBPS_MASTERDIR/.xbps_chroot_init
 }
 
 chroot_sync_repos() {

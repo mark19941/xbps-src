@@ -37,6 +37,9 @@ genbinpkg() {
 	else
 		arch=$XBPS_MACHINE
 	fi
+	if [ -n "$XBPS_ARCH" -a "$XBPS_ARCH" != "$XBPS_TARGET_MACHINE" ]; then
+		arch=${XBPS_ARCH}
+	fi
 	binpkg=$pkgver.$arch.xbps
 	if [ -n "$XBPS_ALT_REPOSITORY" ]; then
 		pkgdir=$XBPS_PACKAGESDIR/$XBPS_ALT_REPOSITORY
@@ -175,6 +178,10 @@ fi
 if [ "$sourcepkg" != "$PKGNAME" ]; then
 	${PKGNAME}_package
 	pkgname=$PKGNAME
+fi
+
+if [ -s $XBPS_MASTERDIR/.xbps_chroot_init ]; then
+	export XBPS_ARCH=$(cat $XBPS_MASTERDIR/.xbps_chroot_init)
 fi
 
 genbinpkg

@@ -254,17 +254,19 @@ install_bbotstrap() {
 	# XBPS_TARGET_PKG == arch
 	if [ -n "$XBPS_TARGET_PKG" ]; then
 		_bootstrap_arch="env XBPS_TARGET_ARCH=$XBPS_TARGET_PKG"
+        if [ "${XBPS_TARGET_PKG}" != "${XBPS_TARGET_PKG#*-}" ]; then
+            _subarch="-${XBPS_TARGET_PKG#*-}"
+        fi
 	fi
-
 	${_bootstrap_arch} xbps-install ${_args} ${XBPS_INSTALL_ARGS} -r $XBPS_MASTERDIR \
-		-c $XBPS_MASTERDIR/host/repocache -y base-chroot
+		-c $XBPS_MASTERDIR/host/repocache -y base-chroot${_subarch}
 	if [ $? -ne 0 ]; then
 		msg_error "Failed to install bootstrap packages!\n"
 	fi
 	# Reconfigure base-directories.
 	xbps-reconfigure -r $XBPS_MASTERDIR -f base-directories &>/dev/null
 	msg_normal "Installed bootstrap successfully!\n"
-	chroot_prepare || msg_error "Failed to initialize chroot!\n"
+	chroot_prepare $XBPS_TARGET_PKG || msg_error "Failed to initialize chroot!\n"
 }
 
 masterdir_zap() {
@@ -377,6 +379,10 @@ XBPS_TARGET_PKG="$2"
 
 if [ -f $XBPS_MASTERDIR/.xbps_chroot_init ]; then
 	export CHROOT_READY=1
+fi
+
+if [ -s $XBPS_MASTERDIR/.xbps_chroot_init ]; then
+    export XBPS_ARCH=$(cat $XBPS_MASTERDIR/.xbps_chroot_init)
 fi
 
 # Check if stdout is a tty; if false disable colors.
