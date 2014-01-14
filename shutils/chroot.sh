@@ -137,15 +137,15 @@ chroot_sync_repos() {
 	else
 		sed -e 's,^#.*\(include("/etc/xbps/repos/remote.conf")$\),\1,' \
 			-i ${XBPS_MASTERDIR}/etc/xbps/xbps.conf
-		# Copy host keys to the target rootdir.
-		if [ ! -d $XBPS_MASTERDIR/usr/$XBPS_CROSS_TRIPLET/var/db/xbps/keys ]; then
-			mkdir -p $XBPS_MASTERDIR/usr/$XBPS_CROSS_TRIPLET/var/db/xbps/keys
-		fi
-		cp -a $XBPS_MASTERDIR/var/db/xbps/keys/*.plist \
-			$XBPS_MASTERDIR/usr/$XBPS_CROSS_TRIPLET/var/db/xbps/keys
 		# Make sure to sync index for remote repositories.
 		$CHROOT_CMD $XBPS_MASTERDIR /usr/sbin/xbps-install -S
 		if [ -n "$XBPS_CROSS_BUILD" ]; then
+			# Copy host keys to the target rootdir.
+			if [ ! -d $XBPS_MASTERDIR/usr/$XBPS_CROSS_TRIPLET/var/db/xbps/keys ]; then
+				mkdir -p $XBPS_MASTERDIR/usr/$XBPS_CROSS_TRIPLET/var/db/xbps/keys
+			fi
+			cp -a $XBPS_MASTERDIR/var/db/xbps/keys/*.plist \
+				$XBPS_MASTERDIR/usr/$XBPS_CROSS_TRIPLET/var/db/xbps/keys
 			$CHROOT_CMD $XBPS_MASTERDIR sh -c \
 				"/usr/bin/env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH /usr/sbin/xbps-install -r /usr/$XBPS_CROSS_TRIPLET -S"
 		fi
