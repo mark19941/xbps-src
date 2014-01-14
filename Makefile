@@ -21,11 +21,9 @@ CFLAGS += -O2 -Wall -Werror
 .PHONY: all clean install uninstall
 
 all:
-	sed -e	"s|@@XBPS_INSTALL_PREFIX@@|$(PREFIX)|g"		\
-	    -e	"s|@@XBPS_INSTALL_ETCDIR@@|$(ETCDIR)|g"		\
-	    -e  "s|@@XBPS_INSTALL_SHAREDIR@@|$(SHAREDIR)|g"	\
-	    -e  "s|@@XBPS_INSTALL_SBINDIR@@|$(SBINDIR)|g"	\
-	    -e	"s|@@XBPS_INSTALL_LIBEXECDIR@@|$(LIBEXECDIR)|g"	\
+	sed -e  "s|@@XBPS_INSTALL_SHAREDIR@@|$(SHAREDIR)|g"		\
+	    -e	"s|@@XBPS_INSTALL_LIBEXECDIR@@|$(LIBEXECDIR)|g"		\
+	    -e	"s|@@XBPS_INSTALL_ETCDIR@@|$(ETCDIR)|g"			\
 	    -e  "s|@@XBPS_SRC_VERSION@@|$(VERSION) ($(GITVER))|g"	\
 		xbps-src.sh.in > xbps-src
 	$(CC) $(CFLAGS) libexec/$(CHROOT_C) -o libexec/$(CHROOT_BIN)

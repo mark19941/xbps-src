@@ -236,6 +236,7 @@ setup_pkg_reqvars() {
 			fi
 		done
 
+		export XBPS_TARGET_MACHINE=$XBPS_TARGET_ARCH
 		export XBPS_CROSS_BASE=/usr/$XBPS_CROSS_TRIPLET
 
 		XBPS_INSTALL_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_INSTALL_CMD -c /host/repocache -r $XBPS_CROSS_BASE"
@@ -245,8 +246,11 @@ setup_pkg_reqvars() {
 		XBPS_RINDEX_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH $XBPS_RINDEX_CMD"
 		XBPS_UHELPER_XCMD="env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH xbps-uhelper -r $XBPS_CROSS_BASE"
 
-		export XBPS_TARGET_MACHINE=$XBPS_TARGET_ARCH
 	else
+		export XBPS_TARGET_MACHINE=${XBPS_ARCH:-$XBPS_MACHINE}
+		unset XBPS_CROSS_BASE XBPS_CROSS_LDFLAGS
+		unset XBPS_CROSS_CFLAGS XBPS_CROSS_CXXFLAGS XBPS_CROSS_CPPFLAGS
+
 		XBPS_INSTALL_XCMD="$XBPS_INSTALL_CMD"
 		XBPS_QUERY_XCMD="$XBPS_QUERY_CMD"
 		XBPS_RECONFIGURE_XCMD="$XBPS_RECONFIGURE_CMD"
@@ -254,14 +258,6 @@ setup_pkg_reqvars() {
 		XBPS_RINDEX_XCMD="$XBPS_RINDEX_CMD"
 		XBPS_UHELPER_XCMD="$XBPS_UHELPER_CMD"
 
-		if [ -n "$XBPS_ARCH" ]; then
-			export XBPS_TARGET_MACHINE=$XBPS_ARCH
-		else
-			export XBPS_TARGET_MACHINE=$XBPS_MACHINE
-		fi
-
-		unset XBPS_CROSS_BASE XBPS_CROSS_LDFLAGS
-		unset XBPS_CROSS_CFLAGS XBPS_CROSS_CXXFLAGS XBPS_CROSS_CPPFLAGS
 	fi
 
 	export XBPS_INSTALL_XCMD XBPS_QUERY_XCMD XBPS_RECONFIGURE_XCMD \
@@ -269,7 +265,7 @@ setup_pkg_reqvars() {
 }
 
 setup_pkg() {
-	local pkg="$1" cross="$2" restorecross
+	local pkg="$1" cross="$2"
 
 	[ -z "$pkg" ] && return 1
 
@@ -427,9 +423,10 @@ setup_pkg_common_vars() {
 	export CPPFLAGS="$XBPS_CPPFLAGS $XBPS_CROSS_CPPFLAGS $CPPFLAGS"
 	export LDFLAGS="$LDFLAGS $XBPS_LDFLAGS $XBPS_CROSS_LDFLAGS"
 
+	export BUILD_CC="cc"
+	export BUILD_CFLAGS="$XBPS_CFLAGS"
+
 	if [ -n "$cross" ]; then
-		export BUILD_CC="cc"
-		export BUILD_CFLAGS="$XBPS_CFLAGS"
 		export CC="${XBPS_CROSS_TRIPLET}-gcc"
 		export CXX="${XBPS_CROSS_TRIPLET}-c++"
 		export CPP="${XBPS_CROSS_TRIPLET}-cpp"
@@ -509,11 +506,6 @@ install_cross_pkg() {
 	local cross="$1" rval
 
 	[ -z "$cross" -o "$cross" = "" ] && return 0
-
-	if [ ! -r ${XBPS_CROSSPFDIR}/${cross}.sh ]; then
-		echo "ERROR: missing cross build profile for ${cross}, exiting."
-		exit 1
-	fi
 
 	source_file ${XBPS_CROSSPFDIR}/${cross}.sh
 

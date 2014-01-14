@@ -299,9 +299,11 @@ exit_func() {
 		if [ -n "$IN_CHROOT" ]; then
 			remove_pkg_autodeps
 		fi
-		remove_pkg $XBPS_CROSS_BUILD
-		remove_pkg_wrksrc
-	fi
+    fi
+    if [ -n "$sourcepkg" ]; then
+	    remove_pkg $XBPS_CROSS_BUILD
+	    remove_pkg_wrksrc
+    fi
 	if [ -z "$IN_CHROOT" ]; then
 		msg_red "xbps-src: a failure has ocurred! exiting...\n"
 	fi
@@ -313,9 +315,7 @@ umask 022
 trap 'exit_func' INT TERM HUP
 
 readonly XBPS_SRC_VERSION="@@XBPS_SRC_VERSION@@"
-readonly XBPS_PREFIX=${DESTDIR}@@XBPS_INSTALL_PREFIX@@
 readonly XBPS_ETCDIR=${DESTDIR}@@XBPS_INSTALL_ETCDIR@@
-readonly XBPS_SBINDIR=${DESTDIR}@@XBPS_INSTALL_SBINDIR@@
 readonly XBPS_SHAREDIR=${DESTDIR}@@XBPS_INSTALL_SHAREDIR@@
 readonly XBPS_LIBEXECDIR=${DESTDIR}@@XBPS_INSTALL_LIBEXECDIR@@
 readonly XBPS_PKGS_REPO="git://github.com/voidlinux/xbps-packages"
@@ -379,10 +379,6 @@ XBPS_TARGET_PKG="$2"
 
 if [ -f $XBPS_MASTERDIR/.xbps_chroot_init ]; then
 	export CHROOT_READY=1
-fi
-
-if [ -s $XBPS_MASTERDIR/.xbps_chroot_init ]; then
-    export XBPS_ARCH=$(cat $XBPS_MASTERDIR/.xbps_chroot_init)
 fi
 
 # Check if stdout is a tty; if false disable colors.
@@ -464,6 +460,10 @@ export XBPS_FETCH_CMD="xbps-uhelper fetch"
 readonly XBPS_VERSION=$(xbps-uhelper -V|awk '{print $2}')
 readonly XBPS_APIVER=$(xbps-uhelper -V|awk '{print $4}')
 
+if [ -s $XBPS_MASTERDIR/.xbps_chroot_init ]; then
+    export XBPS_ARCH=$(cat $XBPS_MASTERDIR/.xbps_chroot_init)
+fi
+
 export XBPS_HELPERSDIR XBPS_SHUTILSDIR XBPS_CROSSPFDIR XBPS_TRIGGERSDIR \
 	XBPS_SRCPKGDIR XBPS_COMMONDIR XBPS_DESTDIR XBPS_BUILDDIR \
 	XBPS_PACKAGESDIR XBPS_SRCDISTDIR XBPS_DIGEST_CMD \
@@ -514,8 +514,6 @@ else
 	fi
 fi
 
-check_build_requirements
-
 if [ -z "$CHROOT_READY" ]; then
 	if [ -n "$BASE_CHROOT_REQ" ]; then
 		check_installed_pkg base-chroot-$BASE_CHROOT_REQ
@@ -527,6 +525,8 @@ if [ -z "$CHROOT_READY" ]; then
 		fi
 	fi
 fi
+
+check_build_requirements
 
 #
 # Main switch.
