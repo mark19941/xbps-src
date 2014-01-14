@@ -176,6 +176,7 @@ if [ -z "$pkgname" -o -z "$version" ]; then
 fi
 
 if [ "$sourcepkg" != "$PKGNAME" ]; then
+	reset_subpkg_vars
 	${PKGNAME}_package
 	pkgname=$PKGNAME
 fi
