@@ -33,7 +33,7 @@ if [ -f $XBPS_INSTALL_DONE ]; then
 	exit 0
 fi
 
-mkdir -p $XBPS_DESTDIR/$pkgname-$version
+mkdir -p $XBPS_DESTDIR/$XBPS_CROSS_TRIPLET/$pkgname-$version
 
 cd $wrksrc || msg_error "$pkgver: cannot access to wrksrc [$wrksrc]\n"
 if [ -n "$build_wrksrc" ]; then
