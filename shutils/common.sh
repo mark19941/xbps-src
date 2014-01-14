@@ -168,7 +168,7 @@ reset_pkg_vars() {
 
 	local TMPL_PRIV_VARS="pkgver subpackages sourcepkg makejobs disable_debug \
 			run_depends build_depends host_build_depends \
-			SUBPKG XBPS_EXTRACT_DONE XBPS_CONFIGURE_DONE \
+			XBPS_EXTRACT_DONE XBPS_CONFIGURE_DONE \
 			XBPS_BUILD_DONE XBPS_INSTALL_DONE FILESDIR DESTDIR \
 			PKGDESTDIR PATCHESDIR CFLAGS CXXFLAGS CPPFLAGS \
 			XBPS_CROSS_CFLAGS XBPS_CROSS_CXXFLAGS \
@@ -302,7 +302,6 @@ setup_pkg() {
 		if ! declare -f ${pkg}_package >/dev/null; then
 			msg_error "$pkgname: missing ${pkg}_package() function!\n"
 		fi
-		SUBPKG=1
 	fi
 
 	pkgver="${pkg}-${version}_${revision}"
