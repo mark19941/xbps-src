@@ -98,7 +98,7 @@ chroot_prepare() {
 	# Copy /etc/hosts from base-files.
 	cp -f $XBPS_SRCPKGDIR/base-files/files/hosts $XBPS_MASTERDIR/etc
 
-	ln -sfr ${XBPS_MASTERDIR}/bin/bash ${XBPS_MASTERDIR}/bin/sh
+	ln -sf /bin/bash ${XBPS_MASTERDIR}/bin/sh
 	rm -f $XBPS_MASTERDIR/etc/xbps/xbps.conf
 
 	# Prepare default locale: en_US.UTF-8.
