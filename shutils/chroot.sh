@@ -146,7 +146,7 @@ chroot_sync_repos() {
 			fi
 			cp -a $XBPS_MASTERDIR/var/db/xbps/keys/*.plist \
 				$XBPS_MASTERDIR/usr/$XBPS_CROSS_TRIPLET/var/db/xbps/keys
-			$CHROOT_CMD $XBPS_MASTERDIR sh -c \
+			$CHROOT_CMD $XBPS_MASTERDIR /bin/sh -c \
 				"/usr/bin/env XBPS_TARGET_ARCH=$XBPS_TARGET_ARCH /usr/sbin/xbps-install -r /usr/$XBPS_CROSS_TRIPLET -S"
 		fi
 	fi
@@ -192,7 +192,7 @@ chroot_handler() {
 
 		action="$arg $action"
 		env -i PATH=/bin:/sbin:/usr/bin:/usr/sbin HOME=/tmp IN_CHROOT=1 LANG=en_US.UTF-8 \
-			$CHROOT_CMD ${_chargs} $XBPS_MASTERDIR sh -c \
+			$CHROOT_CMD ${_chargs} $XBPS_MASTERDIR /bin/sh -c \
 			"xbps-src $action $pkg" || rv=$?
 	fi
 
