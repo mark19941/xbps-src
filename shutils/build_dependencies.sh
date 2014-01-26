@@ -230,9 +230,6 @@ install_pkg_deps() {
 	fi
 
 	for i in ${host_binpkg_deps[@]}; do
-		if [ -n "$CHROOT_READY" -a "$build_style" = "meta" ]; then
-			continue
-		fi
 		msg_normal "$pkgver: installing host dependency '$i' ...\n"
 		install_pkg_from_repos "${i}"
 	done
