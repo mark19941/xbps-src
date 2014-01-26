@@ -11,11 +11,10 @@ _noglob_helper() {
        "$@"
        set +f
 }
-alias _noglob='set -f; noglob_helper'
 
 # Apply _noglob to v* commands
 for cmd in vinstall vcopy vmove vmkdir; do
-       alias ${cmd}=_noglob "${cmd}"
+       alias ${cmd}="set -f; noglob_helper "${cmd}"
 done
 
 vinstall() {
