@@ -1,5 +1,23 @@
 # -*-* shell *-*-
 
+# enable aliases
+shopt -s expand_aliases
+
+# clear all aliases
+unalias -a
+
+# disable wildcards helper
+_noglob_helper() {
+       "$@"
+       set +f
+}
+alias _noglob='set -f; noglob_helper'
+
+# Apply _noglob to v* commands
+for cmd in vinstall vcopy vmove vmkdir; do
+       alias ${cmd}=_noglob "${cmd}"
+done
+
 vinstall() {
 	local file="$1" mode="$2" targetdir="$3" targetfile="$4"
 	local _destdir=
