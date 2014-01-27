@@ -1,6 +1,23 @@
 # -*-* shell *-*-
 
-vinstall() {
+# enable aliases
+shopt -s expand_aliases
+
+# clear all aliases
+unalias -a
+
+# disable wildcards helper
+_noglob_helper() {
+       set +f
+       "$@"
+}
+
+# Apply _noglob to v* commands
+for cmd in vinstall vcopy vmove vmkdir; do
+       alias ${cmd}="set -f; _noglob_helper _${cmd}"
+done
+
+_vinstall() {
 	local file="$1" mode="$2" targetdir="$3" targetfile="$4"
 	local _destdir=
 
@@ -32,7 +49,7 @@ vinstall() {
 	fi
 }
 
-vcopy() {
+_vcopy() {
 	local files="$1" targetdir="$2" _destdir
 
 	if [ -z "$DESTDIR" ]; then
@@ -53,7 +70,8 @@ vcopy() {
 	cp -a $files ${_destdir}/${targetdir}
 }
 
-vmove() {
+_vmove() {
+	echo $@
 	local files="$1" _destdir _pkgdestdir _targetdir
 
 	if [ -z "$DESTDIR" ]; then
@@ -95,7 +113,7 @@ vmove() {
 	fi
 }
 
-vmkdir() {
+_vmkdir() {
 	local dir="$1" mode="$2" _destdir
 
 	if [ -z "$DESTDIR" ]; then
