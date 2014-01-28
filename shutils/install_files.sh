@@ -71,7 +71,6 @@ _vcopy() {
 }
 
 _vmove() {
-	echo $@
 	local files="$1" _destdir _pkgdestdir _targetdir
 
 	if [ -z "$DESTDIR" ]; then
