@@ -185,14 +185,13 @@ check_config_vars() {
 check_build_requirements() {
     local found
 
-    for f in $XBPS_COMMONDIR/*.sh $XBPS_SHUTILSDIR/*.sh; do
+    for f in $XBPS_COMMONDIR/environment/*.sh $XBPS_SHUTILSDIR/*.sh; do
 	    [ -r $f ] && . $f
     done
 
     if [ -d "${XBPS_DISTDIR}/.git" ]; then
-	    if [ -z "$XBPS_SRC_REQ" -o -z "$XBPS_UTILS_REQ" -o \
-		     -z "$XBPS_UTILS_API_REQ" -o -z "$BASE_CHROOT_REQ" ]; then
-		    echo "ERROR: missing defs from xbps-packages/common/global-defs.sh!"
+	    if [ -z "$XBPS_SRC_REQ" -o -z "$XBPS_UTILS_REQ" -o -z "$XBPS_UTILS_API_REQ" ]; then
+		    echo "ERROR: cannot satisfy xbps requirements!"
 		    exit 1
 	    fi
         case "$XBPS_TARGET" in
@@ -389,13 +388,13 @@ if [ "$(id -u)" -eq 0 ]; then
     exit 1
 fi
 
-readonly XBPS_HELPERSDIR=$XBPS_SHAREDIR/helpers
 readonly XBPS_SHUTILSDIR=$XBPS_SHAREDIR/shutils
 
 if [ -n "$IN_CHROOT" ]; then
-    readonly XBPS_DISTDIR=/xbps-packages
+	readonly XBPS_DISTDIR=/xbps-packages
 	readonly XBPS_SRCPKGDIR=$XBPS_DISTDIR/srcpkgs
 	readonly XBPS_COMMONDIR=$XBPS_DISTDIR/common
+	readonly XBPS_HELPERSDIR=$XBPS_COMMONDIR/helpers
 	readonly XBPS_DESTDIR=/destdir
 	readonly XBPS_BUILDDIR=/builddir
 else
@@ -404,6 +403,7 @@ else
     fi
 	readonly XBPS_SRCPKGDIR=$XBPS_DISTDIR/srcpkgs
 	readonly XBPS_COMMONDIR=$XBPS_DISTDIR/common
+	readonly XBPS_HELPERSDIR=$XBPS_COMMONDIR/helpers
 	readonly XBPS_DESTDIR=$XBPS_MASTERDIR/destdir
 	readonly XBPS_BUILDDIR=$XBPS_MASTERDIR/builddir
 fi

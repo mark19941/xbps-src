@@ -42,8 +42,6 @@ install-scripts: all
 	install -m 750 libexec/$(CHROOT_BIN) $(DESTDIR)$(LIBEXECDIR)
 	install -d $(DESTDIR)$(SHAREDIR)/shutils
 	install -m 644 shutils/*.sh $(DESTDIR)$(SHAREDIR)/shutils
-	install -d $(DESTDIR)$(SHAREDIR)/helpers
-	install -m 644 helpers/*.sh $(DESTDIR)$(SHAREDIR)/helpers
 	install -d $(DESTDIR)$(SHAREDIR)/chroot
 	install -m 644 chroot/xbps.conf $(DESTDIR)$(SHAREDIR)/chroot
 	install -m 644 chroot/repos-local.conf $(DESTDIR)$(SHAREDIR)/chroot

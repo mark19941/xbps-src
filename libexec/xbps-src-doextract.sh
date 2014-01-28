@@ -12,11 +12,11 @@ PKGNAME="$1"
 
 . $XBPS_SHUTILSDIR/common.sh
 
-for f in $XBPS_COMMONDIR/*.sh; do
+setup_pkg "$PKGNAME"
+
+for f in $XBPS_COMMONDIR/environment/*.sh; do
 	. $f
 done
-
-setup_pkg "$PKGNAME"
 
 XBPS_FETCH_DONE="$wrksrc/.xbps_extract_done"
 XBPS_EXTRACT_DONE="$wrksrc/.xbps_extract_done"

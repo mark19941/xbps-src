@@ -165,11 +165,11 @@ XBPS_ALT_REPOSITORY="$3"
 
 . $XBPS_SHUTILSDIR/common.sh
 
-for f in $XBPS_COMMONDIR/*.sh; do
+setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
+
+for f in $XBPS_COMMONDIR/environment/*.sh; do
 	. $f
 done
-
-setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 
 if [ -z "$pkgname" -o -z "$version" ]; then
 	msg_error "$PKGNAME: pkgname/version not set in pkg template!\n"
