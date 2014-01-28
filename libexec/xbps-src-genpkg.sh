@@ -165,6 +165,10 @@ XBPS_ALT_REPOSITORY="$3"
 
 . $XBPS_SHUTILSDIR/common.sh
 
+for f in $XBPS_COMMONDIR/helpers/*.sh; do
+	. $f
+done
+
 setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 
 for f in $XBPS_COMMONDIR/environment/*.sh; do

@@ -12,6 +12,10 @@ PKGNAME="$1"
 
 . $XBPS_SHUTILSDIR/common.sh
 
+for f in  $XBPS_COMMONDIR/helpers/*.sh; do
+	. $f
+done
+
 setup_pkg "$PKGNAME"
 
 for f in $XBPS_COMMONDIR/environment/*.sh; do
