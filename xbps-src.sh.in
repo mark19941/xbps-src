@@ -247,9 +247,6 @@ install_bbotstrap() {
     [ -n "$CHROOT_READY" ] && return
 	# binary bootstrap
 	msg_normal "Installing bootstrap from binary package repositories...\n"
-	case "$XBPS_VERSION" in
-		0.[2-9][1-9]*) _args="-S" ;;
-	esac
 	# XBPS_TARGET_PKG == arch
 	if [ -n "$XBPS_TARGET_PKG" ]; then
 		_bootstrap_arch="env XBPS_TARGET_ARCH=$XBPS_TARGET_PKG"
@@ -257,7 +254,7 @@ install_bbotstrap() {
             _subarch="-${XBPS_TARGET_PKG#*-}"
         fi
 	fi
-	${_bootstrap_arch} xbps-install ${_args} ${XBPS_INSTALL_ARGS} -r $XBPS_MASTERDIR \
+	${_bootstrap_arch} xbps-install -S ${XBPS_INSTALL_ARGS} -r $XBPS_MASTERDIR \
 		-c $XBPS_MASTERDIR/host/repocache -y base-chroot${_subarch}
 	if [ $? -ne 0 ]; then
 		msg_error "Failed to install bootstrap packages!\n"
