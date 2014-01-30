@@ -340,7 +340,8 @@ main (int      argc,
         {
           char *dest;
           
-          asprintf (&dest, "%s%s", chroot_dir, bind_mount_iter->dest);
+          if (asprintf (&dest, "%s%s", chroot_dir, bind_mount_iter->dest) < 0)
+            fatal_errno ("Couldn't print to allocated string");
           
           if (bind_mount_iter->type == MOUNT_SPEC_READONLY)
             {
