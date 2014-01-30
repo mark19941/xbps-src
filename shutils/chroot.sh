@@ -164,8 +164,10 @@ chroot_handler() {
 
 	# Debian uses /run/shm instead...
 	if [ -d /run/shm ]; then
+		mkdir -p ${XBPS_MASTERDIR}/run/shm
 		_chargs+=" --mount-bind /run/shm /run/shm"
 	elif [ -d /dev/shm ]; then
+		mkdir -p ${XBPS_MASTERDIR}/dev/shm
 		_chargs+=" --mount-bind /dev/shm /dev/shm"
 	fi
 
