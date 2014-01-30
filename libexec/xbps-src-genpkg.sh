@@ -171,10 +171,6 @@ done
 
 setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 
-for f in $XBPS_COMMONDIR/environment/*.sh; do
-	. $f
-done
-
 if [ -z "$pkgname" -o -z "$version" ]; then
 	msg_error "$PKGNAME: pkgname/version not set in pkg template!\n"
 fi

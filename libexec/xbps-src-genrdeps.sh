@@ -172,10 +172,6 @@ done
 setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 setup_pkg_depends $PKGNAME
 
-for f in $XBPS_COMMONDIR/environment/*.sh; do
-	. $f
-done
-
 if [ ! -d "$PKGDESTDIR" ]; then
 	msg_error "$pkgver: cannot access $PKGDESTDIR!\n"
 fi
