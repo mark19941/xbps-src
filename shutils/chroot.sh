@@ -160,8 +160,14 @@ chroot_handler() {
 	local _chargs="
 		--mount-bind /dev /dev
 		--mount-bind /sys /sys
-		--mount-proc /proc
-		--mount-bind /dev/shm /dev/shm"
+		--mount-proc /proc"
+
+	# Debian uses /run/shm instead...
+	if [ -d /run/shm ]; then
+		_chargs+=" --mount-bind /run/shm /run/shm"
+	elif [ -d /dev/shm ]; then
+		_chargs+=" --mount-bind /dev/shm /dev/shm"
+	fi
 
 	if [ -n "$XBPS_HOSTDIR" ]; then
 		_chargs+=" --mount-bind $XBPS_HOSTDIR /host"
