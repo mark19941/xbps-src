@@ -182,9 +182,13 @@ chroot_handler() {
 	fi
 	[ -z "$action" -a -z "$pkg" ] && return 1
 
-	chroot_prepare || return $?
-	chroot_init || return $?
-	chroot_sync_repos || return $?
+	case "$action" in
+	fetch|extract|build|configure|install-destdir|build-pkg)
+		chroot_prepare || return $?
+		chroot_init || return $?
+		chroot_sync_repos || return $?
+		;;
+	esac
 
 	if [ "$action" = "chroot" ]; then
 		$CHROOT_CMD ${_chargs} $XBPS_MASTERDIR /bin/xbps-shell || rv=$?
