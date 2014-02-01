@@ -86,6 +86,7 @@ install_pkg() {
 		if [ "$TARGETPKG_PKGDEPS_DONE" ]; then
 			setup_pkg $XBPS_TARGET_PKG $cross
 			unset TARGETPKG_PKGDEPS_DONE
+			install_cross_pkg $cross
 		fi
 	fi
 
