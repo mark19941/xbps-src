@@ -170,6 +170,10 @@ for f in $XBPS_COMMONDIR/helpers/*.sh; do
 done
 
 setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
+
+if [ "$PKGNAME" != "$sourcepkg" ]; then
+	reset_subpkg_vars
+fi
 setup_pkg_depends $PKGNAME
 
 if [ ! -d "$PKGDESTDIR" ]; then
