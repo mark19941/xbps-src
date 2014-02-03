@@ -62,7 +62,10 @@ if [ -n "$create_srcdir" ]; then
 else
 	srcdir="$XBPS_SRCDISTDIR"
 fi
-[ ! -d "$srcdir" ] && mkdir -p -m775 "$srcdir" && chgrp xbuilder "$srcdir"
+if [ ! -d "$srcdir" ]; then
+	mkdir -p -m775 "$srcdir"
+	chgrp $(id -g) "$srcdir"
+fi
 
 cd $srcdir || msg_error "$pkgver: cannot change dir to $srcdir!\n"
 for f in ${distfiles}; do
