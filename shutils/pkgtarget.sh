@@ -24,16 +24,20 @@ check_pkg_arch() {
 
 	if [ -n "$BEGIN_INSTALL" -a -n "$only_for_archs" ]; then
 		if [ -n "$cross" ]; then
-			if $(echo "$only_for_archs"|grep -q "$XBPS_TARGET_MACHINE"); then
-				found=1
-			fi
+			_arch="$XBPS_TARGET_MACHINE"
+		elif [ -n "$XBPS_ARCH" ]; then
+			_arch="$XBPS_ARCH"
 		else
-			if $(echo "$only_for_archs"|grep -q "$XBPS_MACHINE"); then
-				found=1
-			fi
+			_arch="$XBPS_MACHINE"
 		fi
+		for f in ${only_for_archs}; do
+			if [ "$f" = "${_arch}" ]; then
+				found=1
+				break
+			fi
+		done
 		if [ -z "$found" ]; then
-			msg_red "$pkgname: this package cannot be built on $XBPS_MACHINE.\n"
+			msg_red "$pkgname: this package cannot be built for ${_arch}.\n"
 			exit 0
 		fi
 	fi
