@@ -488,8 +488,10 @@ remove_pkg_autodeps() {
 	msg_normal "${pkgver:-xbps-src}: removing autodeps, please wait...\n"
 	tmplogf=$(mktemp)
 
-	( $FAKEROOT_CMD xbps-reconfigure -a;
-	  $FAKEROOT_CMD xbps-remove -Ryo; ) >> $tmplogf 2>&1
+	_remove_pkg_cross_deps
+
+	$FAKEROOT_CMD xbps-reconfigure -a >> $tmplogf 2>&1
+	$FAKEROOT_CMD xbps-remove -Ryo >> $tmplogf 2>&1
 
 	if [ $? -ne 0 ]; then
 		msg_red "${pkgver:-xbps-src}: failed to remove autodeps:\n"
@@ -497,8 +499,6 @@ remove_pkg_autodeps() {
 		msg_error "${pkgver:-xbps-src}: cannot continue!\n"
 	fi
 	rm -f $tmplogf
-
-	_remove_pkg_cross_deps
 }
 
 install_cross_pkg() {
