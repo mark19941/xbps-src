@@ -140,14 +140,10 @@ XBPS_CROSS_BUILD="$2"
 . $XBPS_SHUTILSDIR/install_files.sh
 
 for f in $XBPS_COMMONDIR/helpers/*.sh; do
-	. $f
+	source_file $f
 done
 
 setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
-
-for f in $XBPS_COMMONDIR/environment/*.sh; do
-	. $f
-done
 
 if [ "$sourcepkg" != "$PKGNAME" ]; then
 	${PKGNAME}_package

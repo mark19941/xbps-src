@@ -55,14 +55,10 @@ PKGNAME="$1"
 . $XBPS_SHUTILSDIR/common.sh
 
 for f in $XBPS_COMMONDIR/helpers/*.sh; do
-	. $f
+	source_file $f
 done
 
 setup_pkg "$PKGNAME"
-
-for f in $XBPS_COMMONDIR/environment/*.sh; do
-	. $f
-done
 
 XBPS_APPLYPATCHES_DONE="$wrksrc/.xbps_applypatches_done"
 

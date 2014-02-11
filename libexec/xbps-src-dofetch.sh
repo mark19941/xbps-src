@@ -28,15 +28,16 @@ PKGNAME="$1"
 
 . $XBPS_SHUTILSDIR/common.sh
 
-for f in $XBPS_COMMONDIR/environment/*.sh $XBPS_COMMONDIR/helpers/*.sh; do
-	. $f
+for f in $XBPS_COMMONDIR/helpers/*.sh; do
+	source_file $f
 done
 
 setup_pkg "$PKGNAME"
 
-if [ -z $pkgname ]; then
-	exit 1
-fi
+for f in $XBPS_COMMONDIR/environment/fetch/*.sh; do
+	set -a; source_file $f; set +a
+done
+
 #
 # There's nothing of interest if we are a meta template.
 #

@@ -166,7 +166,7 @@ XBPS_CROSS_BUILD="$2"
 . $XBPS_SHUTILSDIR/common.sh
 
 for f in $XBPS_COMMONDIR/helpers/*.sh; do
-	. $f
+	source_file $f
 done
 
 setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD

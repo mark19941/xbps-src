@@ -15,18 +15,14 @@ XBPS_CROSS_BUILD="$2"
 . $XBPS_SHUTILSDIR/common.sh
 
 for f in $XBPS_COMMONDIR/helpers/*.sh; do
-	. $f
+	source_file $f
 done
 
 setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 
-for f in $XBPS_COMMONDIR/environment/*.sh; do
-	. $f
+for f in $XBPS_COMMONDIR/environment/configure/*.sh; do
+	set -a; source_file $f; set +a
 done
-
-if [ -z $pkgname -o -z $version ]; then
-	msg_error "$1: pkgname or version not set in pkg template!\n"
-fi
 
 XBPS_CONFIGURE_DONE="$wrksrc/.xbps_${XBPS_CROSS_BUILD}_configure_done"
 XBPS_PRECONFIGURE_DONE="$wrksrc/.xbps_${XBPS_CROSS_BUILD}_pre_configure_done"

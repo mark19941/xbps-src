@@ -203,6 +203,9 @@ reset_subpkg_vars() {
 source_file() {
 	local f="$1"
 
+	if [ ! -f "$f" -o ! -r "$f" ]; then
+		return 0
+	fi
 	if ! source "$f"; then
 		msg_error "xbps-src: failed to read $f!\n"
 	fi
@@ -275,6 +278,11 @@ setup_pkg() {
 
 	reset_pkg_vars
 	setup_pkg_reqvars $cross
+
+	# Source all environment setup snippets.
+	for f in ${XBPS_COMMONDIR}/environment/setup/*.sh; do
+		source_file "$f"
+	done
 
 	if [ -n "$cross" ]; then
 		export CROSS_BUILD="$cross"

@@ -185,7 +185,7 @@ check_config_vars() {
 check_build_requirements() {
     local found
 
-    for f in $XBPS_COMMONDIR/environment/*.sh $XBPS_SHUTILSDIR/*.sh; do
+    for f in $XBPS_COMMONDIR/environment/setup/*.sh $XBPS_SHUTILSDIR/*.sh; do
 	    [ -r $f ] && . $f
     done
 

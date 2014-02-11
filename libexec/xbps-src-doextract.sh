@@ -12,14 +12,14 @@ PKGNAME="$1"
 
 . $XBPS_SHUTILSDIR/common.sh
 
-for f in  $XBPS_COMMONDIR/helpers/*.sh; do
-	. $f
+for f in $XBPS_COMMONDIR/helpers/*.sh; do
+	source_file $f
 done
 
 setup_pkg "$PKGNAME"
 
-for f in $XBPS_COMMONDIR/environment/*.sh; do
-	. $f
+for f in $XBPS_COMMONDIR/environment/extract/*.sh; do
+	set -a; source_file $f; set +a
 done
 
 XBPS_FETCH_DONE="$wrksrc/.xbps_extract_done"
