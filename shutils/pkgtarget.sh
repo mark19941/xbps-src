@@ -103,10 +103,6 @@ install_pkg() {
 	$XBPS_LIBEXECDIR/xbps-src-doextract $sourcepkg || exit 1
 	[ "$target" = "extract" ] && return 0
 
-	# Apply patches if requested by template file
-	$XBPS_LIBEXECDIR/xbps-src-dopatch $sourcepkg || exit 1
-
-
 	# Run configure phase
 	$XBPS_LIBEXECDIR/xbps-src-doconfigure $sourcepkg $cross || exit 1
 	[ "$target" = "configure" ] && return 0

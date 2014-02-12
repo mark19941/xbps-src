@@ -50,6 +50,7 @@ else
 	if [ -z "$distfiles" -a -z "$checksum" ]; then
 		mkdir -p $wrksrc
 		touch -f $XBPS_EXTRACT_DONE
+		run_pkg_hooks post-extract
 		exit 0
 	fi
 fi
