@@ -118,7 +118,7 @@ install_pkg() {
 	# Install sourcepkg into destdir.
 	$FAKEROOT_CMD $XBPS_LIBEXECDIR/xbps-src-doinstall $sourcepkg $cross || exit 1
 
-	for subpkg in ${sourcepkg} ${subpackages}; do
+	for subpkg in ${subpackages} ${sourcepkg}; do
 		# Run subpkg pkg_install func.
 		$FAKEROOT_CMD $XBPS_LIBEXECDIR/xbps-src-dopkg $subpkg $cross || exit 1
 
