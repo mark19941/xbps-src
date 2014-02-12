@@ -1,7 +1,7 @@
 # -*-* shell *-*-
 
 run_func() {
-	local func="$1" restoretrap= logpipe= logfile= teepid=
+	local func="$1" desc="$2" restoretrap= logpipe= logfile= teepid=
 
 	if [ -d "${wrksrc}" ]; then
 		logpipe=$(mktemp -u --tmpdir=${wrksrc} .xbps_${XBPS_CROSS_BUILD}_XXXXXXXX.logpipe)
@@ -11,7 +11,7 @@ run_func() {
 		logfile=$(mktemp -t .xbps_${XBPS_CROSS_BUILD}_${func}_${pkgname}.log.XXXXXXXX)
 	fi
 
-	msg_normal "$pkgver: running $func ...\n"
+	msg_normal "$pkgver: running ${desc:-${func}} ...\n"
 
 	set -E
 	restoretrap=$(trap -p ERR)
@@ -209,6 +209,18 @@ source_file() {
 	if ! source "$f"; then
 		msg_error "xbps-src: failed to read $f!\n"
 	fi
+}
+
+run_pkg_hooks() {
+	local phase="$1" hookn
+
+	for f in ${XBPS_COMMONDIR}/hooks/${phase}/*.sh; do
+		[ ! -r $f ] && continue
+		hookn=$(basename $f)
+		hookn=${hookn%.sh}
+		. $f
+		run_func hook "$phase hook: $hookn"
+	done
 }
 
 get_subpkgs() {

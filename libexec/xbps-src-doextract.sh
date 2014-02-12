@@ -33,6 +33,8 @@ if [ ! -w "$XBPS_BUILDDIR" ]; then
 	msg_error "$pkgver: can't extract distfile(s) (permission denied)\n"
 fi
 
+run_pkg_hooks pre-extract
+
 #
 # If a pkg defines a do_extract() function, use it.
 #
@@ -41,6 +43,7 @@ if declare -f do_extract >/dev/null; then
 	cd $wrksrc
 	run_func do_extract
 	touch -f $XBPS_EXTRACT_DONE
+	run_pkg_hooks post-extract
 	exit 0
 else
 	# If distfiles and checksum not set, skip this phase.
@@ -171,5 +174,7 @@ touch -f $XBPS_EXTRACT_DONE
 if declare -f post_extract >/dev/null; then
 	run_func post_extract
 fi
+
+run_pkg_hooks post-extract
 
 exit 0

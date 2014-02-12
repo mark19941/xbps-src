@@ -47,6 +47,8 @@ if [ -f "$XBPS_FETCH_DONE" ]; then
 	exit 0
 fi
 
+run_pkg_hooks pre-fetch
+
 #
 # if a pkg defines a do_fetch() function, use it.
 #
@@ -55,6 +57,7 @@ if declare -f do_fetch >/dev/null; then
 	[ -n "$build_wrksrc" ] && mkdir -p "$wrksrc"
 	run_func do_fetch
 	touch -f $XBPS_FETCH_DONE
+	run_pkg_hooks post-fetch
 	exit 0
 fi
 
@@ -146,5 +149,7 @@ for f in ${distfiles}; do
 
 	dfcount=$(($dfcount + 1))
 done
+
+run_pkg_hooks post-fetch
 
 exit $rval

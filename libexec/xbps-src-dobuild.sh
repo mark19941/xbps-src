@@ -43,6 +43,8 @@ if [ -n "$build_wrksrc" ]; then
 		msg_error "$pkgver: cannot access build_wrksrc directory [$build_wrksrc]\n"
 fi
 
+run_pkg_hooks pre-build
+
 # Run pre_build()
 if [ ! -f $XBPS_PRE_BUILD_DONE ]; then
 	cd $wrksrc
@@ -81,5 +83,7 @@ if [ ! -f $XBPS_POST_BUILD_DONE ]; then
 		touch -f $XBPS_POST_BUILD_DONE
 	fi
 fi
+
+run_pkg_hooks post-build
 
 exit 0

@@ -41,6 +41,8 @@ if [ -n "$build_wrksrc" ]; then
 		|| msg_error "$pkgver: cannot access to build_wrksrc [$build_wrksrc]\n"
 fi
 
+run_pkg_hooks pre-install
+
 # Run pre_install()
 if [ ! -f $XBPS_PRE_INSTALL_DONE ]; then
 	if declare -f pre_install >/dev/null; then
