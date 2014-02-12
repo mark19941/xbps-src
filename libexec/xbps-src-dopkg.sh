@@ -30,10 +30,19 @@ if [ -f $XBPS_PKG_DONE ]; then
 	exit 0
 fi
 
+#
+# Always remove metadata files generated in a previous installation.
+#
+for f in INSTALL REMOVE files.plist props.plist flist rdeps; do
+	[ -f ${PKGDESTDIR}/${f} ] && rm -f ${PKGDESTDIR}/${f}
+done
+
 # If it's a subpkg execute the pkg_install() function.
 if [ "$sourcepkg" != "$PKGNAME" ]; then
+	reset_subpkg_vars
 	${PKGNAME}_package
 	pkgname=$PKGNAME
+
 
 	install -d $PKGDESTDIR
 	if declare -f pkg_install >/dev/null; then
@@ -42,15 +51,9 @@ if [ "$sourcepkg" != "$PKGNAME" ]; then
 	fi
 fi
 
-#
-# Always remove metadata files generated in a previous installation.
-#
-for f in INSTALL REMOVE files.plist props.plist flist rdeps; do
-	[ -f ${PKGDESTDIR}/${f} ] && rm -f ${PKGDESTDIR}/${f}
-done
+setup_pkg_depends $pkgname
 
 run_pkg_hooks post-install
-
 #
 # Create package's flist for bootstrap packages.
 #

@@ -121,12 +121,6 @@ install_pkg() {
 	for subpkg in ${subpackages} ${sourcepkg}; do
 		# Run subpkg pkg_install func.
 		$FAKEROOT_CMD $XBPS_LIBEXECDIR/xbps-src-dopkg $subpkg $cross || exit 1
-
-		# Strip binaries/libraries.
-		$XBPS_LIBEXECDIR/xbps-src-dostrip $subpkg $cross || exit 1
-
-		# Generate run-time dependecies.
-		$XBPS_LIBEXECDIR/xbps-src-genrdeps $subpkg $cross || exit 1
 	done
 
 	if [ -n "$XBPS_USE_GIT_REVS" ]; then
