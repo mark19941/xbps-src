@@ -540,7 +540,7 @@ install_cross_pkg() {
 		check_installed_pkg cross-${XBPS_CROSS_TRIPLET}-0.1_1
 		if [ $? -ne 0 ]; then
 			msg_normal "Installing cross pkg: cross-${XBPS_CROSS_TRIPLET} ...\n"
-			$XBPS_INSTALL_CMD -Ay cross-${XBPS_CROSS_TRIPLET} 2>&1 >/dev/null
+			$XBPS_INSTALL_CMD -y cross-${XBPS_CROSS_TRIPLET} &>/dev/null
 			rval=$?
 			if [ $rval -ne 0 ]; then
 				msg_error "failed to install cross-${XBPS_CROSS_TRIPLET} (error $rval)\n"
@@ -551,11 +551,33 @@ install_cross_pkg() {
 			cp ${XBPS_MASTERDIR}/var/db/xbps/keys/*.plist \
 				${XBPS_CROSS_BASE}/var/db/xbps/keys
 		fi
-		$XBPS_INSTALL_CMD -r ${XBPS_CROSS_BASE} -Sy cross-vpkg-dummy 2>&1 >/dev/null
+		$XBPS_INSTALL_CMD -r ${XBPS_CROSS_BASE} -SAy cross-vpkg-dummy &>/dev/null
 		rval=$?
 		if [ $rval -ne 0 -a $rval -ne 17 ]; then
 			msg_error "failed to install cross-vpkg-dummy (error $rval)\n"
 		fi
+	fi
+}
+
+remove_cross_pkg() {
+	local cross="$1" rval
+
+	[ -z "$cross" -o "$cross" = "" ] && return 0
+
+	source_file ${XBPS_CROSSPFDIR}/${cross}.sh
+
+	if [ -z "$CHROOT_READY" ]; then
+		echo "ERROR: chroot mode not activated (install a bootstrap)."
+		exit 1
+	elif [ -z "$IN_CHROOT" ]; then
+		return 0
+	fi
+
+	msg_normal "Removing cross pkg: cross-${XBPS_CROSS_TRIPLET} ...\n"
+	$XBPS_REMOVE_CMD -y cross-${XBPS_CROSS_TRIPLET} &>/dev/null
+	rval=$?
+	if [ $rval -ne 0 ]; then
+		msg_error "failed to remove cross-${XBPS_CROSS_TRIPLET} (error $rval)\n"
 	fi
 }
 

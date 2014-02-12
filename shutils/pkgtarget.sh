@@ -118,7 +118,7 @@ install_pkg() {
 	# Install sourcepkg into destdir.
 	$FAKEROOT_CMD $XBPS_LIBEXECDIR/xbps-src-doinstall $sourcepkg $cross || exit 1
 
-	for subpkg in ${subpackages}; do
+	for subpkg in ${sourcepkg} ${subpackages}; do
 		# Run subpkg pkg_install func.
 		$FAKEROOT_CMD $XBPS_LIBEXECDIR/xbps-src-dopkg $subpkg $cross || exit 1
 
@@ -128,15 +128,6 @@ install_pkg() {
 		# Generate run-time dependecies.
 		$XBPS_LIBEXECDIR/xbps-src-genrdeps $subpkg $cross || exit 1
 	done
-
-	# Prepare sourcepkg destdir.
-	$FAKEROOT_CMD $XBPS_LIBEXECDIR/xbps-src-dopkg $sourcepkg $cross || exit 1
-
-	# Strip binaries/libraries.
-	$XBPS_LIBEXECDIR/xbps-src-dostrip $sourcepkg $cross || exit 1
-
-	# Generate run-time dependecies.
-	$XBPS_LIBEXECDIR/xbps-src-genrdeps $sourcepkg $cross || exit 1
 
 	if [ -n "$XBPS_USE_GIT_REVS" ]; then
 		msg_normal "$pkgver: fetching source git revisions, please wait...\n"
@@ -186,6 +177,7 @@ install_pkg() {
 	if [ "$XBPS_TARGET_PKG" = "$sourcepkg" ]; then
 		# Package built successfully. Exit directly due to nested install_pkg
 		# and install_pkg_deps functions.
+		remove_cross_pkg $cross
 		exit 0
 	fi
 }
