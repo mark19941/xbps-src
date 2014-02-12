@@ -156,29 +156,25 @@ chroot_sync_repos() {
 }
 
 chroot_handler() {
-	local action="$1" pkg="$2" rv=0 arg= _envargs=
-	local _chargs="
-		--mount-bind /dev /dev
-		--mount-bind /sys /sys
-		--mount-proc /proc"
+	local action="$1" pkg="$2" rv=0 arg= _envargs= _chargs=
 
 	# Debian uses /run/shm instead...
 	if [ -d /run/shm ]; then
 		mkdir -p ${XBPS_MASTERDIR}/run/shm
-		_chargs+=" --mount-bind /run/shm /run/shm"
+		_chargs+=" -S /run/shm"
 	elif [ -d /dev/shm ]; then
 		mkdir -p ${XBPS_MASTERDIR}/dev/shm
-		_chargs+=" --mount-bind /dev/shm /dev/shm"
+		_chargs+=" -S /dev/shm"
 	fi
 
 	if [ -n "$XBPS_HOSTDIR" ]; then
-		_chargs+=" --mount-bind $XBPS_HOSTDIR /host"
+		_chargs+=" -H $XBPS_HOSTDIR"
 	fi
 	if [ "$XBPS_DISTDIR" != "$XBPS_MASTERDIR/xbps-packages" ]; then
 		if [ ! -d $XBPS_MASTERDIR/xbps-packages ]; then
 			mkdir -p $XBPS_MASTERDIR/xbps-packages
 		fi
-		_chargs+=" --mount-bind ${XBPS_DISTDIR} /xbps-packages"
+		_chargs+=" -D ${XBPS_DISTDIR}"
 	fi
 	[ -z "$action" -a -z "$pkg" ] && return 1
 

@@ -321,7 +321,7 @@ readonly XBPS_PKGS_REPO="git://github.com/voidlinux/xbps-packages"
 
 readonly PROGNAME=$(basename $0)
 readonly FAKEROOT_CMD="fakeroot --"
-readonly CHROOT_CMD="${XBPS_LIBEXECDIR}/xbps-src-chroot-helper --unshare-ipc --unshare-pid"
+readonly CHROOT_CMD="${XBPS_LIBEXECDIR}/xbps-src-chroot-helper"
 readonly XBPS_MACHINE=$(uname -m)
 
 export XBPS_SRC_VERSION XBPS_SHAREDIR XBPS_LIBEXECDIR

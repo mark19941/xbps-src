@@ -14,7 +14,7 @@ VERSION	= 101
 GITVER	:= $(shell git rev-parse --short HEAD)
 CONF_FILE = xbps-src.conf
 
-CHROOT_C = linux-user-chroot.c
+CHROOT_C = uchroot.c
 CHROOT_BIN = xbps-src-chroot-helper
 CFLAGS += -O2 -Wall -Werror
 
