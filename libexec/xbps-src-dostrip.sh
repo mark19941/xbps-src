@@ -137,7 +137,6 @@ PKGNAME="$1"
 XBPS_CROSS_BUILD="$2"
 
 . $XBPS_SHUTILSDIR/common.sh
-. $XBPS_SHUTILSDIR/install_files.sh
 
 for f in $XBPS_COMMONDIR/helpers/*.sh; do
 	source_file $f
