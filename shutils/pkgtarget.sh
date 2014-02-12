@@ -164,7 +164,7 @@ install_pkg() {
 		if [ -n "$XBPS_BUILD_FORCEMODE" ]; then
 			local _flags="-f"
 		fi
-		$FAKEROOT_CMD $XBPS_INSTALL_CMD ${_flags} -y $opkg >${_log} 2>&1
+		$XBPS_INSTALL_CMD ${_flags} -y $opkg >${_log} 2>&1
 		if [ $? -ne 0 ]; then
 			msg_red "Failed to install $opkg into masterdir, see below for errors:\n"
 			cat ${_log}
