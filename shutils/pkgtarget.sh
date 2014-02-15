@@ -96,11 +96,11 @@ install_pkg() {
 
 	# Fetch distfiles after installing required dependencies,
 	# because some of them might be required for do_fetch().
-	$XBPS_LIBEXECDIR/xbps-src-dofetch $sourcepkg || exit 1
+	$XBPS_LIBEXECDIR/xbps-src-dofetch $sourcepkg $cross || exit 1
 	[ "$target" = "fetch" ] && return 0
 
 	# Fetch, extract, build and install into the destination directory.
-	$XBPS_LIBEXECDIR/xbps-src-doextract $sourcepkg || exit 1
+	$XBPS_LIBEXECDIR/xbps-src-doextract $sourcepkg $cross || exit 1
 	[ "$target" = "extract" ] && return 0
 
 	# Run configure phase

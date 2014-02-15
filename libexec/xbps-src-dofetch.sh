@@ -2,6 +2,7 @@
 #
 # Passed arguments:
 # 	$1 - pkgname [REQUIRED]
+#	$2 - cross target [OPTIONAL]
 
 verify_sha256_cksum() {
 	local file="$1" origsum="$2" distfile="$3"
@@ -19,12 +20,13 @@ verify_sha256_cksum() {
 	fi
 }
 
-if [ $# -ne 1 ]; then
-	echo "$(basename $0): invalid number of arguments: pkgname"
+if [ $# -lt 1 -o $# -gt 2 ]; then
+	echo "$(basename $0): invalid number of arguments: pkgname [cross-target]"
 	exit 1
 fi
 
 PKGNAME="$1"
+XBPS_CROSS_BUILD="$2"
 
 . $XBPS_SHUTILSDIR/common.sh
 
@@ -32,7 +34,7 @@ for f in $XBPS_COMMONDIR/helpers/*.sh; do
 	source_file $f
 done
 
-setup_pkg "$PKGNAME"
+setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 
 for f in $XBPS_COMMONDIR/environment/fetch/*.sh; do
 	set -a; source_file $f; set +a
