@@ -92,11 +92,12 @@ Options:
  -a  <profile>
      Cross compile packages for this profile. Supported values:
 
-     i686           - for i686 GNU/Linux
+     armv6hf-musl   - for ARMv6 EABI (LE Hard Float) Musl/Linux
+     armv6hf        - for ARMv6 EABI (LE Hard Float) GNU/Linux
+     armv7hf-musl   - for ARMv7 EABI (LE Hard Float) Musl/Linux
+     armv7hf        - for ARMv7 EABI (LE Hard Float) GNU/Linux
      i686-musl      - for i686 Musl/Linux
-     armv6hf        - for ARMv6 EABI5 (LE Hard Float) GNU/Linux
-     armv6hf-musl   - for ARMv6 EABI5 (LE Hard Float) Musl/Linux
-     armv7          - for ARMv7 EABI5 (LE Hard Float) GNU/Linux
+     i686           - for i686 GNU/Linux
      mips           - for MIPS o32 (BE Soft Float) GNU/Linux
      mipsel         - for MIPS o32 (LE Soft Float) GNU/Linux
      x86_64-musl    - for x86_64 Musl/Linux
@@ -221,18 +222,19 @@ check_build_requirements() {
 			    exit 1
 		    fi
 	    fi
-	    # Set XBPS_ALT_REPOSITORY to our current branch.
+	    # Set XBPS_REPOSITORY to our current branch.
 	    if [ -z "$XBPS_ALT_REPOSITORY" ]; then
 		    pushd "$PWD" &>/dev/null
 		    cd $XBPS_DISTDIR
 		    _gitbranch="$(git symbolic-ref --short HEAD 2>/dev/null)"
 		    if [ -n "${_gitbranch}" -a "${_gitbranch}" != "master" ]; then
-			    readonly XBPS_ALT_REPOSITORY="${_gitbranch}"
-			    msg_normal "Using git branch \`$XBPS_ALT_REPOSITORY\' as local repository.\n"
+			    export XBPS_REPOSITORY="${XBPS_REPOSITORY}/${_gitbranch}"
+			    msg_normal "Using \`$XBPS_REPOSITORY\' as local repository.\n"
 		    fi
 		    popd &>/dev/null
 	    else
-		    msg_normal "Using \`$XBPS_ALT_REPOSITORY\' as local repository.\n"
+            export XBPS_REPOSITORY="${XBPS_REPOSITORY}/${XBPS_ALT_REPOSITORY}"
+		    msg_normal "Using \`$XBPS_REPOSITORY\' as local repository.\n"
 	    fi
     fi
 }
@@ -406,11 +408,11 @@ else
 	readonly XBPS_BUILDDIR=$XBPS_MASTERDIR/builddir
 fi
 if [ -n "$XBPS_HOSTDIR" ]; then
-	readonly XBPS_PACKAGESDIR=$XBPS_HOSTDIR/binpkgs
+	export XBPS_REPOSITORY=$XBPS_HOSTDIR/binpkgs
 	readonly XBPS_SRCDISTDIR=$XBPS_HOSTDIR/sources
 else
+	export XBPS_REPOSITORY=$XBPS_MASTERDIR/host/binpkgs
 	readonly XBPS_SRCDISTDIR=$XBPS_MASTERDIR/host/sources
-	readonly XBPS_PACKAGESDIR=$XBPS_MASTERDIR/host/binpkgs
 fi
 readonly XBPS_TRIGGERSDIR=$XBPS_SRCPKGDIR/xbps-triggers/files
 readonly XBPS_CROSSPFDIR=$XBPS_COMMONDIR/cross-profiles
@@ -427,7 +429,7 @@ if [ -d "$XBPS_DISTDIR/.git" ]; then
     done
 fi
 
-for i in DESTDIR PACKAGESDIR BUILDDIR SRCDISTDIR; do
+for i in REPOSITORY DESTDIR BUILDDIR SRCDISTDIR; do
     eval val="\$XBPS_$i"
     if [ ! -d "$val" ]; then
         mdir=$(dirname $XBPS_MASTERDIR)
@@ -445,8 +447,8 @@ if [ -n "$IN_CHROOT" ]; then
 	readonly XBPS_REMOVE_CMD="xbps-remove"
 else
 	readonly XBPS_UHELPER_CMD="xbps-uhelper -r $XBPS_MASTERDIR"
-	readonly XBPS_INSTALL_CMD="xbps-install -C _empty.conf_ --repository=$XBPS_PACKAGESDIR -r $XBPS_MASTERDIR"
-	readonly XBPS_QUERY_CMD="xbps-query -C _empty.conf_ --repository=$XBPS_PACKAGESDIR -r $XBPS_MASTERDIR"
+	readonly XBPS_INSTALL_CMD="xbps-install -C _empty.conf_ --repository=$XBPS_REPOSITORY -r $XBPS_MASTERDIR"
+	readonly XBPS_QUERY_CMD="xbps-query -C _empty.conf_ --repository=$XBPS_REPOSITORY -r $XBPS_MASTERDIR"
 	readonly XBPS_RINDEX_CMD="xbps-rindex"
 	readonly XBPS_RECONFIGURE_CMD="xbps-reconfigure -r $XBPS_MASTERDIR"
 	readonly XBPS_REMOVE_CMD="xbps-remove -r $XBPS_MASTERDIR"
@@ -464,16 +466,15 @@ fi
 
 export XBPS_SHUTILSDIR XBPS_CROSSPFDIR XBPS_TRIGGERSDIR \
 	XBPS_SRCPKGDIR XBPS_COMMONDIR XBPS_DESTDIR XBPS_BUILDDIR \
-	XBPS_PACKAGESDIR XBPS_SRCDISTDIR XBPS_DIGEST_CMD \
+	XBPS_REPOSITORY XBPS_ALT_REPOSITORY XBPS_SRCDISTDIR XBPS_DIGEST_CMD \
 	XBPS_UHELPER_CMD XBPS_INSTALL_CMD XBPS_QUERY_CMD \
 	XBPS_RINDEX_CMD XBPS_RECONFIGURE_CMD XBPS_REMOVE_CMD \
 	XBPS_CMPVER_CMD XBPS_FETCH_CMD XBPS_VERSION XBPS_APIVER \
 	XBPS_BUILDSTYLEDIR XBPS_CFLAGS XBPS_CXXFLAGS XBPS_LDFLAGS \
     XBPS_MAKEJOBS XBPS_BUILD_FORCEMODE XBPS_USE_GIT_REVS XBPS_DEBUG_PKGS \
     XBPS_CCACHE XBPS_DISTCC XBPS_DISTCC_HOSTS XBPS_SKIP_DEPS \
-    XBPS_ALT_REPOSITORY XBPS_SKIP_REMOTEREPOS XBPS_CROSS_BUILD \
-    XBPS_CONFIG_FILE XBPS_KEEP_ALL XBPS_HOSTDIR XBPS_MASTERDIR \
-    XBPS_BUILD_OPTS
+    XBPS_SKIP_REMOTEREPOS XBPS_CROSS_BUILD XBPS_BUILD_OPTS \
+    XBPS_CONFIG_FILE XBPS_KEEP_ALL XBPS_HOSTDIR XBPS_MASTERDIR
 
 #
 # Sanitize PATH.

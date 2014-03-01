@@ -130,7 +130,7 @@ install_pkg() {
 
 	# If install went ok generate the binpkgs.
 	for subpkg in ${sourcepkg} ${subpackages}; do
-		$XBPS_LIBEXECDIR/xbps-src-genpkg $subpkg "$cross" "$XBPS_ALT_REPOSITORY" || exit 1
+		$FAKEROOT_CMD $XBPS_LIBEXECDIR/xbps-src-genpkg $subpkg "$XBPS_REPOSITORY" "$cross" || exit 1
 	done
 
 	# pkg cleanup
