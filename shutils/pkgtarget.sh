@@ -43,39 +43,6 @@ check_pkg_arch() {
 	fi
 }
 
-fetch_git_revs() {
-	local _revs= _out= f= _filerev= _files=
-
-	# If the file exists don't regenerate it again.
-	if [ -s ${PKG_GITREVS_FILE} ]; then
-		return
-	fi
-	# Get the git revisions from this source pkg.
-	cd $XBPS_SRCPKGDIR
-	_files=$(git ls-files $1)
-	[ -z "${_files}" ] && return
-
-	for f in ${_files}; do
-		_filerev=$(git rev-list --abbrev-commit HEAD $f | head -n1)
-		[ -z "${_filerev}" ] && continue
-		_out="${f} ${_filerev}"
-		if [ -z "${_revs}" ]; then
-			_revs="${_out}"
-		else
-			_revs="${_revs} ${_out}"
-		fi
-	done
-
-	echo "$pkgver git source revisions:"
-	set -- ${_revs}
-	while [ $# -gt 0 ]; do
-		local _file=$1; local _rev=$2
-		echo "${_file}: ${_rev}"
-		echo "${_file}: ${_rev}" >> ${PKG_GITREVS_FILE}
-		shift 2
-	done
-}
-
 install_pkg() {
 	local target="$1" cross="$2" lrepo subpkg opkg
 
@@ -118,11 +85,6 @@ install_pkg() {
 		# Run subpkg pkg_install func.
 		$FAKEROOT_CMD $XBPS_LIBEXECDIR/xbps-src-dopkg $subpkg $cross || exit 1
 	done
-
-	if [ -n "$XBPS_USE_GIT_REVS" ]; then
-		msg_normal "$pkgver: fetching source git revisions, please wait...\n"
-		fetch_git_revs $sourcepkg
-	fi
 
 	if [ "$XBPS_TARGET_PKG" = "$sourcepkg" ]; then
 		[ "$target" = "install-destdir" ] && return 0
@@ -190,9 +152,6 @@ remove_pkg() {
 		_destdir="$XBPS_DESTDIR"
 	fi
 
-	if [ -f "$PKG_GITREVS_FILE" ]; then
-		rm -f $PKG_GITREVS_FILE
-	fi
 	for f in ${sourcepkg} ${subpackages}; do
 		if [ -d "${_destdir}/${f}-${version}" ]; then
 			msg_normal "$f: removing files from destdir...\n"

@@ -44,7 +44,7 @@ show_pkg_deps() {
 }
 
 show_pkg_files() {
-	[ -f "$PKGDESTDIR/flist" ] && cat ${PKGDESTDIR}/flist
+	[ -d ${PKGDESTDIR} ] && find ${PKGDESTDIR} -print
 }
 
 show_pkg_build_deps() {

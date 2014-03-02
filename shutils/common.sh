@@ -172,7 +172,7 @@ reset_pkg_vars() {
 			XBPS_BUILD_DONE XBPS_INSTALL_DONE FILESDIR DESTDIR \
 			PKGDESTDIR PATCHESDIR CFLAGS CXXFLAGS CPPFLAGS \
 			XBPS_CROSS_CFLAGS XBPS_CROSS_CXXFLAGS \
-			XBPS_CROSS_CPPFLAGS XBPS_CROSS_LDFLAGS PKG_GITREVS_FILE \
+			XBPS_CROSS_CPPFLAGS XBPS_CROSS_LDFLAGS \
 			CC CXX BUILD_CC BUILD_CFLAGS LDFLAGS LD_LIBRARY_PATH PKG_BUILD_OPTIONS"
 
 	local TMPL_FUNCS="pre_configure pre_build pre_install do_build \
@@ -341,11 +341,6 @@ setup_pkg() {
 	else
 		wrksrc="$XBPS_BUILDDIR/$wrksrc"
 	fi
-
-	if [ -n "$XBPS_USE_GIT_REVS" ]; then
-		PKG_GITREVS_FILE="${wrksrc}/.xbps_${sourcepkg}_git_revs"
-	fi
-
 }
 
 setup_pkg_depends() {

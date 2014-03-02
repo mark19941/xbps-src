@@ -33,7 +33,7 @@ fi
 #
 # Always remove metadata files generated in a previous installation.
 #
-for f in INSTALL REMOVE files.plist props.plist flist rdeps; do
+for f in INSTALL REMOVE files.plist props.plist rdeps shlib-provides shlib-requires; do
 	[ -f ${PKGDESTDIR}/${f} ] && rm -f ${PKGDESTDIR}/${f}
 done
 
@@ -54,14 +54,6 @@ fi
 setup_pkg_depends $pkgname
 
 run_pkg_hooks post-install
-#
-# Create package's flist for bootstrap packages.
-#
-touch -f ${PKGDESTDIR}/flist
-find ${PKGDESTDIR} -print >> ${PKGDESTDIR}/flist
-if [ -s ${PKGDESTDIR}/flist ]; then
-	sed -i -e "s|${PKGDESTDIR}||g;s|/flist||g;/^$/d" ${PKGDESTDIR}/flist
-fi
 
 touch -f $XBPS_PKG_DONE
 
