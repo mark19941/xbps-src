@@ -4,22 +4,6 @@
 # 	$1 - pkgname [REQUIRED]
 #	$2 - cross target [OPTIONAL]
 
-verify_sha256_cksum() {
-	local file="$1" origsum="$2" distfile="$3"
-
-	[ -z "$file" -o -z "$cksum" ] && return 1
-
-	msg_normal "$pkgver: verifying checksum for distfile '$file'... "
-	filesum=$(${XBPS_DIGEST_CMD} $distfile)
-	if [ "$origsum" != "$filesum" ]; then
-		echo
-		msg_red "SHA256 mismatch for '$file:'\n$filesum\n"
-		return 1
-	else
-		msg_normal_append "OK.\n"
-	fi
-}
-
 if [ $# -lt 1 -o $# -gt 2 ]; then
 	echo "$(basename $0): invalid number of arguments: pkgname [cross-target]"
 	exit 1
@@ -40,118 +24,37 @@ for f in $XBPS_COMMONDIR/environment/fetch/*.sh; do
 	set -a; source_file $f; set +a
 done
 
-#
-# There's nothing of interest if we are a meta template.
-#
 XBPS_FETCH_DONE="$wrksrc/.xbps_fetch_done"
 
 if [ -f "$XBPS_FETCH_DONE" ]; then
 	exit 0
 fi
 
+# Run pre-fetch hooks.
 run_pkg_hooks pre-fetch
 
-#
-# if a pkg defines a do_fetch() function, use it.
-#
+# If template defines pre_fetch(), use it.
+if declare -f pre_fetch >/dev/null; then
+	run_func pre_fetch
+fi
+
+# If template defines do_fetch(), use it rather than the hooks.
 if declare -f do_fetch >/dev/null; then
 	cd ${XBPS_BUILDDIR}
 	[ -n "$build_wrksrc" ] && mkdir -p "$wrksrc"
 	run_func do_fetch
 	touch -f $XBPS_FETCH_DONE
-	run_pkg_hooks post-fetch
-	exit 0
-fi
-
-if [ -n "$create_srcdir" ]; then
-	srcdir="$XBPS_SRCDISTDIR/$pkgname-$version"
 else
-	srcdir="$XBPS_SRCDISTDIR"
-fi
-if [ ! -d "$srcdir" ]; then
-	mkdir -p -m775 "$srcdir"
-	chgrp $(id -g) "$srcdir"
+	# Run do-fetch hooks.
+	run_pkg_hooks "do-fetch"
 fi
 
-cd $srcdir || msg_error "$pkgver: cannot change dir to $srcdir!\n"
-for f in ${distfiles}; do
-	curfile=$(basename $f)
-	distfile="$srcdir/$curfile"
-	while true; do
-		flock -w 1 ${distfile}.part true
-		if [ $? -eq 0 ]; then
-			break
-		fi
-		msg_warn "$pkgver: ${distfile} is being already downloaded, waiting for 1s ...\n"
-	done
-	if [ -f "$distfile" ]; then
-		flock -n ${distfile}.part rm -f ${distfile}.part
-		for i in ${checksum}; do
-			if [ $dfcount -eq $ckcount -a -n "$i" ]; then
-				cksum=$i
-				found=yes
-				break
-			fi
+# if templates defines post_fetch(), use it.
+if declare -f post_fetch >/dev/null; then
+	run_func post_fetch
+fi
 
-			ckcount=$(($ckcount + 1))
-		done
-
-		if [ -z $found ]; then
-			msg_error "$pkgver: cannot find checksum for $curfile.\n"
-		fi
-
-		verify_sha256_cksum $curfile $cksum $distfile
-		rval=$?
-		unset cksum found
-		ckcount=0
-		dfcount=$(($dfcount + 1))
-		continue
-	fi
-
-	msg_normal "$pkgver: fetching distfile '$curfile'...\n"
-
-	if [ -n "$distfiles" ]; then
-		localurl="$f"
-	else
-		localurl="$url/$curfile"
-	fi
-
-	flock ${distfile}.part $XBPS_FETCH_CMD $localurl
-	if [ $? -ne 0 ]; then
-		unset localurl
-		if [ ! -f $distfile ]; then
-			msg_error "$pkgver: couldn't fetch $curfile.\n"
-		else
-			msg_error "$pkgver: there was an error fetching $curfile.\n"
-		fi
-	else
-		unset localurl
-		#
-		# XXX duplicate code.
-		#
-		for i in ${checksum}; do
-			if [ $dfcount -eq $ckcount -a -n "$i" ]; then
-				cksum=$i
-				found=yes
-				break
-			fi
-
-			ckcount=$(($ckcount + 1))
-		done
-
-		if [ -z $found ]; then
-			msg_error "$pkgver: cannot find checksum for $curfile.\n"
-		fi
-
-		verify_sha256_cksum $curfile $cksum $distfile
-		rval=$?
-		unset cksum found
-		ckcount=0
-	fi
-
-	dfcount=$(($dfcount + 1))
-done
-
+# Run post-fetch hooks.
 run_pkg_hooks post-fetch
 
-exit $rval
+exit 0

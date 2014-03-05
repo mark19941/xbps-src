@@ -36,7 +36,13 @@ if [ -s $XBPS_MASTERDIR/.xbps_chroot_init ]; then
 	export XBPS_ARCH=$(cat $XBPS_MASTERDIR/.xbps_chroot_init)
 fi
 
+# Run pre-pkg hooks.
 run_pkg_hooks pre-pkg
+
+# Run do-pkg hooks.
+run_pkg_hooks "do-pkg"
+
+# Run post-pkg hooks.
 run_pkg_hooks post-pkg
 
 exit 0

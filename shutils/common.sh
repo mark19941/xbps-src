@@ -159,7 +159,7 @@ set_build_options() {
 
 reset_pkg_vars() {
 	local TMPL_VARS="pkgname version revision short_desc long_desc homepage license maintainer \
-			only_for_archs distfiles checksum build_style create_srcdir \
+			only_for_archs distfiles checksum build_style \
 			configure_script configure_args wrksrc build_wrksrc create_wrksrc \
 			make_cmd make_build_args make_install_args make_build_target make_install_target \
 			patch_args disable_parallel_build keep_libtool_archives \
