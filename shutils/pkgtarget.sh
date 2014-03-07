@@ -161,9 +161,9 @@ remove_pkg() {
 			msg_normal "$f: removing dbg files from destdir...\n"
 			rm -rf ${_destdir}/${f}-dbg-${version}
 		fi
-		if [ -d "${_destdir}/${f}32-${version}" ]; then
+		if [ -d "${_destdir}/${f}-32bit-${version}" ]; then
 			msg_normal "$f: removing 32bit files from destdir...\n"
-			rm -rf ${_destdir}/${f}32-${version}
+			rm -rf ${_destdir}/${f}-32bit-${version}
 		fi
 		rm -f $wrksrc/.xbps_${f}_${cross}_pre_install_done
 		rm -f $wrksrc/.xbps_${f}_${cross}_install_done
