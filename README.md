@@ -32,7 +32,7 @@ to set appropiate permissions to the `chroot helper`.
 - GNU bash
 - fakeroot
 - git
-- xbps >= 0.26
+- xbps >= 0.33
 
 The following packages are required to build a full bootstrap from scratch:
 

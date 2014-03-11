@@ -61,10 +61,8 @@ _EOF
 	mkdir -p $XBPS_MASTERDIR/etc/xbps/repos
 	if [ -n "$XBPS_ALT_REPOSITORY" ]; then
 		( \
-		printf "repositories += {\n"; \
-		printf "\t/host/binpkgs/${XBPS_ALT_REPOSITORY},\n"; \
-		printf "\t/host/binpkgs/${XBPS_ALT_REPOSITORY}/nonfree\n"; \
-		printf "}\n"; \
+		echo "repository=/host/binpkgs/${XBPS_ALT_REPOSITORY}"; \
+		echo "repository=/host/binpkgs/${XBPS_ALT_REPOSITORY}/nonfree"; \
 		) > $XBPS_MASTERDIR/etc/xbps/repos/alternative.conf
 	else
 		: > $XBPS_MASTERDIR/etc/xbps/repos/alternative.conf
