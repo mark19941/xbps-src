@@ -546,7 +546,8 @@ install_cross_pkg() {
 			cp ${XBPS_MASTERDIR}/var/db/xbps/keys/*.plist \
 				${XBPS_CROSS_BASE}/var/db/xbps/keys
 		fi
-		$XBPS_INSTALL_CMD -r ${XBPS_CROSS_BASE} -SAy cross-vpkg-dummy &>/dev/null
+		$XBPS_INSTALL_CMD --repository=http://repo.voidlinux.eu/current \
+			-r ${XBPS_CROSS_BASE} -SAy cross-vpkg-dummy &>/dev/null
 		rval=$?
 		if [ $rval -ne 0 -a $rval -ne 17 ]; then
 			msg_error "failed to install cross-vpkg-dummy (error $rval)\n"
