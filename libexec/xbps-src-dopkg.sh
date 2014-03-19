@@ -15,13 +15,13 @@ XBPS_CROSS_BUILD="$2"
 . $XBPS_SHUTILSDIR/common.sh
 
 for f in $XBPS_COMMONDIR/helpers/*.sh; do
-	source_file $f
+	source_file "$f"
 done
 
 setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 
 for f in $XBPS_COMMONDIR/environment/install/*.sh; do
-	set -a; source_file $f; set +a
+	source_file "$f"
 done
 
 XBPS_PKG_DONE="$wrksrc/.xbps_${PKGNAME}_${XBPS_CROSS_BUILD}_pkg_done"
@@ -39,10 +39,12 @@ done
 
 # If it's a subpkg execute the pkg_install() function.
 if [ "$sourcepkg" != "$PKGNAME" ]; then
-	reset_subpkg_vars
+	# Source all subpkg environment setup snippets.
+	for f in ${XBPS_COMMONDIR}/environment/setup-subpkg/*.sh; do
+		source_file "$f"
+	done
 	${PKGNAME}_package
 	pkgname=$PKGNAME
-
 
 	install -d $PKGDESTDIR
 	if declare -f pkg_install >/dev/null; then

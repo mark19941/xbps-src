@@ -11,7 +11,7 @@ run_func() {
 		logfile=$(mktemp -t .xbps_${XBPS_CROSS_BUILD}_${func}_${pkgname}.log.XXXXXXXX)
 	fi
 
-	msg_normal "$pkgver: running ${desc:-${func}} ...\n"
+	msg_normal "${pkgver:-xbps-src}: running ${desc:-${func}} ...\n"
 
 	set -E
 	restoretrap=$(trap -p ERR)
@@ -157,49 +157,6 @@ set_build_options() {
 	export PKG_BUILD_OPTIONS="$(echo "$PKG_BUILD_OPTIONS"|tr ' ' '\n'|sort|tr '\n' ' ')"
 }
 
-reset_pkg_vars() {
-	local TMPL_VARS="pkgname version revision short_desc long_desc homepage license maintainer \
-			only_for_archs distfiles checksum build_style \
-			configure_script configure_args wrksrc build_wrksrc create_wrksrc \
-			make_cmd make_build_args make_install_args make_build_target make_install_target \
-			patch_args disable_parallel_build keep_libtool_archives \
-			skip_extraction force_debug_pkgs makedepends hostmakedepends \
-			build_options build_options_default bootstrap"
-
-	local TMPL_PRIV_VARS="pkgver subpackages sourcepkg makejobs disable_debug \
-			run_depends build_depends host_build_depends \
-			XBPS_EXTRACT_DONE XBPS_CONFIGURE_DONE \
-			XBPS_BUILD_DONE XBPS_INSTALL_DONE FILESDIR DESTDIR \
-			PKGDESTDIR PATCHESDIR CFLAGS CXXFLAGS CPPFLAGS \
-			XBPS_CROSS_CFLAGS XBPS_CROSS_CXXFLAGS \
-			XBPS_CROSS_CPPFLAGS XBPS_CROSS_LDFLAGS \
-			CC CXX BUILD_CC BUILD_CFLAGS LDFLAGS LD_LIBRARY_PATH PKG_BUILD_OPTIONS"
-
-	local TMPL_FUNCS="pre_configure pre_build pre_install do_build \
-			  do_install do_configure do_fetch post_configure \
-			  post_build post_install post_extract"
-
-	for f in ${subpackages}; do
-		eval unset -f ${f}_package
-	done
-
-	eval unset -v "$TMPL_VARS" "$TMPL_PRIV_VARS"
-	eval unset -f "$TMPL_FUNCS"
-}
-
-reset_subpkg_vars() {
-        local VARS="nonfree conf_files noarch triggers replaces allow_unknown_shlibs \
-			system_accounts system_groups preserve nostrip noverifyrdeps \
-			xml_entries sgml_entries xml_catalogs sgml_catalogs \
-			font_dirs dkms_modules provides kernel_hooks_version \
-			conflicts pycompile_dirs pycompile_module \
-			systemd_services make_dirs depends run_depends \
-			mutable_files nostrip_files"
-
-	eval unset -v "$VARS"
-	unset -f pkg_install
-}
-
 source_file() {
 	local f="$1"
 
@@ -214,6 +171,7 @@ source_file() {
 run_pkg_hooks() {
 	local phase="$1" hookn
 
+	eval unset -f hook
 	for f in ${XBPS_COMMONDIR}/hooks/${phase}/*.sh; do
 		[ ! -r $f ] && continue
 		hookn=$(basename $f)
@@ -236,17 +194,28 @@ get_subpkgs() {
 	done
 }
 
-setup_pkg_reqvars() {
-	local cross="$1" REQ_VARS i val
+setup_pkg() {
+	local pkg="$1" cross="$2"
+	local val _vars f
+
+	[ -z "$pkg" ] && return 1
+
+	# Start with a sane environment
+	unset -v PKG_BUILD_OPTIONS XBPS_CROSS_CFLAGS XBPS_CROSS_CXXFLAGS XBPS_CROSS_CPPFLAGS XBPS_CROSS_LDFLAGS
+	unset -v run_depends build_depends host_build_depends
+
+	for f in ${subpackages}; do
+		eval unset -f ${f}_package
+	done
 
 	if [ -n "$cross" ]; then
 		source_file $XBPS_CROSSPFDIR/${cross}.sh
 
 		REQ_VARS="TARGET_ARCH CROSS_TRIPLET CROSS_CFLAGS CROSS_CXXFLAGS"
-		for i in ${REQ_VARS}; do
-			eval val="\$XBPS_$i"
+		for f in ${REQ_VARS}; do
+			eval val="\$XBPS_$f"
 			if [ -z "$val" ]; then
-				echo "ERROR: XBPS_$i is not defined!"
+				echo "ERROR: XBPS_$f is not defined!"
 				exit 1
 			fi
 		done
@@ -277,33 +246,37 @@ setup_pkg_reqvars() {
 
 	export XBPS_INSTALL_XCMD XBPS_QUERY_XCMD XBPS_RECONFIGURE_XCMD \
 		XBPS_REMOVE_XCMD XBPS_RINDEX_XCMD XBPS_UHELPER_XCMD
-}
 
-setup_pkg() {
-	local pkg="$1" cross="$2"
-
-	[ -z "$pkg" ] && return 1
-
-	if [ ! -f $XBPS_SRCPKGDIR/${pkg}/template ]; then
-		msg_error "Cannot find $pkg build template file.\n"
-	fi
-
-	reset_pkg_vars
-	setup_pkg_reqvars $cross
-
-	# Source all environment setup snippets.
+	# Source all sourcepkg environment setup snippets.
 	for f in ${XBPS_COMMONDIR}/environment/setup/*.sh; do
 		source_file "$f"
 	done
+	# Source all subpkg environment setup snippets.
+	for f in ${XBPS_COMMONDIR}/environment/setup-subpkg/*.sh; do
+		source_file "$f"
+	done
 
+	if [ ! -f ${XBPS_SRCPKGDIR}/${pkg}/template ]; then
+		msg_error "xbps-src: unexistent file: ${XBPS_SRCPKGDIR}/${pkg}/template\n"
+	fi
 	if [ -n "$cross" ]; then
 		export CROSS_BUILD="$cross"
-		source_file $XBPS_SRCPKGDIR/${pkg}/template
+		source_file ${XBPS_SRCPKGDIR}/${pkg}/template
 	else
 		unset CROSS_BUILD
-		source_file $XBPS_SRCPKGDIR/${pkg}/template
+		source_file ${XBPS_SRCPKGDIR}/${pkg}/template
 	fi
 
+	# Check if required vars weren't set.
+	_vars="pkgname version short_desc revision homepage license"
+	for f in ${_vars}; do
+		eval val="\$$f"
+		if [ -z "$val" -o -z "$f" ]; then
+			msg_error "\"$f\" not set on $pkgname template.\n"
+		fi
+	done
+
+	# Check if base-chroot is already installed.
 	if [ -z "$bootstrap" ]; then
 		check_installed_pkg base-chroot-0.1_1
 		if [ $? -ne 0 ]; then
@@ -312,12 +285,14 @@ setup_pkg() {
 		fi
 	fi
 
-	sourcepkg=$pkgname
+	sourcepkg="${pkgname}"
 	subpackages="$(get_subpkgs)"
 
 	if [ -h $XBPS_SRCPKGDIR/$pkg ]; then
-		# subpkg
-		reset_subpkg_vars
+		# Source all subpkg environment setup snippets.
+		for f in ${XBPS_COMMONDIR}/environment/setup-subpkg/*.sh; do
+			source_file "$f"
+		done
 		pkgname=$pkg
 		if ! declare -f ${pkg}_package >/dev/null; then
 			msg_error "$pkgname: missing ${pkg}_package() function!\n"
@@ -326,6 +301,7 @@ setup_pkg() {
 
 	pkgver="${pkg}-${version}_${revision}"
 
+	# If build_style() unset, a do_install() function must be defined.
 	if [ -z "$build_style" ]; then
 		# Check that at least do_install() is defined.
 		if ! declare -f do_install >/dev/null; then
@@ -333,82 +309,12 @@ setup_pkg() {
 		fi
 	fi
 
-	setup_pkg_common_vars $pkg $cross
-	set_build_options
-
+	# Setup some specific package vars.
 	if [ -z "$wrksrc" ]; then
 		wrksrc="$XBPS_BUILDDIR/${sourcepkg}-${version}"
 	else
 		wrksrc="$XBPS_BUILDDIR/$wrksrc"
 	fi
-}
-
-setup_pkg_depends() {
-	local pkg="$1" j _pkgdepname _pkgdep _depname
-
-	if [ -n "$pkg" ]; then
-		# subpkg
-		if declare -f ${pkg}_package >/dev/null; then
-			${pkg}_package
-		fi
-	fi
-
-	for j in ${depends}; do
-		_depname="${j#*\?}"
-		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${_depname} 2>/dev/null)"
-		if [ -z "${_pkgdepname}" ]; then
-			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${_depname} 2>/dev/null)"
-		fi
-
-		if [ -z "${_pkgdepname}" ]; then
-			_pkgdep="${_depname}>=0"
-		else
-			_pkgdep="${_depname}"
-		fi
-		run_depends+=" ${_pkgdep}"
-	done
-	for j in ${hostmakedepends}; do
-		_depname="${j%\?*}"
-		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${_depname} 2>/dev/null)"
-		if [ -z "${_pkgdepname}" ]; then
-			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${_depname} 2>/dev/null)"
-		fi
-		if [ -z "${_pkgdepname}" ]; then
-			_pkgdep="${_depname}>=0"
-		else
-			_pkgdep="${_depname}"
-		fi
-		host_build_depends+=" ${_pkgdep}"
-	done
-	for j in ${makedepends}; do
-		_depname="${j%\?*}"
-		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${_depname} 2>/dev/null)"
-		if [ -z "${_pkgdepname}" ]; then
-			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${_depname} 2>/dev/null)"
-		fi
-		if [ -z "${_pkgdepname}" ]; then
-			_pkgdep="${_depname}>=0"
-		else
-			_pkgdep="${_depname}"
-		fi
-		build_depends+=" ${_pkgdep}"
-	done
-}
-
-setup_pkg_common_vars() {
-	local pkg="$1" cross="$2" val i REQ_VARS dbgflags
-
-	[ -z "$pkgname" ] && return 1
-
-	REQ_VARS="pkgname version short_desc revision homepage license"
-
-	# Check if required vars weren't set.
-	for i in ${REQ_VARS}; do
-		eval val="\$$i"
-		if [ -z "$val" -o -z "$i" ]; then
-			msg_error "\"$i\" not set on $pkgname template.\n"
-		fi
-	done
 
 	FILESDIR=$XBPS_SRCPKGDIR/$sourcepkg/files
 	PATCHESDIR=$XBPS_SRCPKGDIR/$sourcepkg/patches
@@ -469,6 +375,61 @@ setup_pkg_common_vars() {
 		export NM="nm"
 		export READELF="readelf"
 	fi
+
+	set_build_options
+
+}
+
+setup_pkg_depends() {
+	local pkg="$1" j _pkgdepname _pkgdep _depname
+
+	if [ -n "$pkg" ]; then
+		# subpkg
+		if declare -f ${pkg}_package >/dev/null; then
+			${pkg}_package
+		fi
+	fi
+
+	for j in ${depends}; do
+		_depname="${j#*\?}"
+		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${_depname} 2>/dev/null)"
+		if [ -z "${_pkgdepname}" ]; then
+			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${_depname} 2>/dev/null)"
+		fi
+
+		if [ -z "${_pkgdepname}" ]; then
+			_pkgdep="${_depname}>=0"
+		else
+			_pkgdep="${_depname}"
+		fi
+		run_depends+=" ${_pkgdep}"
+	done
+	for j in ${hostmakedepends}; do
+		_depname="${j%\?*}"
+		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${_depname} 2>/dev/null)"
+		if [ -z "${_pkgdepname}" ]; then
+			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${_depname} 2>/dev/null)"
+		fi
+		if [ -z "${_pkgdepname}" ]; then
+			_pkgdep="${_depname}>=0"
+		else
+			_pkgdep="${_depname}"
+		fi
+		host_build_depends+=" ${_pkgdep}"
+	done
+	for j in ${makedepends}; do
+		_depname="${j%\?*}"
+		_pkgdepname="$($XBPS_UHELPER_CMD getpkgdepname ${_depname} 2>/dev/null)"
+		if [ -z "${_pkgdepname}" ]; then
+			_pkgdepname="$($XBPS_UHELPER_CMD getpkgname ${_depname} 2>/dev/null)"
+		fi
+		if [ -z "${_pkgdepname}" ]; then
+			_pkgdep="${_depname}>=0"
+		else
+			_pkgdep="${_depname}"
+		fi
+		build_depends+=" ${_pkgdep}"
+	done
 }
 
 _remove_pkg_cross_deps() {

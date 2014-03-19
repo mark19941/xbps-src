@@ -15,13 +15,13 @@ XBPS_CROSS_BUILD="$2"
 . $XBPS_SHUTILSDIR/common.sh
 
 for f in $XBPS_COMMONDIR/helpers/*.sh; do
-	source_file $f
+	source_file "$f"
 done
 
 setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 
 for f in $XBPS_COMMONDIR/environment/fetch/*.sh; do
-	set -a; source_file $f; set +a
+	source_file "$f"
 done
 
 XBPS_FETCH_DONE="$wrksrc/.xbps_fetch_done"

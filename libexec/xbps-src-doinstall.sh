@@ -15,13 +15,13 @@ XBPS_CROSS_BUILD="$2"
 . $XBPS_SHUTILSDIR/common.sh
 
 for f in $XBPS_COMMONDIR/helpers/*.sh; do
-	source_file $f
+	source_file "$f"
 done
 
 setup_pkg "$PKGNAME" $XBPS_CROSS_BUILD
 
 for f in $XBPS_COMMONDIR/environment/install/*.sh; do
-	set -a; source_file $f; set +a
+	source_file "$f"
 done
 
 XBPS_INSTALL_DONE="$wrksrc/.xbps_${pkgname}_${XBPS_CROSS_BUILD}_install_done"
