@@ -1,8 +1,0 @@
-syntax: glob
-
-libexec/xbps-src-chroot-helper
-masterdir/
-xbps-src
-
-*.bak
-*.o
